@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wethr.net Station Snapshot</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0e17;
+    --surface: #111827;
+    --surface2: #1a2235;
+    --border: #1e2d45;
+    --accent: #00d4ff;
+    --accent2: #ff6b35;
+    --green: #00ff9d;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --danger: #ff4757;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,212,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 40px 24px 80px;
+  }
+  header {
+    margin-bottom: 40px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 24px;
+  }
+  .logo-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 6px;
+  }
+  .logo-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 12px var(--accent);
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; box-shadow: 0 0 12px var(--accent); }
+    50% { opacity: 0.6; box-shadow: 0 0 6px var(--accent); }
+  }
+  h1 {
+    font-size: 1.7rem;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    color: #fff;
+  }
+  h1 span { color: var(--accent); }
+  .subtitle {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .config-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 24px;
+  }
+  .config-panel h2 {
+    font-size: 0.7rem;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 20px;
+  }
+  .fields-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field label {
+    font-size: 0.68rem;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .field input, .field select {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem;
+    outline: none;
+    transition: border-color 0.2s;
+    width: 100%;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+  .field input:focus, .field select:focus { border-color: var(--accent); }
+  .field input::placeholder { color: var(--muted); }
+  .field select option { background: var(--surface); color: var(--text); }
+  .select-wrapper { position: relative; }
+  .select-wrapper::after {
+    content: '▾';
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--accent);
+    pointer-events: none;
+    font-size: 0.9rem;
+  }
+  .fetch-btn {
+    width: 100%;
+    margin-top: 20px;
+    padding: 14px 24px;
+    background: transparent;
+    border: 1px solid var(--accent);
+    border-radius: 8px;
+    color: var(--accent);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+  .fetch-btn:hover { background: rgba(0,212,255,0.08); box-shadow: 0 0 20px rgba(0,212,255,0.15); }
+  .fetch-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .fetch-btn .spinner {
+    width: 14px; height: 14px;
+    border: 2px solid rgba(0,212,255,0.3);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    display: none;
+  }
+  .fetch-btn.loading .spinner { display: block; }
+  .fetch-btn.loading .btn-text { opacity: 0.6; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .status-bar {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--muted);
+    padding: 10px 0;
+    min-height: 30px;
+  }
+  .status-bar.error { color: var(--danger); }
+  .status-bar.success { color: var(--green); }
+  .data-section { display: none; flex-direction: column; gap: 16px; }
+  .data-section.visible { display: flex; }
+  .data-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface2);
+  }
+  .card-title {
+    font-size: 0.68rem;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .record-count {
+    font-size: 0.65rem;
+    background: rgba(0,212,255,0.1);
+    border: 1px solid rgba(0,212,255,0.2);
+    border-radius: 4px;
+    padding: 2px 8px;
+    color: var(--accent);
+  }
+  .card-body {
+    padding: 16px 18px;
+    max-height: 280px;
+    overflow-y: auto;
+  }
+  .card-body::-webkit-scrollbar { width: 4px; }
+  .card-body::-webkit-scrollbar-track { background: transparent; }
+  .card-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+  .obs-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+  }
+  .obs-table th {
+    text-align: left;
+    color: var(--muted);
+    font-weight: 500;
+    font-size: 0.65rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 0 8px 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .obs-table td {
+    padding: 7px 8px 7px 0;
+    color: var(--text);
+    border-bottom: 1px solid rgba(30,45,69,0.5);
+    vertical-align: middle;
+  }
+  .obs-table tr:last-child td { border-bottom: none; }
+  .temp-val { color: var(--accent2); font-weight: 700; }
+  .time-val { color: var(--muted); }
+  .pacing-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
+    gap: 12px;
+  }
+  .pacing-item {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+  }
+  .pacing-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .pacing-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--green);
+  }
+  .pacing-value.na { color: var(--muted); font-size: 0.8rem; }
+  .copy-section { margin-top: 8px; }
+  .copy-btn {
+    width: 100%;
+    padding: 16px 24px;
+    background: rgba(0,255,157,0.05);
+    border: 1px solid var(--green);
+    border-radius: 10px;
+    color: var(--green);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+  .copy-btn:hover { background: rgba(0,255,157,0.12); box-shadow: 0 0 24px rgba(0,255,157,0.15); }
+  .copy-btn.copied { background: rgba(0,255,157,0.15); }
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .tag-metar { background: rgba(0,212,255,0.1); color: var(--accent); border: 1px solid rgba(0,212,255,0.2); }
+  .tag-hf { background: rgba(255,107,53,0.1); color: var(--accent2); border: 1px solid rgba(255,107,53,0.2); }
+  .tag-speci { background: rgba(255,71,87,0.1); color: var(--danger); border: 1px solid rgba(255,71,87,0.2); }
+  @media (max-width: 600px) {
+    .fields-grid { grid-template-columns: 1fr; }
+    h1 { font-size: 1.3rem; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="logo-row">
+      <div class="logo-dot"></div>
+      <h1>Wethr<span>.net</span> Station Snapshot</h1>
+    </div>
+    <div class="subtitle">2-hour observation fetch &amp; AI clipboard export — API v2</div>
+  </header>
+
+  <div class="config-panel">
+    <h2>⚙ Configuration</h2>
+    <div class="fields-grid">
+      <div class="field">
+        <label>API Key</label>
+        <input type="password" id="apiKey" placeholder="Your Bearer token…" autocomplete="off" />
+      </div>
+      <div class="field">
+        <label>Station</label>
+        <div class="select-wrapper">
+          <select id="stationSelect">
+              <option value="KLAX">KLAX — Los Angeles, CA</option>
+              <option value="KATL">KATL — Atlanta, GA</option>
+              <option value="KAUS">KAUS — Austin, TX</option>
+              <option value="KBOS">KBOS — Boston, MA</option>
+              <option value="KCLT">KCLT — Charlotte, NC</option>
+              <option value="KMDW">KMDW — Chicago (Midway), IL</option>
+              <option value="KDFW">KDFW — Dallas/Ft Worth, TX</option>
+              <option value="KDCA">KDCA — Washington D.C.</option>
+              <option value="KDTW">KDTW — Detroit, MI</option>
+              <option value="KHOU">KHOU — Houston, TX</option>
+              <option value="KJAX">KJAX — Jacksonville, FL</option>
+              <option value="KLAS">KLAS — Las Vegas, NV</option>
+              <option value="KMIA">KMIA — Miami, FL</option>
+              <option value="KMSP">KMSP — Minneapolis, MN</option>
+              <option value="KOKC">KOKC — Oklahoma City, OK</option>
+              <option value="KPHL">KPHL — Philadelphia, PA</option>
+              <option value="KPHX">KPHX — Phoenix, AZ</option>
+              <option value="KSAT">KSAT — San Antonio, TX</option>
+              <option value="KSFO">KSFO — San Francisco, CA</option>
+              <option value="KSEA">KSEA — Seattle, WA</option>
+              <option value="KLGA">KLGA — New York (LaGuardia)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <button class="fetch-btn" id="fetchBtn" onclick="fetchAll()">
+      <div class="spinner"></div>
+      <span class="btn-text">⬇ Fetch Station Data</span>
+    </button>
+  </div>
+
+  <div class="status-bar" id="statusBar"></div>
+
+  <div class="data-section" id="dataSection">
+
+    <!-- Pacing -->
+    <div class="data-card">
+      <div class="card-header">
+        <div class="card-title">📊 Pacing &amp; Current Conditions</div>
+      </div>
+      <div class="card-body">
+        <div class="pacing-grid" id="pacingGrid"></div>
+      </div>
+    </div>
+
+    <!-- 1-min -->
+    <div class="data-card">
+      <div class="card-header">
+        <div class="card-title">
+          ⚡ 1-Minute Observations — Last 2 hrs
+          <span class="record-count" id="count1min">—</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <table class="obs-table">
+          <thead><tr>
+            <th>Time (UTC)</th><th>Temp</th><th>Dew Pt</th><th>RH%</th><th>Wind</th><th>Type</th>
+          </tr></thead>
+          <tbody id="tbody1min"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 5-min / hourly -->
+    <div class="data-card">
+      <div class="card-header">
+        <div class="card-title">
+          🕐 5-Min / Hourly METAR Observations — Last 2 hrs
+          <span class="record-count" id="count5min">—</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <table class="obs-table">
+          <thead><tr>
+            <th>Time (UTC)</th><th>Temp</th><th>Dew Pt</th><th>RH%</th><th>Wind</th><th>Type</th>
+          </tr></thead>
+          <tbody id="tbody5min"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Copy -->
+    <div class="copy-section">
+      <button class="copy-btn" id="copyBtn" onclick="copyToClipboard()">
+        <span>📋</span>
+        <span id="copyText">Copy All Data to Clipboard for AI</span>
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  let fetchedData = null;
+  const BASE = 'https://wethr.net/api/v2';
+
+  function getHeaders() {
+    const key = document.getElementById('apiKey').value.trim();
+    return { 'Authorization': 'Bearer ' + key };
+  }
+
+  function setStatus(msg, type) {
+    const el = document.getElementById('statusBar');
+    el.textContent = msg;
+    el.className = 'status-bar ' + (type || '');
+  }
+
+  function formatTime(t) {
+    if (!t) return '—';
+    return String(t).replace('T', ' ').replace('Z', '').substring(0, 19) + ' UTC';
+  }
+
+  function formatTemp(obs, units) {
+    const v = obs.temperature_display != null ? obs.temperature_display
+            : obs.temperature_f != null ? obs.temperature_f
+            : obs.temperature;
+    if (v == null) return '—';
+    return v + (units === 'fahrenheit' ? '°F' : '°C');
+  }
+
+  function formatDew(obs, units) {
+    const dp = obs.dew_point;
+    if (dp == null) return '—';
+    if (units === 'fahrenheit') return Math.round(dp * 9 / 5 + 32) + '°F';
+    return dp + '°C';
+  }
+
+  function formatWind(obs) {
+    if (obs.wind_speed == null) return '—';
+    const dir = obs.wind_direction || '—';
+    const gust = obs.wind_gust ? ' G' + obs.wind_gust : '';
+    return dir + ' ' + obs.wind_speed + gust + ' kt';
+  }
+
+  function guessType(obs) {
+    const t = new Date((obs.observation_time || '').replace(' ', 'T').replace(/Z?$/, 'Z'));
+    const m = t.getMinutes();
+    if (m === 53 || m === 0 || m === 20 || m === 50) return 'METAR';
+    if (m % 5 === 0) return 'HF-METAR-5min';
+    return 'HF-METAR-1min';
+  }
+
+  function getTagClass(type) {
+    if (type.includes('1min')) return 'tag tag-hf';
+    if (type.includes('5min')) return 'tag tag-metar';
+    if (type.includes('SPECI')) return 'tag tag-speci';
+    return 'tag tag-metar';
+  }
+
+  function is1Min(obs) {
+    const t = new Date((obs.observation_time || '').replace(' ', 'T').replace(/Z?$/, 'Z'));
+    return t.getMinutes() % 5 !== 0;
+  }
+
+  function buildRow(obs, units) {
+    const type = obs.product || guessType(obs);
+    return '<tr>'
+      + '<td class="time-val">' + formatTime(obs.observation_time) + '</td>'
+      + '<td class="temp-val">' + formatTemp(obs, units) + '</td>'
+      + '<td>' + formatDew(obs, units) + '</td>'
+      + '<td>' + (obs.relative_humidity != null ? obs.relative_humidity + '%' : '—') + '</td>'
+      + '<td>' + formatWind(obs) + '</td>'
+      + '<td><span class="' + getTagClass(type) + '">' + type + '</span></td>'
+      + '</tr>';
+  }
+
+  async function fetchAll() {
+    const key = document.getElementById('apiKey').value.trim();
+    const station = document.getElementById('stationSelect').value;
+    if (!key) { setStatus('⚠ Enter your API key first.', 'error'); return; }
+
+    const btn = document.getElementById('fetchBtn');
+    btn.disabled = true;
+    btn.classList.add('loading');
+    btn.querySelector('.btn-text').textContent = 'Fetching…';
+    document.getElementById('dataSection').classList.remove('visible');
+    setStatus('Connecting to wethr.net…');
+
+    const now = new Date();
+    const twoHoursAgo = new Date(now.getTime() - 2 * 60 * 60 * 1000);
+    const end = now.toISOString().slice(0, 19) + 'Z';
+    const start = twoHoursAgo.toISOString().slice(0, 19) + 'Z';
+    const h = getHeaders();
+
+    try {
+      const [r1, r2, r3] = await Promise.allSettled([
+        fetch(BASE + '/observations.php?station_code=' + station + '&start_time=' + start + '&end_time=' + end, { headers: h }),
+        fetch(BASE + '/observations.php?station_code=' + station + '&mode=latest', { headers: h }),
+        fetch(BASE + '/observations.php?station_code=' + station + '&mode=wethr_high&logic=wu', { headers: h }),
+      ]);
+
+      let history = [], latest = null, wu = null;
+      let units = 'fahrenheit';
+
+      if (r1.status === 'fulfilled' && r1.value.ok) {
+        const d = await r1.value.json();
+        history = Array.isArray(d) ? d : (d.observations || []);
+        if (history[0]) units = history[0].units || units;
+      }
+      if (r2.status === 'fulfilled' && r2.value.ok) {
+        latest = await r2.value.json();
+        units = latest.units || units;
+      }
+      if (r3.status === 'fulfilled' && r3.value.ok) wu = await r3.value.json();
+
+      if (!history.length && !latest) throw new Error('No data returned — verify API key and station.');
+
+      history.sort(function(a, b) { return new Date(b.observation_time) - new Date(a.observation_time); });
+
+      const obs1 = history.filter(is1Min);
+      const obs5 = history.filter(function(o) { return !is1Min(o); });
+
+      fetchedData = { station, history, latest, wu, units, obs1, obs5, at: new Date() };
+
+      renderPacing(latest, wu, units);
+      renderTable('tbody1min', 'count1min', obs1, units);
+      renderTable('tbody5min', 'count5min', obs5, units);
+
+      document.getElementById('dataSection').classList.add('visible');
+      setStatus('✓ ' + history.length + ' observations loaded — ' + obs1.length + ' at 1-min resolution, ' + obs5.length + ' at 5-min/METAR.', 'success');
+
+    } catch (err) {
+      setStatus('✗ ' + err.message, 'error');
+    }
+
+    btn.disabled = false;
+    btn.classList.remove('loading');
+    btn.querySelector('.btn-text').textContent = '⬇ Fetch Station Data';
+  }
+
+  function renderPacing(latest, wu, units) {
+    const u = units === 'fahrenheit' ? '°F' : '°C';
+    const cur = latest ? (latest.temperature_display != null ? latest.temperature_display : latest.temperature_f) : null;
+    const items = [
+      { label: 'Current Temp', value: cur != null ? cur + u : 'N/A' },
+      { label: 'Rel. Humidity', value: latest && latest.relative_humidity != null ? latest.relative_humidity + '%' : 'N/A' },
+      { label: 'DSM High', value: latest && (latest.dsm_high_display != null || latest.dsm_high_f != null) ? (latest.dsm_high_display != null ? latest.dsm_high_display : latest.dsm_high_f) + u : 'N/A' },
+      { label: 'WU Wethr High', value: wu && wu.wethr_high != null ? wu.wethr_high + u : 'N/A' },
+      { label: 'WU Wethr Low',  value: wu && wu.wethr_low  != null ? wu.wethr_low  + u : 'N/A' },
+      { label: 'Last Obs (UTC)', value: latest ? formatTime(latest.observation_time) : 'N/A' },
+    ];
+    document.getElementById('pacingGrid').innerHTML = items.map(function(i) {
+      return '<div class="pacing-item"><div class="pacing-label">' + i.label + '</div>'
+           + '<div class="pacing-value' + (i.value === 'N/A' ? ' na' : '') + '">' + i.value + '</div></div>';
+    }).join('');
+  }
+
+  function renderTable(tbodyId, countId, obs, units) {
+    document.getElementById(countId).textContent = obs.length + ' records';
+    document.getElementById(tbodyId).innerHTML = obs.length
+      ? obs.map(function(o) { return buildRow(o, units); }).join('')
+      : '<tr><td colspan="6" style="color:var(--muted);padding:12px 0;font-family:\'JetBrains Mono\',monospace;font-size:0.75rem;">No observations in this window</td></tr>';
+  }
+
+  function pad(s, n) { return String(s).padEnd(n); }
+
+  function copyToClipboard() {
+    if (!fetchedData) return;
+    const { station, latest, wu, units, obs1, obs5, at } = fetchedData;
+    const u = units === 'fahrenheit' ? '°F' : '°C';
+    const lines = [];
+
+    lines.push('=== WETHR.NET STATION SNAPSHOT ===');
+    lines.push('Station : ' + station);
+    lines.push('Fetched : ' + at.toUTCString());
+    lines.push('Units   : ' + units);
+    lines.push('');
+
+    lines.push('--- PACING / CURRENT CONDITIONS ---');
+    if (latest) {
+      const cur = latest.temperature_display != null ? latest.temperature_display : latest.temperature_f;
+      lines.push('Current Temperature : ' + (cur != null ? cur + u : 'N/A'));
+      lines.push('Relative Humidity   : ' + (latest.relative_humidity != null ? latest.relative_humidity + '%' : 'N/A'));
+      const dsmH = latest.dsm_high_display != null ? latest.dsm_high_display : latest.dsm_high_f;
+      if (dsmH != null) lines.push('DSM High            : ' + dsmH + u);
+      lines.push('Last Obs Time (UTC) : ' + (latest.observation_time || 'N/A'));
+    }
+    if (wu) {
+      lines.push('Wethr High (WU) : ' + wu.wethr_high + u + '  @ ' + (wu.time_of_high_utc || 'N/A'));
+      lines.push('Wethr Low  (WU) : ' + wu.wethr_low  + u + '  @ ' + (wu.time_of_low_utc  || 'N/A'));
+    }
+    lines.push('');
+
+    lines.push('--- 1-MINUTE OBSERVATIONS (' + obs1.length + ' records, last 2 hrs) ---');
+    lines.push(pad('Time (UTC)',22) + ' ' + pad('Temp',8) + ' ' + pad('Dew Pt',8) + ' ' + pad('RH%',5) + ' ' + pad('Wind',18) + ' Type');
+    lines.push('-'.repeat(80));
+    obs1.forEach(function(o) {
+      const type = o.product || guessType(o);
+      lines.push(pad(formatTime(o.observation_time),22) + ' ' + pad(formatTemp(o,units),8) + ' ' + pad(formatDew(o,units),8) + ' ' + pad(o.relative_humidity != null ? o.relative_humidity+'%' : '—',5) + ' ' + pad(formatWind(o),18) + ' ' + type);
+    });
+    lines.push('');
+
+    lines.push('--- 5-MIN / HOURLY METAR OBSERVATIONS (' + obs5.length + ' records, last 2 hrs) ---');
+    lines.push(pad('Time (UTC)',22) + ' ' + pad('Temp',8) + ' ' + pad('Dew Pt',8) + ' ' + pad('RH%',5) + ' ' + pad('Wind',18) + ' Type');
+    lines.push('-'.repeat(80));
+    obs5.forEach(function(o) {
+      const type = o.product || guessType(o);
+      lines.push(pad(formatTime(o.observation_time),22) + ' ' + pad(formatTemp(o,units),8) + ' ' + pad(formatDew(o,units),8) + ' ' + pad(o.relative_humidity != null ? o.relative_humidity+'%' : '—',5) + ' ' + pad(formatWind(o),18) + ' ' + type);
+    });
+    lines.push('');
+    lines.push('=== END OF SNAPSHOT ===');
+
+    const text = lines.join('\n');
+
+    function onCopied() {
+      const btn = document.getElementById('copyBtn');
+      const txt = document.getElementById('copyText');
+      btn.classList.add('copied');
+      txt.textContent = '✓ Copied to Clipboard!';
+      setTimeout(function() {
+        btn.classList.remove('copied');
+        txt.textContent = 'Copy All Data to Clipboard for AI';
+      }, 2500);
+    }
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(onCopied).catch(function() {
+        fallbackCopy(text); onCopied();
+      });
+    } else {
+      fallbackCopy(text); onCopied();
+    }
+  }
+
+  function fallbackCopy(text) {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.focus(); ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+  }
+</script>
+</body>
+</html>
