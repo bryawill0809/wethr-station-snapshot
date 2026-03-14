@@ -184,7 +184,7 @@
 
     <div class="data-card">
       <div class="card-header">
-        <div class="card-title">🕐 All Observations — Last 2 hrs (1min / 5min / Hourly) <span class="record-count" id="countObsToday">—</span></div>
+        <div class="card-title">🕐 All Observations — Last 2 hrs (5min / Hourly) <span class="record-count" id="countObsToday">—</span></div>
       </div>
       <div class="card-body">
         <table class="obs-table">
@@ -219,7 +219,7 @@
 
     <div class="data-card">
       <div class="card-header">
-        <div class="card-title tmrw-title">🕐 All Observations — Last 2 hrs (1min / 5min / Hourly) <span class="record-count tmrw" id="countObsTmrw">—</span></div>
+        <div class="card-title tmrw-title">🕐 All Observations — Last 2 hrs (5min / Hourly) <span class="record-count tmrw" id="countObsTmrw">—</span></div>
       </div>
       <div class="card-body">
         <table class="obs-table">
@@ -572,24 +572,37 @@
   function buildClipboard(store){
     var lines=[];
     var u=store.units==='fahrenheit'?'°F':'°C';
-    var dayLabel=store.isTomorrow?'TOMORROW':'TODAY';
 
-    // AI-ready prompt header
-    if(store.isTomorrow){
-      lines.push("Tomorrow's projection data, pacing from today. calibrate model integrity to our prompt and nail the exact future high tomorrow at "+store.station);
-    } else {
-      lines.push("Here is the "+store.station+" Tape from today, run the prompt to find where we top out.");
+    function modelSection(label, data){
+      lines.push('--- '+label+' ('+data.length+' models) ---');
+      lines.push(pad('Model',22)+' '+pad('Fcst High',10)+' '+pad('High Time',12)+' '+pad('Pacing',10)+' '+pad('WU Range',12)+' Delta');
+      lines.push('-'.repeat(85));
+      data.forEach(function(m){
+        lines.push(pad(m.model,22)+' '+pad(m.forecastHigh!=null?m.forecastHigh+'°F':'—',10)+' '+pad(m.highTimeLocal,12)+' '+pad(m.pacingHigh!=null?m.pacingHigh+'°F':'—',10)+' '+pad(m.wuRange,12)+' '+m.delta);
+      });
+      lines.push('');
     }
-    lines.push('');
-    lines.push('=== WETHR.NET STATION SNAPSHOT — '+dayLabel+' ('+store.targetDateStr+') ===');
-    lines.push('Station : '+store.station);
-    lines.push('Fetched : '+store.at.toUTCString());
-    lines.push('');
 
-    lines.push('--- CURRENT CONDITIONS & PACING ---');
-    if(store.isTomorrow){
-      // Tomorrow: skip current-conditions block entirely — model table IS the pacing data
-    } else {
+    function obsSection(label, history, units){
+      lines.push('--- '+label+' ('+history.length+' records) ---');
+      lines.push(pad('Time (UTC)',22)+' '+pad('Temp',8)+' '+pad('Dew Pt',8)+' '+pad('RH%',5)+' '+pad('Wind',18)+' Type');
+      lines.push('-'.repeat(80));
+      history.forEach(function(o){
+        var t=o.product||guessType(o);
+        lines.push(pad(formatTime(o.observation_time),22)+' '+pad(formatTemp(o,units),8)+' '+pad(formatDew(o,units),8)+' '+pad(o.relative_humidity!=null?o.relative_humidity+'%':'—',5)+' '+pad(formatWind(o),18)+' '+t);
+      });
+      lines.push('');
+    }
+
+    if(!store.isTomorrow){
+      // ── TODAY ──────────────────────────────────────────────────────
+      lines.push("Here is the "+store.station+" Tape from today, run the prompt to find where we top out.");
+      lines.push('');
+      lines.push('Station : '+store.station+'   Fetched : '+store.at.toUTCString());
+      lines.push('');
+
+      // Current conditions
+      lines.push('--- CURRENT CONDITIONS & PACING ---');
       if(store.latest){
         var cur=store.latest.temperature_display!=null?store.latest.temperature_display:store.latest.temperature_f;
         lines.push('Current Temperature : '+(cur!=null?cur+u:'N/A'));
@@ -602,36 +615,33 @@
         lines.push('WU Wethr High : '+store.wu.wethr_high+u+'  @ '+(store.wu.time_of_high_utc||'N/A'));
         lines.push('WU Wethr Low  : '+store.wu.wethr_low+u+'  @ '+(store.wu.time_of_low_utc||'N/A'));
       }
-    }
-    lines.push('');
-    // If tomorrow: show TODAY model pacing first, then tomorrow
-    if(store.isTomorrow && storeToday && storeToday.modelData && storeToday.modelData.length){
-      lines.push('--- TODAY MODEL FORECAST PACING ('+storeToday.modelData.length+' models) ---');
-      lines.push(pad('Model',22)+' '+pad('Fcst High',10)+' '+pad('High Time',12)+' '+pad('Pacing',10)+' '+pad('WU Range',12)+' Delta');
-      lines.push('-'.repeat(85));
-      storeToday.modelData.forEach(function(m){
-        lines.push(pad(m.model,22)+' '+pad(m.forecastHigh!=null?m.forecastHigh+'\u00b0F':'\u2014',10)+' '+pad(m.highTimeLocal,12)+' '+pad(m.pacingHigh!=null?m.pacingHigh+'\u00b0F':'\u2014',10)+' '+pad(m.wuRange,12)+' '+m.delta);
-      });
       lines.push('');
+
+      // Today model pacing
+      modelSection('TODAY MODEL FORECAST PACING', store.modelData);
+
+      // Obs last 2hrs
+      obsSection('ALL OBSERVATIONS — LAST 2 HRS (5min / Hourly)', store.history, store.units);
+
+    } else {
+      // ── TOMORROW ───────────────────────────────────────────────────
+      lines.push("Tomorrow's projection data, pacing from today. calibrate model integrity to our prompt and nail the exact future high tomorrow at "+store.station);
+      lines.push('');
+      lines.push('Station : '+store.station+'   Fetched : '+store.at.toUTCString());
+      lines.push('');
+
+      // Obs last 2hrs FIRST
+      obsSection('ALL OBSERVATIONS — LAST 2 HRS (5min / Hourly)', store.history, store.units);
+
+      // Today model pacing (if available)
+      if(storeToday && storeToday.modelData && storeToday.modelData.length){
+        modelSection('TODAY MODEL FORECAST PACING', storeToday.modelData);
+      }
+
+      // Tomorrow model pacing
+      modelSection('TOMORROW MODEL FORECAST PACING', store.modelData);
     }
 
-    lines.push('--- '+dayLabel+' MODEL FORECAST PACING ('+store.modelData.length+' models) ---');
-    lines.push(pad('Model',22)+' '+pad('Fcst High',10)+' '+pad('High Time',12)+' '+pad('Pacing',10)+' '+pad('WU Range',12)+' Delta');
-    lines.push('-'.repeat(85));
-    store.modelData.forEach(function(m){
-      lines.push(pad(m.model,22)+' '+pad(m.forecastHigh!=null?m.forecastHigh+'\u00b0F':'\u2014',10)+' '+pad(m.highTimeLocal,12)+' '+pad(m.pacingHigh!=null?m.pacingHigh+'\u00b0F':'\u2014',10)+' '+pad(m.wuRange,12)+' '+m.delta);
-    });
-    lines.push('');
-
-
-    lines.push('--- ALL OBSERVATIONS — LAST 2 HRS (1min / 5min / Hourly) ('+store.history.length+' records) ---');
-    lines.push(pad('Time (UTC)',22)+' '+pad('Temp',8)+' '+pad('Dew Pt',8)+' '+pad('RH%',5)+' '+pad('Wind',18)+' Type');
-    lines.push('-'.repeat(80));
-    store.history.forEach(function(o){
-      var t=o.product||guessType(o);
-      lines.push(pad(formatTime(o.observation_time),22)+' '+pad(formatTemp(o,store.units),8)+' '+pad(formatDew(o,store.units),8)+' '+pad(o.relative_humidity!=null?o.relative_humidity+'%':'—',5)+' '+pad(formatWind(o),18)+' '+t);
-    });
-    lines.push('');
     lines.push('=== END OF SNAPSHOT ===');
     return lines.join('\n');
   }
