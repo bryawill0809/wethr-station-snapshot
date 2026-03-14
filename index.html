@@ -97,7 +97,7 @@
   }
   .fields-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
     gap: 16px;
   }
   .field { display: flex; flex-direction: column; gap: 6px; }
@@ -108,7 +108,7 @@
     text-transform: uppercase;
     color: var(--muted);
   }
-  .field input, .field select {
+  .field select {
     background: var(--bg);
     border: 1px solid var(--border);
     border-radius: 8px;
@@ -122,8 +122,7 @@
     appearance: none;
     -webkit-appearance: none;
   }
-  .field input:focus, .field select:focus { border-color: var(--accent); }
-  .field input::placeholder { color: var(--muted); }
+  .field select:focus { border-color: var(--accent); }
   .field select option { background: var(--surface); color: var(--text); }
   .select-wrapper { position: relative; }
   .select-wrapper::after {
@@ -307,7 +306,6 @@
   .tag-hf { background: rgba(255,107,53,0.1); color: var(--accent2); border: 1px solid rgba(255,107,53,0.2); }
   .tag-speci { background: rgba(255,71,87,0.1); color: var(--danger); border: 1px solid rgba(255,71,87,0.2); }
   @media (max-width: 600px) {
-    .fields-grid { grid-template-columns: 1fr; }
     h1 { font-size: 1.3rem; }
   }
 </style>
@@ -324,37 +322,33 @@
   </header>
 
   <div class="config-panel">
-    <h2>⚙ Configuration</h2>
+    <h2>⚙ Select Station</h2>
     <div class="fields-grid">
-      <div class="field">
-        <label>API Key</label>
-        <input type="password" id="apiKey" placeholder="Your Bearer token…" autocomplete="off" />
-      </div>
       <div class="field">
         <label>Station</label>
         <div class="select-wrapper">
           <select id="stationSelect">
-              <option value="KLAX">KLAX — Los Angeles, CA</option>
-              <option value="KATL">KATL — Atlanta, GA</option>
-              <option value="KAUS">KAUS — Austin, TX</option>
-              <option value="KBOS">KBOS — Boston, MA</option>
-              <option value="KCLT">KCLT — Charlotte, NC</option>
-              <option value="KMDW">KMDW — Chicago (Midway), IL</option>
-              <option value="KDFW">KDFW — Dallas/Ft Worth, TX</option>
-              <option value="KDCA">KDCA — Washington D.C.</option>
-              <option value="KDTW">KDTW — Detroit, MI</option>
-              <option value="KHOU">KHOU — Houston, TX</option>
-              <option value="KJAX">KJAX — Jacksonville, FL</option>
-              <option value="KLAS">KLAS — Las Vegas, NV</option>
-              <option value="KMIA">KMIA — Miami, FL</option>
-              <option value="KMSP">KMSP — Minneapolis, MN</option>
-              <option value="KOKC">KOKC — Oklahoma City, OK</option>
-              <option value="KPHL">KPHL — Philadelphia, PA</option>
-              <option value="KPHX">KPHX — Phoenix, AZ</option>
-              <option value="KSAT">KSAT — San Antonio, TX</option>
-              <option value="KSFO">KSFO — San Francisco, CA</option>
-              <option value="KSEA">KSEA — Seattle, WA</option>
-              <option value="KLGA">KLGA — New York (LaGuardia)</option>
+            <option value="KLAX">KLAX — Los Angeles, CA</option>
+            <option value="KATL">KATL — Atlanta, GA</option>
+            <option value="KAUS">KAUS — Austin, TX</option>
+            <option value="KBOS">KBOS — Boston, MA</option>
+            <option value="KCLT">KCLT — Charlotte, NC</option>
+            <option value="KMDW">KMDW — Chicago (Midway), IL</option>
+            <option value="KDFW">KDFW — Dallas/Ft Worth, TX</option>
+            <option value="KDCA">KDCA — Washington D.C.</option>
+            <option value="KDTW">KDTW — Detroit, MI</option>
+            <option value="KHOU">KHOU — Houston, TX</option>
+            <option value="KJAX">KJAX — Jacksonville, FL</option>
+            <option value="KLAS">KLAS — Las Vegas, NV</option>
+            <option value="KMIA">KMIA — Miami, FL</option>
+            <option value="KMSP">KMSP — Minneapolis, MN</option>
+            <option value="KOKC">KOKC — Oklahoma City, OK</option>
+            <option value="KPHL">KPHL — Philadelphia, PA</option>
+            <option value="KPHX">KPHX — Phoenix, AZ</option>
+            <option value="KSAT">KSAT — San Antonio, TX</option>
+            <option value="KSFO">KSFO — San Francisco, CA</option>
+            <option value="KSEA">KSEA — Seattle, WA</option>
+            <option value="KLGA">KLGA — New York (LaGuardia)</option>
           </select>
         </div>
       </div>
@@ -369,7 +363,6 @@
 
   <div class="data-section" id="dataSection">
 
-    <!-- Pacing -->
     <div class="data-card">
       <div class="card-header">
         <div class="card-title">📊 Pacing &amp; Current Conditions</div>
@@ -379,7 +372,6 @@
       </div>
     </div>
 
-    <!-- 1-min -->
     <div class="data-card">
       <div class="card-header">
         <div class="card-title">
@@ -397,7 +389,6 @@
       </div>
     </div>
 
-    <!-- 5-min / hourly -->
     <div class="data-card">
       <div class="card-header">
         <div class="card-title">
@@ -415,7 +406,6 @@
       </div>
     </div>
 
-    <!-- Copy -->
     <div class="copy-section">
       <button class="copy-btn" id="copyBtn" onclick="copyToClipboard()">
         <span>📋</span>
@@ -428,12 +418,9 @@
 
 <script>
   let fetchedData = null;
-  const BASE = 'https://wethr.net/api/v2';
 
-  function getHeaders() {
-    const key = document.getElementById('apiKey').value.trim();
-    return { 'Authorization': 'Bearer ' + key };
-  }
+  // All calls go to /api/proxy — the Edge Function adds the API key server-side
+  const PROXY = '/api/proxy';
 
   function setStatus(msg, type) {
     const el = document.getElementById('statusBar');
@@ -500,11 +487,12 @@
       + '</tr>';
   }
 
-  async function fetchAll() {
-    const key = document.getElementById('apiKey').value.trim();
-    const station = document.getElementById('stationSelect').value;
-    if (!key) { setStatus('⚠ Enter your API key first.', 'error'); return; }
+  function proxyUrl(params) {
+    return PROXY + '?' + new URLSearchParams(params).toString();
+  }
 
+  async function fetchAll() {
+    const station = document.getElementById('stationSelect').value;
     const btn = document.getElementById('fetchBtn');
     btn.disabled = true;
     btn.classList.add('loading');
@@ -516,13 +504,12 @@
     const twoHoursAgo = new Date(now.getTime() - 2 * 60 * 60 * 1000);
     const end = now.toISOString().slice(0, 19) + 'Z';
     const start = twoHoursAgo.toISOString().slice(0, 19) + 'Z';
-    const h = getHeaders();
 
     try {
       const [r1, r2, r3] = await Promise.allSettled([
-        fetch(BASE + '/observations.php?station_code=' + station + '&start_time=' + start + '&end_time=' + end, { headers: h }),
-        fetch(BASE + '/observations.php?station_code=' + station + '&mode=latest', { headers: h }),
-        fetch(BASE + '/observations.php?station_code=' + station + '&mode=wethr_high&logic=wu', { headers: h }),
+        fetch(proxyUrl({ station_code: station, start_time: start, end_time: end })),
+        fetch(proxyUrl({ station_code: station, mode: 'latest' })),
+        fetch(proxyUrl({ station_code: station, mode: 'wethr_high', logic: 'wu' })),
       ]);
 
       let history = [], latest = null, wu = null;
@@ -539,7 +526,7 @@
       }
       if (r3.status === 'fulfilled' && r3.value.ok) wu = await r3.value.json();
 
-      if (!history.length && !latest) throw new Error('No data returned — verify API key and station.');
+      if (!history.length && !latest) throw new Error('No data returned — check station or try again.');
 
       history.sort(function(a, b) { return new Date(b.observation_time) - new Date(a.observation_time); });
 
@@ -553,7 +540,7 @@
       renderTable('tbody5min', 'count5min', obs5, units);
 
       document.getElementById('dataSection').classList.add('visible');
-      setStatus('✓ ' + history.length + ' observations loaded — ' + obs1.length + ' at 1-min resolution, ' + obs5.length + ' at 5-min/METAR.', 'success');
+      setStatus('✓ ' + history.length + ' observations loaded — ' + obs1.length + ' at 1-min, ' + obs5.length + ' at 5-min/METAR.', 'success');
 
     } catch (err) {
       setStatus('✗ ' + err.message, 'error');
@@ -568,11 +555,11 @@
     const u = units === 'fahrenheit' ? '°F' : '°C';
     const cur = latest ? (latest.temperature_display != null ? latest.temperature_display : latest.temperature_f) : null;
     const items = [
-      { label: 'Current Temp', value: cur != null ? cur + u : 'N/A' },
-      { label: 'Rel. Humidity', value: latest && latest.relative_humidity != null ? latest.relative_humidity + '%' : 'N/A' },
-      { label: 'DSM High', value: latest && (latest.dsm_high_display != null || latest.dsm_high_f != null) ? (latest.dsm_high_display != null ? latest.dsm_high_display : latest.dsm_high_f) + u : 'N/A' },
-      { label: 'WU Wethr High', value: wu && wu.wethr_high != null ? wu.wethr_high + u : 'N/A' },
-      { label: 'WU Wethr Low',  value: wu && wu.wethr_low  != null ? wu.wethr_low  + u : 'N/A' },
+      { label: 'Current Temp',   value: cur != null ? cur + u : 'N/A' },
+      { label: 'Rel. Humidity',  value: latest && latest.relative_humidity != null ? latest.relative_humidity + '%' : 'N/A' },
+      { label: 'DSM High',       value: latest && (latest.dsm_high_display != null || latest.dsm_high_f != null) ? (latest.dsm_high_display != null ? latest.dsm_high_display : latest.dsm_high_f) + u : 'N/A' },
+      { label: 'WU Wethr High',  value: wu && wu.wethr_high != null ? wu.wethr_high + u : 'N/A' },
+      { label: 'WU Wethr Low',   value: wu && wu.wethr_low  != null ? wu.wethr_low  + u : 'N/A' },
       { label: 'Last Obs (UTC)', value: latest ? formatTime(latest.observation_time) : 'N/A' },
     ];
     document.getElementById('pacingGrid').innerHTML = items.map(function(i) {
@@ -618,20 +605,20 @@
     lines.push('');
 
     lines.push('--- 1-MINUTE OBSERVATIONS (' + obs1.length + ' records, last 2 hrs) ---');
-    lines.push(pad('Time (UTC)',22) + ' ' + pad('Temp',8) + ' ' + pad('Dew Pt',8) + ' ' + pad('RH%',5) + ' ' + pad('Wind',18) + ' Type');
+    lines.push(pad('Time (UTC)', 22) + ' ' + pad('Temp', 8) + ' ' + pad('Dew Pt', 8) + ' ' + pad('RH%', 5) + ' ' + pad('Wind', 18) + ' Type');
     lines.push('-'.repeat(80));
     obs1.forEach(function(o) {
       const type = o.product || guessType(o);
-      lines.push(pad(formatTime(o.observation_time),22) + ' ' + pad(formatTemp(o,units),8) + ' ' + pad(formatDew(o,units),8) + ' ' + pad(o.relative_humidity != null ? o.relative_humidity+'%' : '—',5) + ' ' + pad(formatWind(o),18) + ' ' + type);
+      lines.push(pad(formatTime(o.observation_time), 22) + ' ' + pad(formatTemp(o, units), 8) + ' ' + pad(formatDew(o, units), 8) + ' ' + pad(o.relative_humidity != null ? o.relative_humidity + '%' : '—', 5) + ' ' + pad(formatWind(o), 18) + ' ' + type);
     });
     lines.push('');
 
     lines.push('--- 5-MIN / HOURLY METAR OBSERVATIONS (' + obs5.length + ' records, last 2 hrs) ---');
-    lines.push(pad('Time (UTC)',22) + ' ' + pad('Temp',8) + ' ' + pad('Dew Pt',8) + ' ' + pad('RH%',5) + ' ' + pad('Wind',18) + ' Type');
+    lines.push(pad('Time (UTC)', 22) + ' ' + pad('Temp', 8) + ' ' + pad('Dew Pt', 8) + ' ' + pad('RH%', 5) + ' ' + pad('Wind', 18) + ' Type');
     lines.push('-'.repeat(80));
     obs5.forEach(function(o) {
       const type = o.product || guessType(o);
-      lines.push(pad(formatTime(o.observation_time),22) + ' ' + pad(formatTemp(o,units),8) + ' ' + pad(formatDew(o,units),8) + ' ' + pad(o.relative_humidity != null ? o.relative_humidity+'%' : '—',5) + ' ' + pad(formatWind(o),18) + ' ' + type);
+      lines.push(pad(formatTime(o.observation_time), 22) + ' ' + pad(formatTemp(o, units), 8) + ' ' + pad(formatDew(o, units), 8) + ' ' + pad(o.relative_humidity != null ? o.relative_humidity + '%' : '—', 5) + ' ' + pad(formatWind(o), 18) + ' ' + type);
     });
     lines.push('');
     lines.push('=== END OF SNAPSHOT ===');
@@ -650,9 +637,7 @@
     }
 
     if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(text).then(onCopied).catch(function() {
-        fallbackCopy(text); onCopied();
-      });
+      navigator.clipboard.writeText(text).then(onCopied).catch(function() { fallbackCopy(text); onCopied(); });
     } else {
       fallbackCopy(text); onCopied();
     }
@@ -671,3 +656,4 @@
 </script>
 </body>
 </html>
+
