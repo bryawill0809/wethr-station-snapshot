@@ -223,7 +223,7 @@
       </div>
       <div class="card-body no-max">
         <table class="model-table">
-          <thead><tr><th>Model</th><th>Pacing High</th><th>WU Range</th><th>Delta</th></tr></thead>
+          <thead><tr><th>Model</th><th>Fcst High</th><th>High Time (Local)</th><th>Pacing High</th><th>WU Range</th><th>Delta</th></tr></thead>
           <tbody id="tbodyModelsTmrw"></tbody>
         </table>
       </div>
@@ -529,15 +529,17 @@
   function renderModelTable(tbodyId,countId,modelData,isTmrw){
     document.getElementById(countId).textContent=modelData.length+' models';
     if(!modelData.length){
-      var cols=isTmrw?4:6;
+      var cols=6;
       document.getElementById(tbodyId).innerHTML='<tr><td colspan="'+cols+'" style="color:var(--muted);padding:12px 0;font-family:\'JetBrains Mono\',monospace;font-size:0.75rem;">No forecast data available</td></tr>';
       return;
     }
     if(isTmrw){
-      // Tomorrow: Model | Pacing High | WU Range | Delta only
+      // Tomorrow: full 6 columns same as today
       document.getElementById(tbodyId).innerHTML=modelData.map(function(m){
         return '<tr>'
           +'<td class="m-name tmrw">'+m.model+'</td>'
+          +'<td class="m-high">'+(m.forecastHigh!=null?m.forecastHigh+'°F':'—')+'</td>'
+          +'<td class="m-time">'+m.highTimeLocal+'</td>'
           +'<td style="color:var(--text)">'+(m.pacingHigh!=null?m.pacingHigh+'°F':'—')+'</td>'
           +'<td style="color:var(--muted)">'+m.wuRange+'</td>'
           +'<td class="'+m.deltaClass+'">'+m.delta+'</td>'
@@ -603,19 +605,11 @@
     lines.push('');
 
     lines.push('--- '+dayLabel+' MODEL FORECAST PACING ('+store.modelData.length+' models) ---');
-    if(store.isTomorrow){
-      lines.push(pad('Model',22)+' '+pad('Pacing High',12)+' '+pad('WU Range',12)+' Delta');
-      lines.push('-'.repeat(65));
-      store.modelData.forEach(function(m){
-        lines.push(pad(m.model,22)+' '+pad(m.pacingHigh!=null?m.pacingHigh+'\u00b0F':'\u2014',12)+' '+pad(m.wuRange,12)+' '+m.delta);
-      });
-    } else {
-      lines.push(pad('Model',22)+' '+pad('Fcst High',10)+' '+pad('High Time',12)+' '+pad('Pacing',10)+' '+pad('WU Range',12)+' Delta');
+    lines.push(pad('Model',22)+' '+pad('Fcst High',10)+' '+pad('High Time',12)+' '+pad('Pacing',10)+' '+pad('WU Range',12)+' Delta');
     lines.push('-'.repeat(85));
-      store.modelData.forEach(function(m){
-        lines.push(pad(m.model,22)+' '+pad(m.forecastHigh!=null?m.forecastHigh+'\u00b0F':'\u2014',10)+' '+pad(m.highTimeLocal,12)+' '+pad(m.pacingHigh!=null?m.pacingHigh+'\u00b0F':'\u2014',10)+' '+pad(m.wuRange,12)+' '+m.delta);
-      });
-    }
+    store.modelData.forEach(function(m){
+      lines.push(pad(m.model,22)+' '+pad(m.forecastHigh!=null?m.forecastHigh+'\u00b0F':'\u2014',10)+' '+pad(m.highTimeLocal,12)+' '+pad(m.pacingHigh!=null?m.pacingHigh+'\u00b0F':'\u2014',10)+' '+pad(m.wuRange,12)+' '+m.delta);
+    });
     lines.push('');
 
     lines.push('--- 1-MINUTE OBSERVATIONS ('+store.obs1.length+' records, last 2 hrs) ---');
