@@ -208,7 +208,7 @@
 
     <div class="copy-section">
       <button class="copy-btn" id="copyTodayBtn" onclick="copyToClipboard('today')">
-        <span>📋</span><span id="copyTodayText">Copy Today's Data to Clipboard for AI</span>
+        <span>📋</span><span id="copyTodayText">📋 Re-copy to Clipboard</span>
       </button>
     </div>
   </div>
@@ -255,7 +255,7 @@
 
     <div class="copy-section">
       <button class="copy-btn tmrw-copy" id="copyTmrwBtn" onclick="copyToClipboard('tomorrow')">
-        <span>📋</span><span id="copyTmrwText">Copy Tomorrow's Data to Clipboard for AI</span>
+        <span>📋</span><span id="copyTmrwText">📋 Re-copy to Clipboard</span>
       </button>
     </div>
   </div>
@@ -489,7 +489,23 @@
         document.getElementById('todaySection').classList.add('visible');
       }
 
-      setStatus('✓ '+(isTomorrow?"Tomorrow":"Today")+': '+history.length+' obs, '+modelData.length+' models for '+station,'success');
+      // Auto-copy to clipboard immediately
+      try {
+        var clipText = buildClipboard(store);
+        if(navigator.clipboard&&navigator.clipboard.writeText){
+          navigator.clipboard.writeText(clipText).then(function(){
+            setStatus('✓ '+(isTomorrow?"Tomorrow":"Today")+': '+history.length+' obs, '+modelData.length+' models — copied to clipboard!','success');
+          }).catch(function(){
+            fallbackCopy(clipText);
+            setStatus('✓ '+(isTomorrow?"Tomorrow":"Today")+': '+history.length+' obs, '+modelData.length+' models — copied to clipboard!','success');
+          });
+        } else {
+          fallbackCopy(clipText);
+          setStatus('✓ '+(isTomorrow?"Tomorrow":"Today")+': '+history.length+' obs, '+modelData.length+' models — copied to clipboard!','success');
+        }
+      } catch(e){
+        setStatus('✓ '+(isTomorrow?"Tomorrow":"Today")+': '+history.length+' obs, '+modelData.length+' models for '+station,'success');
+      }
 
     } catch(err){
       setStatus('✗ '+err.message,'error');
@@ -640,7 +656,7 @@
     var text=buildClipboard(store);
     var btnId=isTomorrow?'copyTmrwBtn':'copyTodayBtn';
     var txtId=isTomorrow?'copyTmrwText':'copyTodayText';
-    var origLabel=isTomorrow?"Copy Tomorrow's Data to Clipboard for AI":"Copy Today's Data to Clipboard for AI";
+    var origLabel=isTomorrow?"📋 Re-copy to Clipboard":"📋 Re-copy to Clipboard";
 
     function onCopied(){
       var b=document.getElementById(btnId),t=document.getElementById(txtId);
@@ -659,4 +675,3 @@
 </script>
 </body>
 </html>
-
