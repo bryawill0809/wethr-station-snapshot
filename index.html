@@ -406,8 +406,12 @@
     var obsStart=new Date(nowUtc.getTime()-2*3600000).toISOString().slice(0,19)+'Z';
 
     try {
-      var [r1,r2,r3,r4]=await Promise.allSettled([
-        fetch(proxyUrl({endpoint:'observations',station_code:station,start_time:obsStart,end_time:obsEnd})),
+      // Fetch in two 1-hour chunks to maximize HF-METAR 1-min coverage
+      var midTime=new Date(nowUtc.getTime()-1*3600000).toISOString().slice(0,19)+'Z';
+
+      var [r1,r1b,r2,r3,r4]=await Promise.allSettled([
+        fetch(proxyUrl({endpoint:'observations',station_code:station,start_time:midTime,end_time:obsEnd})),
+        fetch(proxyUrl({endpoint:'observations',station_code:station,start_time:obsStart,end_time:midTime})),
         fetch(proxyUrl({endpoint:'observations',station_code:station,mode:'latest'})),
         fetch(proxyUrl({endpoint:'observations',station_code:station,mode:'wethr_high',logic:'wu'})),
         fetch(proxyUrl({endpoint:'forecasts',location_name:station,start_valid_time:fcstStartStr,end_valid_time:fcstEndStr})),
@@ -415,11 +419,18 @@
 
       var history=[],latest=null,wu=null,forecastRows=[],units='fahrenheit';
 
-      if(r1.status==='fulfilled'&&r1.value.ok){
-        var d=await r1.value.json();
-        history=Array.isArray(d)?d:(d.observations||[]);
-        if(history[0]) units=history[0].units||units;
+      // Merge both hourly chunks, deduplicate by observation_time
+      var seenTimes={};
+      function mergeObs(arr){
+        (Array.isArray(arr)?arr:(arr.observations||[])).forEach(function(o){
+          if(!seenTimes[o.observation_time]){
+            seenTimes[o.observation_time]=true;
+            history.push(o);
+          }
+        });
       }
+      if(r1.status==='fulfilled'&&r1.value.ok){ var d=await r1.value.json(); mergeObs(d); if(history[0]) units=history[0].units||units; }
+      if(r1b.status==='fulfilled'&&r1b.value.ok){ var d2=await r1b.value.json(); mergeObs(d2); }
       if(r2.status==='fulfilled'&&r2.value.ok){latest=await r2.value.json();units=latest.units||units;}
       if(r3.status==='fulfilled'&&r3.value.ok) wu=await r3.value.json();
       if(r4.status==='fulfilled'&&r4.value.ok){
@@ -593,6 +604,16 @@
       }
     }
     lines.push('');
+    // If tomorrow: show TODAY model pacing first, then tomorrow
+    if(store.isTomorrow && storeToday && storeToday.modelData && storeToday.modelData.length){
+      lines.push('--- TODAY MODEL FORECAST PACING ('+storeToday.modelData.length+' models) ---');
+      lines.push(pad('Model',22)+' '+pad('Fcst High',10)+' '+pad('High Time',12)+' '+pad('Pacing',10)+' '+pad('WU Range',12)+' Delta');
+      lines.push('-'.repeat(85));
+      storeToday.modelData.forEach(function(m){
+        lines.push(pad(m.model,22)+' '+pad(m.forecastHigh!=null?m.forecastHigh+'\u00b0F':'\u2014',10)+' '+pad(m.highTimeLocal,12)+' '+pad(m.pacingHigh!=null?m.pacingHigh+'\u00b0F':'\u2014',10)+' '+pad(m.wuRange,12)+' '+m.delta);
+      });
+      lines.push('');
+    }
 
     lines.push('--- '+dayLabel+' MODEL FORECAST PACING ('+store.modelData.length+' models) ---');
     lines.push(pad('Model',22)+' '+pad('Fcst High',10)+' '+pad('High Time',12)+' '+pad('Pacing',10)+' '+pad('WU Range',12)+' Delta');
@@ -602,16 +623,6 @@
     });
     lines.push('');
 
-    // If tomorrow, also include today's model pacing table for reference
-    if(store.isTomorrow && storeToday && storeToday.modelData && storeToday.modelData.length){
-      lines.push('--- TODAY MODEL FORECAST PACING ('+storeToday.modelData.length+' models) ---');
-      lines.push(pad('Model',22)+' '+pad('Fcst High',10)+' '+pad('High Time',12)+' '+pad('Pacing',10)+' '+pad('WU Range',12)+' Delta');
-      lines.push('-'.repeat(85));
-      storeToday.modelData.forEach(function(m){
-        lines.push(pad(m.model,22)+' '+pad(m.forecastHigh!=null?m.forecastHigh+'°F':'—',10)+' '+pad(m.highTimeLocal,12)+' '+pad(m.pacingHigh!=null?m.pacingHigh+'°F':'—',10)+' '+pad(m.wuRange,12)+' '+m.delta);
-      });
-      lines.push('');
-    }
 
     lines.push('--- ALL OBSERVATIONS — LAST 2 HRS (1min / 5min / Hourly) ('+store.history.length+' records) ---');
     lines.push(pad('Time (UTC)',22)+' '+pad('Temp',8)+' '+pad('Dew Pt',8)+' '+pad('RH%',5)+' '+pad('Wind',18)+' Type');
@@ -651,3 +662,4 @@
 </script>
 </body>
 </html>
+
