@@ -1,17 +1,21 @@
 export default async (request, context) => {
-  // Only allow GET requests
   if (request.method !== 'GET') {
     return new Response('Method not allowed', { status: 405 });
   }
 
-  // Grab the query string from the incoming request
   const url = new URL(request.url);
-  const params = url.searchParams.toString();
+  const params = url.searchParams;
 
-  // Build the real wethr.net API URL
-  const upstream = `https://wethr.net/api/v2/observations.php${params ? '?' + params : ''}`;
+  // Route to correct wethr.net endpoint based on ?endpoint= param
+  const endpoint = params.get('endpoint') || 'observations';
+  params.delete('endpoint');
 
-  // Fetch from wethr.net using the key stored in Netlify env vars (never exposed to browser)
+  const upstreamPath = endpoint === 'forecasts'
+    ? 'https://wethr.net/api/v2/forecasts.php'
+    : 'https://wethr.net/api/v2/observations.php';
+
+  const upstream = upstreamPath + '?' + params.toString();
+
   const response = await fetch(upstream, {
     headers: {
       'Authorization': 'Bearer ' + Deno.env.get('WETHR_API_KEY'),
