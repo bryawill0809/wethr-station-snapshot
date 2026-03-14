@@ -7,17 +7,9 @@
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #0a0e17;
-    --surface: #111827;
-    --surface2: #1a2235;
-    --border: #1e2d45;
-    --accent: #00d4ff;
-    --accent2: #ff6b35;
-    --green: #00ff9d;
-    --text: #e2e8f0;
-    --muted: #64748b;
-    --danger: #ff4757;
-    --yellow: #ffd166;
+    --bg: #0a0e17; --surface: #111827; --surface2: #1a2235; --border: #1e2d45;
+    --accent: #00d4ff; --accent2: #ff6b35; --green: #00ff9d; --text: #e2e8f0;
+    --muted: #64748b; --danger: #ff4757; --yellow: #ffd166; --purple: #a78bfa;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { background: var(--bg); color: var(--text); font-family: 'Syne', sans-serif; min-height: 100vh; overflow-x: hidden; }
@@ -30,10 +22,11 @@
   header { margin-bottom: 40px; border-bottom: 1px solid var(--border); padding-bottom: 24px; }
   .logo-row { display: flex; align-items: center; gap: 12px; margin-bottom: 6px; }
   .logo-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 12px var(--accent); animation: pulse 2s ease-in-out infinite; }
-  @keyframes pulse { 0%,100% { opacity:1; box-shadow: 0 0 12px var(--accent); } 50% { opacity:0.6; box-shadow: 0 0 6px var(--accent); } }
+  @keyframes pulse { 0%,100%{opacity:1;box-shadow:0 0 12px var(--accent);}50%{opacity:0.6;box-shadow:0 0 6px var(--accent);} }
   h1 { font-size: 1.7rem; font-weight: 800; letter-spacing: -0.5px; color: #fff; }
   h1 span { color: var(--accent); }
   .subtitle { font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; }
+
   .config-panel { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin-bottom: 24px; }
   .config-panel h2 { font-size: 0.7rem; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.15em; text-transform: uppercase; color: var(--accent); margin-bottom: 20px; }
   .field { display: flex; flex-direction: column; gap: 6px; }
@@ -43,70 +36,87 @@
   .field select option { background: var(--surface); color: var(--text); }
   .select-wrapper { position: relative; }
   .select-wrapper::after { content: '▾'; position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: var(--accent); pointer-events: none; font-size: 0.9rem; }
-  .fetch-btn { width: 100%; margin-top: 20px; padding: 14px 24px; background: transparent; border: 1px solid var(--accent); border-radius: 8px; color: var(--accent); font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 10px; }
+
+  .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 20px; }
+  .fetch-btn { width: 100%; padding: 14px 24px; background: transparent; border: 1px solid var(--accent); border-radius: 8px; color: var(--accent); font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
   .fetch-btn:hover { background: rgba(0,212,255,0.08); box-shadow: 0 0 20px rgba(0,212,255,0.15); }
   .fetch-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-  .fetch-btn .spinner { width: 14px; height: 14px; border: 2px solid rgba(0,212,255,0.3); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; display: none; }
+  .fetch-btn.tmrw { border-color: var(--purple); color: var(--purple); }
+  .fetch-btn.tmrw:hover { background: rgba(167,139,250,0.08); box-shadow: 0 0 20px rgba(167,139,250,0.15); }
+  .fetch-btn .spinner { width: 13px; height: 13px; border: 2px solid rgba(0,212,255,0.3); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; display: none; }
+  .fetch-btn.tmrw .spinner { border-color: rgba(167,139,250,0.3); border-top-color: var(--purple); }
   .fetch-btn.loading .spinner { display: block; }
   .fetch-btn.loading .btn-text { opacity: 0.6; }
   @keyframes spin { to { transform: rotate(360deg); } }
+
   .status-bar { font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; color: var(--muted); padding: 10px 0; min-height: 30px; }
   .status-bar.error { color: var(--danger); }
   .status-bar.success { color: var(--green); }
-  .data-section { display: none; flex-direction: column; gap: 16px; }
-  .data-section.visible { display: flex; }
+
+  .day-section { display: none; flex-direction: column; gap: 16px; margin-bottom: 32px; }
+  .day-section.visible { display: flex; }
+  .day-label { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; letter-spacing: 0.18em; text-transform: uppercase; padding: 6px 0 10px; border-bottom: 1px solid var(--border); margin-bottom: 4px; }
+  .day-label.today { color: var(--accent); }
+  .day-label.tomorrow { color: var(--purple); }
+
   .data-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
   .card-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border-bottom: 1px solid var(--border); background: var(--surface2); }
   .card-title { font-size: 0.68rem; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.15em; text-transform: uppercase; color: var(--accent); display: flex; align-items: center; gap: 8px; }
+  .card-title.tmrw-title { color: var(--purple); }
   .record-count { font-size: 0.65rem; background: rgba(0,212,255,0.1); border: 1px solid rgba(0,212,255,0.2); border-radius: 4px; padding: 2px 8px; color: var(--accent); }
+  .record-count.tmrw { background: rgba(167,139,250,0.1); border-color: rgba(167,139,250,0.2); color: var(--purple); }
   .card-body { padding: 16px 18px; max-height: 320px; overflow-y: auto; }
   .card-body.no-max { max-height: none; }
   .card-body::-webkit-scrollbar { width: 4px; }
   .card-body::-webkit-scrollbar-track { background: transparent; }
   .card-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-  /* pacing grid */
+
   .pacing-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(155px, 1fr)); gap: 12px; }
   .pacing-item { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; }
   .pacing-label { font-family: 'JetBrains Mono', monospace; font-size: 0.62rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
   .pacing-value { font-family: 'JetBrains Mono', monospace; font-size: 1.15rem; font-weight: 700; color: var(--green); }
   .pacing-value.na { color: var(--muted); font-size: 0.8rem; }
-  /* obs table */
+
+  .model-table { width: 100%; border-collapse: collapse; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; }
+  .model-table th { text-align: left; color: var(--muted); font-weight: 500; font-size: 0.65rem; letter-spacing: 0.08em; text-transform: uppercase; padding: 0 12px 10px 0; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  .model-table td { padding: 8px 12px 8px 0; border-bottom: 1px solid rgba(30,45,69,0.5); vertical-align: middle; white-space: nowrap; }
+  .model-table tr:last-child td { border-bottom: none; }
+  .m-name { color: var(--accent); font-weight: 700; }
+  .m-name.tmrw { color: var(--purple); }
+  .m-high { color: var(--accent2); font-weight: 700; }
+  .m-time { color: var(--muted); font-size: 0.7rem; }
+  .pace-pos { color: var(--green); }
+  .pace-neg { color: var(--danger); }
+  .pace-zero { color: var(--yellow); }
+
   .obs-table { width: 100%; border-collapse: collapse; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; }
   .obs-table th { text-align: left; color: var(--muted); font-weight: 500; font-size: 0.65rem; letter-spacing: 0.08em; text-transform: uppercase; padding: 0 8px 10px 0; border-bottom: 1px solid var(--border); }
   .obs-table td { padding: 7px 8px 7px 0; color: var(--text); border-bottom: 1px solid rgba(30,45,69,0.5); vertical-align: middle; }
   .obs-table tr:last-child td { border-bottom: none; }
   .temp-val { color: var(--accent2); font-weight: 700; }
   .time-val { color: var(--muted); }
-  /* model table */
-  .model-table { width: 100%; border-collapse: collapse; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; }
-  .model-table th { text-align: left; color: var(--muted); font-weight: 500; font-size: 0.65rem; letter-spacing: 0.08em; text-transform: uppercase; padding: 0 12px 10px 0; border-bottom: 1px solid var(--border); white-space: nowrap; }
-  .model-table td { padding: 8px 12px 8px 0; border-bottom: 1px solid rgba(30,45,69,0.5); vertical-align: middle; white-space: nowrap; }
-  .model-table tr:last-child td { border-bottom: none; }
-  .model-name { color: var(--accent); font-weight: 700; }
-  .model-high { color: var(--accent2); font-weight: 700; }
-  .model-time { color: var(--muted); font-size: 0.7rem; }
-  .model-pace { color: var(--text); }
-  .pace-pos { color: var(--green); }
-  .pace-neg { color: var(--danger); }
-  .pace-zero { color: var(--yellow); }
-  /* tags */
   .tag { display: inline-flex; align-items: center; padding: 2px 6px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 0.6rem; letter-spacing: 0.05em; text-transform: uppercase; }
   .tag-metar { background: rgba(0,212,255,0.1); color: var(--accent); border: 1px solid rgba(0,212,255,0.2); }
   .tag-hf { background: rgba(255,107,53,0.1); color: var(--accent2); border: 1px solid rgba(255,107,53,0.2); }
   .tag-speci { background: rgba(255,71,87,0.1); color: var(--danger); border: 1px solid rgba(255,71,87,0.2); }
-  /* copy */
-  .copy-section { margin-top: 8px; }
-  .copy-btn { width: 100%; padding: 16px 24px; background: rgba(0,255,157,0.05); border: 1px solid var(--green); border-radius: 10px; color: var(--green); font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 10px; }
+
+  .copy-section { margin-top: 4px; }
+  .copy-btn { width: 100%; padding: 14px 24px; background: rgba(0,255,157,0.05); border: 1px solid var(--green); border-radius: 10px; color: var(--green); font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 10px; }
   .copy-btn:hover { background: rgba(0,255,157,0.12); box-shadow: 0 0 24px rgba(0,255,157,0.15); }
   .copy-btn.copied { background: rgba(0,255,157,0.15); }
-  @media (max-width: 600px) { h1 { font-size: 1.3rem; } }
+  .copy-btn.tmrw-copy { background: rgba(167,139,250,0.05); border-color: var(--purple); color: var(--purple); }
+  .copy-btn.tmrw-copy:hover { background: rgba(167,139,250,0.12); box-shadow: 0 0 24px rgba(167,139,250,0.15); }
+  .copy-btn.tmrw-copy.copied { background: rgba(167,139,250,0.15); }
+
+  @media (max-width: 600px) { h1 { font-size: 1.3rem; } .btn-row { grid-template-columns: 1fr; } }
 </style>
 </head>
 <body>
 <div class="container">
+
   <header>
     <div class="logo-row"><div class="logo-dot"></div><h1>Wethr<span>.net</span> Station Snapshot</h1></div>
-    <div class="subtitle">Pacing + Model Data + 2-hr Observations — API v2</div>
+    <div class="subtitle">Pacing · Model Forecasts · 2-hr Observations — API v2</div>
   </header>
 
   <div class="config-panel">
@@ -139,456 +149,518 @@
         </select>
       </div>
     </div>
-    <button class="fetch-btn" id="fetchBtn" onclick="fetchAll()">
-      <div class="spinner"></div>
-      <span class="btn-text">⬇ Fetch Station Data</span>
-    </button>
+    <div class="btn-row">
+      <button class="fetch-btn" id="fetchTodayBtn" onclick="fetchDay('today')">
+        <div class="spinner"></div><span class="btn-text">📅 Today's Data</span>
+      </button>
+      <button class="fetch-btn tmrw" id="fetchTmrwBtn" onclick="fetchDay('tomorrow')">
+        <div class="spinner"></div><span class="btn-text">🔭 Tomorrow's Data</span>
+      </button>
+    </div>
   </div>
 
   <div class="status-bar" id="statusBar"></div>
 
-  <div class="data-section" id="dataSection">
+  <!-- TODAY SECTION -->
+  <div class="day-section" id="todaySection">
+    <div class="day-label today">📅 Today</div>
 
-    <!-- Current Conditions -->
     <div class="data-card">
       <div class="card-header"><div class="card-title">📊 Current Conditions &amp; Pacing</div></div>
-      <div class="card-body"><div class="pacing-grid" id="pacingGrid"></div></div>
+      <div class="card-body"><div class="pacing-grid" id="pacingGridToday"></div></div>
     </div>
 
-    <!-- Model Table -->
     <div class="data-card">
       <div class="card-header">
-        <div class="card-title">🌐 Model Forecast Pacing <span class="record-count" id="modelCount">—</span></div>
+        <div class="card-title">🌐 Today — Model Forecast Pacing <span class="record-count" id="modelCountToday">—</span></div>
       </div>
       <div class="card-body no-max">
         <table class="model-table">
-          <thead><tr>
-            <th>Model</th>
-            <th>Fcst High</th>
-            <th>High Time (Local)</th>
-            <th>Pacing High</th>
-            <th>WU Range</th>
-            <th>Delta</th>
-          </tr></thead>
-          <tbody id="tbodyModels"></tbody>
+          <thead><tr><th>Model</th><th>Fcst High</th><th>High Time (Local)</th><th>Pacing High</th><th>WU Range</th><th>Delta</th></tr></thead>
+          <tbody id="tbodyModelsToday"></tbody>
         </table>
       </div>
     </div>
 
-    <!-- 1-min -->
     <div class="data-card">
       <div class="card-header">
-        <div class="card-title">⚡ 1-Minute Observations — Last 2 hrs <span class="record-count" id="count1min">—</span></div>
+        <div class="card-title">⚡ 1-Min Observations — Last 2 hrs <span class="record-count" id="count1minToday">—</span></div>
       </div>
       <div class="card-body">
         <table class="obs-table">
           <thead><tr><th>Time (UTC)</th><th>Temp</th><th>Dew Pt</th><th>RH%</th><th>Wind</th><th>Type</th></tr></thead>
-          <tbody id="tbody1min"></tbody>
+          <tbody id="tbody1minToday"></tbody>
         </table>
       </div>
     </div>
 
-    <!-- 5-min -->
     <div class="data-card">
       <div class="card-header">
-        <div class="card-title">🕐 5-Min / Hourly METAR — Last 2 hrs <span class="record-count" id="count5min">—</span></div>
+        <div class="card-title">🕐 5-Min / Hourly METAR — Last 2 hrs <span class="record-count" id="count5minToday">—</span></div>
       </div>
       <div class="card-body">
         <table class="obs-table">
           <thead><tr><th>Time (UTC)</th><th>Temp</th><th>Dew Pt</th><th>RH%</th><th>Wind</th><th>Type</th></tr></thead>
-          <tbody id="tbody5min"></tbody>
+          <tbody id="tbody5minToday"></tbody>
         </table>
       </div>
     </div>
 
     <div class="copy-section">
-      <button class="copy-btn" id="copyBtn" onclick="copyToClipboard()">
-        <span>📋</span><span id="copyText">Copy All Data to Clipboard for AI</span>
+      <button class="copy-btn" id="copyTodayBtn" onclick="copyToClipboard('today')">
+        <span>📋</span><span id="copyTodayText">Copy Today's Data to Clipboard for AI</span>
       </button>
     </div>
-
   </div>
+
+  <!-- TOMORROW SECTION -->
+  <div class="day-section" id="tmrwSection">
+    <div class="day-label tomorrow">🔭 Tomorrow</div>
+
+    <div class="data-card">
+      <div class="card-header">
+        <div class="card-title tmrw-title">🌐 Tomorrow — Model Pacing Details <span class="record-count tmrw" id="modelCountTmrw">—</span></div>
+      </div>
+      <div class="card-body no-max">
+        <table class="model-table">
+          <thead><tr><th>Model</th><th>Pacing High</th><th>WU Range</th><th>Delta</th></tr></thead>
+          <tbody id="tbodyModelsTmrw"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="data-card">
+      <div class="card-header">
+        <div class="card-title tmrw-title">⚡ 1-Min Observations — Last 2 hrs <span class="record-count tmrw" id="count1minTmrw">—</span></div>
+      </div>
+      <div class="card-body">
+        <table class="obs-table">
+          <thead><tr><th>Time (UTC)</th><th>Temp</th><th>Dew Pt</th><th>RH%</th><th>Wind</th><th>Type</th></tr></thead>
+          <tbody id="tbody1minTmrw"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="data-card">
+      <div class="card-header">
+        <div class="card-title tmrw-title">🕐 5-Min / Hourly METAR — Last 2 hrs <span class="record-count tmrw" id="count5minTmrw">—</span></div>
+      </div>
+      <div class="card-body">
+        <table class="obs-table">
+          <thead><tr><th>Time (UTC)</th><th>Temp</th><th>Dew Pt</th><th>RH%</th><th>Wind</th><th>Type</th></tr></thead>
+          <tbody id="tbody5minTmrw"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="copy-section">
+      <button class="copy-btn tmrw-copy" id="copyTmrwBtn" onclick="copyToClipboard('tomorrow')">
+        <span>📋</span><span id="copyTmrwText">Copy Tomorrow's Data to Clipboard for AI</span>
+      </button>
+    </div>
+  </div>
+
 </div>
-
 <script>
-  let fetchedData = null;
-  const PROXY = '/api/proxy';
+  var storeToday = null, storeTmrw = null;
+  var PROXY = '/api/proxy';
+  var MODELS = ['GFS','HRRR','NAM','NBM','GEFS','ECMWF-IFS','ICON','GEM-GDPS','JMA','UKMO','ARPEGE','RAP','GFS-MOS','NBS-MOS','NAM-MOS','LAV-MOS','GEM-HRDPS','NAM4KM'];
+  var TZ_OFFSETS = {
+    'KLAX':-8,'KSFO':-8,'KSEA':-8,'KLAS':-8,'KPHX':-7,
+    'KMDW':-6,'KAUS':-6,'KDFW':-6,'KHOU':-6,'KMSP':-6,'KBNA':-6,'KMSY':-6,'KOKC':-6,'KSAT':-6,
+    'KATL':-5,'KBOS':-5,'KCLT':-5,'KDCA':-5,'KDTW':-5,'KJAX':-5,'KMIA':-5,'KLGA':-5,'KPHL':-5,'KNYC':-5
+  };
 
-  const MODELS = ['GFS','HRRR','NAM','NBM','GEFS','ECMWF-IFS','ICON','GEM-GDPS','JMA','UKMO','ARPEGE','RAP','GFS-MOS','NBS-MOS','NAM-MOS','LAV-MOS','GEM-HRDPS','NAM4KM'];
+  function proxyUrl(p){ return PROXY+'?'+new URLSearchParams(p).toString(); }
 
-  function setStatus(msg, type) {
-    const el = document.getElementById('statusBar');
-    el.textContent = msg;
-    el.className = 'status-bar ' + (type || '');
+  function setStatus(msg,type){
+    var el=document.getElementById('statusBar');
+    el.textContent=msg; el.className='status-bar '+(type||'');
   }
 
-  function proxyUrl(params) {
-    return PROXY + '?' + new URLSearchParams(params).toString();
+  function formatTime(t){
+    if(!t) return '—';
+    return String(t).replace('T',' ').replace('Z','').substring(0,19)+' UTC';
   }
 
-  function formatTime(t) {
-    if (!t) return '—';
-    return String(t).replace('T',' ').replace('Z','').substring(0,19) + ' UTC';
+  function formatTemp(obs,units){
+    var v=obs.temperature_display!=null?obs.temperature_display:obs.temperature_f!=null?obs.temperature_f:obs.temperature;
+    if(v==null) return '—';
+    return v+(units==='fahrenheit'?'°F':'°C');
   }
 
-  function formatTemp(obs, units) {
-    const v = obs.temperature_display != null ? obs.temperature_display : obs.temperature_f != null ? obs.temperature_f : obs.temperature;
-    if (v == null) return '—';
-    return v + (units === 'fahrenheit' ? '°F' : '°C');
+  function formatDew(obs,units){
+    var dp=obs.dew_point;
+    if(dp==null) return '—';
+    return units==='fahrenheit'?Math.round(dp*9/5+32)+'°F':dp+'°C';
   }
 
-  function formatDew(obs, units) {
-    const dp = obs.dew_point;
-    if (dp == null) return '—';
-    if (units === 'fahrenheit') return Math.round(dp * 9/5 + 32) + '°F';
-    return dp + '°C';
+  function formatWind(obs){
+    if(obs.wind_speed==null) return '—';
+    return (obs.wind_direction||'—')+' '+obs.wind_speed+(obs.wind_gust?' G'+obs.wind_gust:'')+' kt';
   }
 
-  function formatWind(obs) {
-    if (obs.wind_speed == null) return '—';
-    return (obs.wind_direction||'—') + ' ' + obs.wind_speed + (obs.wind_gust ? ' G'+obs.wind_gust : '') + ' kt';
+  function guessType(obs){
+    var m=new Date((obs.observation_time||'').replace(' ','T').replace(/Z?$/,'Z')).getMinutes();
+    if(m===53||m===0||m===20||m===50) return 'METAR';
+    return m%5===0?'HF-METAR-5min':'HF-METAR-1min';
   }
 
-  function guessType(obs) {
-    const m = new Date((obs.observation_time||'').replace(' ','T').replace(/Z?$/,'Z')).getMinutes();
-    if (m===53||m===0||m===20||m===50) return 'METAR';
-    if (m%5===0) return 'HF-METAR-5min';
-    return 'HF-METAR-1min';
-  }
-
-  function getTagClass(type) {
-    if (type.includes('1min')) return 'tag tag-hf';
-    if (type.includes('5min')) return 'tag tag-metar';
-    if (type.includes('SPECI')) return 'tag tag-speci';
+  function getTagClass(t){
+    if(t.includes('1min')) return 'tag tag-hf';
+    if(t.includes('5min')) return 'tag tag-metar';
+    if(t.includes('SPECI')) return 'tag tag-speci';
     return 'tag tag-metar';
   }
 
-  function is1Min(obs) {
-    return new Date((obs.observation_time||'').replace(' ','T').replace(/Z?$/,'Z')).getMinutes() % 5 !== 0;
+  function is1Min(obs){
+    return new Date((obs.observation_time||'').replace(' ','T').replace(/Z?$/,'Z')).getMinutes()%5!==0;
   }
 
-  function buildObsRow(obs, units) {
-    const type = obs.product || guessType(obs);
+  function buildObsRow(obs,units){
+    var type=obs.product||guessType(obs);
     return '<tr>'
-      + '<td class="time-val">'+formatTime(obs.observation_time)+'</td>'
-      + '<td class="temp-val">'+formatTemp(obs,units)+'</td>'
-      + '<td>'+formatDew(obs,units)+'</td>'
-      + '<td>'+(obs.relative_humidity!=null?obs.relative_humidity+'%':'—')+'</td>'
-      + '<td>'+formatWind(obs)+'</td>'
-      + '<td><span class="'+getTagClass(type)+'">'+type+'</span></td>'
-      + '</tr>';
+      +'<td class="time-val">'+formatTime(obs.observation_time)+'</td>'
+      +'<td class="temp-val">'+formatTemp(obs,units)+'</td>'
+      +'<td>'+formatDew(obs,units)+'</td>'
+      +'<td>'+(obs.relative_humidity!=null?obs.relative_humidity+'%':'—')+'</td>'
+      +'<td>'+formatWind(obs)+'</td>'
+      +'<td><span class="'+getTagClass(type)+'">'+type+'</span></td>'
+      +'</tr>';
   }
 
-  // Convert UTC valid_time to local time string given station timezone offset (hours)
-  function utcToLocalTimeStr(utcStr, tzOffsetHours) {
-    if (!utcStr) return '—';
-    const d = new Date(utcStr.replace(' ','T').replace(/Z?$/,'Z'));
-    const local = new Date(d.getTime() + tzOffsetHours * 3600 * 1000);
-    let h = local.getUTCHours();
-    const min = local.getUTCMinutes();
-    const ampm = h >= 12 ? 'PM' : 'AM';
-    h = h % 12 || 12;
-    return h + (min > 0 ? ':' + String(min).padStart(2,'0') : '') + ' ' + ampm;
+  function utcToLocalTimeStr(utcStr,tzOff){
+    if(!utcStr) return '—';
+    var d=new Date(utcStr.replace(' ','T').replace(/Z?$/,'Z'));
+    var local=new Date(d.getTime()+tzOff*3600000);
+    var h=local.getUTCHours(),min=local.getUTCMinutes();
+    var ampm=h>=12?'PM':'AM';
+    h=h%12||12;
+    return h+(min>0?':'+String(min).padStart(2,'0'):'')+' '+ampm;
   }
 
-  // Get timezone offset hours for a station (approximate, using standard time)
-  const TZ_OFFSETS = {
-    'KLAX':-8,'KSFO':-8,'KSEA':-8,'KLAS':-8,
-    'KPHX':-7,
-    'KMDW':-6,'KAUS':-6,'KDFW':-6,'KHOU':-6,'KMSP':-6,'KBNA':-6,'KMSY':-6,'KOKC':-6,'KSAT':-6,
-    'KATL':-5,'KBOS':-5,'KCLT':-5,'KDCA':-5,'KDTW':-5,'KJAX':-5,'KMIA':-5,'KLGA':-5,'KPHL':-5,'KNYC':-5,
-  };
+  function getLocalDateStr(nowUtc,tzOff,daysAhead){
+    var d=new Date(nowUtc.getTime()+tzOff*3600000+(daysAhead||0)*86400000);
+    return d.toISOString().slice(0,10);
+  }
 
-  // Process forecast data: group by model, find max temp_f per model for today
-  function processForecasts(forecastRows, station, wuHigh, wuLow) {
-    const tzOff = TZ_OFFSETS[station] || -5;
-    // Today's date in station local time
-    const nowUtc = new Date();
-    const nowLocal = new Date(nowUtc.getTime() + tzOff * 3600 * 1000);
-    const todayStr = nowLocal.toISOString().slice(0,10);
-
-    // Group by model, keep only latest run per model
-    const modelMap = {};
-    forecastRows.forEach(function(row) {
-      // Filter to today's valid times only
-      const vt = new Date(row.valid_time.replace(' ','T').replace(/Z?$/,'Z'));
-      const vtLocal = new Date(vt.getTime() + tzOff * 3600 * 1000);
-      const vtDateStr = vtLocal.toISOString().slice(0,10);
-      if (vtDateStr !== todayStr) return;
-
-      const model = row.model;
-      if (!modelMap[model]) modelMap[model] = { model, runTime: row.run_time, rows: [] };
-      // Keep latest run_time per model
-      if (row.run_time > modelMap[model].runTime) {
-        modelMap[model].runTime = row.run_time;
-        modelMap[model].rows = [];
-      }
-      if (row.run_time === modelMap[model].runTime) {
-        modelMap[model].rows.push(row);
-      }
+  function processForecasts(rows,station,targetDateStr,nowUtc,wuHigh,wuLow,isTomorrow){
+    var tzOff=TZ_OFFSETS[station]||-5;
+    var modelMap={};
+    rows.forEach(function(row){
+      var vt=new Date(row.valid_time.replace(' ','T').replace(/Z?$/,'Z'));
+      var vtLocal=new Date(vt.getTime()+tzOff*3600000);
+      if(vtLocal.toISOString().slice(0,10)!==targetDateStr) return;
+      var model=row.model;
+      if(!modelMap[model]) modelMap[model]={model:model,runTime:row.run_time,rows:[]};
+      if(row.run_time>modelMap[model].runTime){modelMap[model].runTime=row.run_time;modelMap[model].rows=[];}
+      if(row.run_time===modelMap[model].runTime) modelMap[model].rows.push(row);
     });
 
-    // For each model, find max temp_f and its valid_time
-    const results = [];
-    Object.values(modelMap).forEach(function(m) {
-      let maxTemp = null, maxTime = null, maxPacingTemp = null;
-      m.rows.forEach(function(row) {
-        const tf = row.temperature_f;
-        if (tf != null) {
-          if (maxTemp === null || tf > maxTemp) {
-            maxTemp = tf;
-            maxTime = row.valid_time;
-          }
-          // Pacing: find max temp up to now
-          const vt = new Date(row.valid_time.replace(' ','T').replace(/Z?$/,'Z'));
-          if (vt <= nowUtc) {
-            if (maxPacingTemp === null || tf > maxPacingTemp) maxPacingTemp = tf;
-          }
+    var results=[];
+    Object.values(modelMap).forEach(function(m){
+      var maxTemp=null,maxTime=null,maxPacing=null;
+      m.rows.forEach(function(row){
+        var tf=row.temperature_f;
+        if(tf==null) return;
+        if(maxTemp===null||tf>maxTemp){maxTemp=tf;maxTime=row.valid_time;}
+        // pacing: for tomorrow we use ALL rows (full day hasn't happened yet, so the forecast itself IS the pace)
+        // for today we only count rows up to now
+        var vt=new Date(row.valid_time.replace(' ','T').replace(/Z?$/,'Z'));
+        if(isTomorrow || vt<=nowUtc){
+          if(maxPacing===null||tf>maxPacing) maxPacing=tf;
         }
       });
-      if (maxTemp === null) return;
+      if(maxTemp===null) return;
 
-      // Extract run hour label e.g. "12Z"
-      const runHour = m.runTime ? (new Date(m.runTime.replace(' ','T').replace(/Z?$/,'Z')).getUTCHours() + 'Z') : '';
-      const modelLabel = m.model + (runHour ? ' (' + runHour + ')' : '');
+      var runHour=m.runTime?new Date(m.runTime.replace(' ','T').replace(/Z?$/,'Z')).getUTCHours()+'Z':'';
+      var modelLabel=m.model+(runHour?' ('+runHour+')':'');
+      var highTimeLocal=utcToLocalTimeStr(maxTime,tzOff);
 
-      // High time in local
-      const highTimeLocal = utcToLocalTimeStr(maxTime, tzOff);
-
-      // Pacing delta vs WU range
-      const pacing = maxPacingTemp !== null ? Math.round(maxPacingTemp * 10) / 10 : null;
-      let deltaStr = '—';
-      let deltaClass = '';
-      if (pacing !== null && wuHigh !== null && wuLow !== null) {
-        const dLow = Math.round((wuLow - pacing) * 10) / 10;
-        const dHigh = Math.round((wuHigh - pacing) * 10) / 10;
-        const sign = function(n) { return n >= 0 ? '+' : ''; };
-        deltaStr = sign(dLow) + dLow + ' to ' + sign(dHigh) + dHigh;
-        // Color: if model is above range = red (negative delta), below = green (positive), within = yellow
-        if (dHigh < 0) deltaClass = 'pace-neg';
-        else if (dLow > 0) deltaClass = 'pace-pos';
-        else deltaClass = 'pace-zero';
+      var deltaStr='—',deltaClass='';
+      if(maxPacing!==null&&wuHigh!==null&&wuLow!==null){
+        var dLow=Math.round((wuLow-maxPacing)*10)/10;
+        var dHigh=Math.round((wuHigh-maxPacing)*10)/10;
+        var sign=function(n){return n>=0?'+':''};
+        deltaStr=sign(dLow)+dLow+' to '+sign(dHigh)+dHigh;
+        deltaClass=dHigh<0?'pace-neg':dLow>0?'pace-pos':'pace-zero';
       }
 
       results.push({
-        model: modelLabel,
-        forecastHigh: Math.round(maxTemp * 10) / 10,
-        highTimeLocal,
-        pacingHigh: pacing,
-        wuRange: wuHigh !== null ? wuLow + '–' + wuHigh + '°F' : '—',
-        delta: deltaStr,
-        deltaClass,
+        model:modelLabel,
+        forecastHigh:Math.round(maxTemp*10)/10,
+        highTimeLocal:highTimeLocal,
+        pacingHigh:maxPacing!==null?Math.round(maxPacing*10)/10:null,
+        wuRange:wuHigh!==null?wuLow+'–'+wuHigh+'°F':'—',
+        delta:deltaStr,
+        deltaClass:deltaClass
       });
     });
 
-    // Sort by MODELS order, then alphabetically for any extras
-    results.sort(function(a,b) {
-      const ai = MODELS.findIndex(function(m) { return a.model.startsWith(m); });
-      const bi = MODELS.findIndex(function(m) { return b.model.startsWith(m); });
-      const av = ai === -1 ? 999 : ai;
-      const bv = bi === -1 ? 999 : bi;
-      return av - bv;
+    results.sort(function(a,b){
+      var ai=MODELS.findIndex(function(m){return a.model.startsWith(m);});
+      var bi=MODELS.findIndex(function(m){return b.model.startsWith(m);});
+      return (ai===-1?999:ai)-(bi===-1?999:bi);
     });
-
     return results;
   }
 
-  async function fetchAll() {
-    const station = document.getElementById('stationSelect').value;
-    const btn = document.getElementById('fetchBtn');
-    btn.disabled = true;
-    btn.classList.add('loading');
-    btn.querySelector('.btn-text').textContent = 'Fetching…';
-    document.getElementById('dataSection').classList.remove('visible');
-    setStatus('Fetching observations, pacing & model data…');
+  async function fetchDay(day){
+    var isTomorrow=day==='tomorrow';
+    var station=document.getElementById('stationSelect').value;
+    var btnId=isTomorrow?'fetchTmrwBtn':'fetchTodayBtn';
+    var btn=document.getElementById(btnId);
+    btn.disabled=true; btn.classList.add('loading');
+    btn.querySelector('.btn-text').textContent='Fetching…';
+    setStatus('Fetching '+(isTomorrow?"tomorrow's":"today's")+' data for '+station+'…');
 
-    const now = new Date();
-    const twoHoursAgo = new Date(now.getTime() - 2*60*60*1000);
-    const end = now.toISOString().slice(0,19)+'Z';
-    const start = twoHoursAgo.toISOString().slice(0,19)+'Z';
+    var tzOff=TZ_OFFSETS[station]||-5;
+    var nowUtc=new Date();
+    var targetDateStr=getLocalDateStr(nowUtc,tzOff,isTomorrow?1:0);
 
-    // Forecast window: start of today UTC to +36 hrs
-    const tzOff = TZ_OFFSETS[station] || -5;
-    const todayLocalMidnight = new Date(now.getTime() + tzOff*3600*1000);
-    todayLocalMidnight.setUTCHours(0,0,0,0);
-    const fcstStart = new Date(todayLocalMidnight.getTime() - tzOff*3600*1000); // back to UTC
-    const fcstEnd = new Date(fcstStart.getTime() + 36*60*60*1000);
-    const fcstStartStr = fcstStart.toISOString().slice(0,19)+'Z';
-    const fcstEndStr = fcstEnd.toISOString().slice(0,19)+'Z';
+    // Forecast window: full target day in UTC
+    var localMidnight=new Date(targetDateStr+'T00:00:00.000Z');
+    var fcstStart=new Date(localMidnight.getTime()-tzOff*3600000);
+    var fcstEnd=new Date(fcstStart.getTime()+30*3600000);
+    var fcstStartStr=fcstStart.toISOString().slice(0,19)+'Z';
+    var fcstEndStr=fcstEnd.toISOString().slice(0,19)+'Z';
+
+    // Obs window: last 2 hours (same for both)
+    var obsEnd=nowUtc.toISOString().slice(0,19)+'Z';
+    var obsStart=new Date(nowUtc.getTime()-2*3600000).toISOString().slice(0,19)+'Z';
 
     try {
-      const [r1, r2, r3, r4] = await Promise.allSettled([
-        fetch(proxyUrl({ endpoint:'observations', station_code: station, start_time: start, end_time: end })),
-        fetch(proxyUrl({ endpoint:'observations', station_code: station, mode: 'latest' })),
-        fetch(proxyUrl({ endpoint:'observations', station_code: station, mode: 'wethr_high', logic: 'wu' })),
-        fetch(proxyUrl({ endpoint:'forecasts', location_name: station, start_valid_time: fcstStartStr, end_valid_time: fcstEndStr })),
+      var [r1,r2,r3,r4]=await Promise.allSettled([
+        fetch(proxyUrl({endpoint:'observations',station_code:station,start_time:obsStart,end_time:obsEnd})),
+        fetch(proxyUrl({endpoint:'observations',station_code:station,mode:'latest'})),
+        fetch(proxyUrl({endpoint:'observations',station_code:station,mode:'wethr_high',logic:'wu'})),
+        fetch(proxyUrl({endpoint:'forecasts',location_name:station,start_valid_time:fcstStartStr,end_valid_time:fcstEndStr})),
       ]);
 
-      let history=[], latest=null, wu=null, forecastRows=[];
-      let units='fahrenheit';
+      var history=[],latest=null,wu=null,forecastRows=[],units='fahrenheit';
 
-      if (r1.status==='fulfilled'&&r1.value.ok) {
-        const d = await r1.value.json();
-        history = Array.isArray(d)?d:(d.observations||[]);
-        if (history[0]) units = history[0].units||units;
+      if(r1.status==='fulfilled'&&r1.value.ok){
+        var d=await r1.value.json();
+        history=Array.isArray(d)?d:(d.observations||[]);
+        if(history[0]) units=history[0].units||units;
       }
-      if (r2.status==='fulfilled'&&r2.value.ok) { latest = await r2.value.json(); units=latest.units||units; }
-      if (r3.status==='fulfilled'&&r3.value.ok) wu = await r3.value.json();
-      if (r4.status==='fulfilled'&&r4.value.ok) {
-        const fd = await r4.value.json();
-        forecastRows = Array.isArray(fd)?fd:(fd.forecasts||fd.data||[]);
+      if(r2.status==='fulfilled'&&r2.value.ok){latest=await r2.value.json();units=latest.units||units;}
+      if(r3.status==='fulfilled'&&r3.value.ok) wu=await r3.value.json();
+      if(r4.status==='fulfilled'&&r4.value.ok){
+        var fd=await r4.value.json();
+        forecastRows=Array.isArray(fd)?fd:(fd.forecasts||fd.data||[]);
       }
 
-      if (!history.length&&!latest) throw new Error('No data returned — check station or try again.');
+      history.sort(function(a,b){return new Date(b.observation_time)-new Date(a.observation_time);});
+      var obs1=history.filter(is1Min);
+      var obs5=history.filter(function(o){return !is1Min(o);});
 
-      history.sort(function(a,b){ return new Date(b.observation_time)-new Date(a.observation_time); });
-      const obs1 = history.filter(is1Min);
-      const obs5 = history.filter(function(o){ return !is1Min(o); });
+      // Extract WU high/low — handle all possible field names from API v2
+      var wuHigh=null, wuLow=null;
+      if(wu){
+        wuHigh = wu.wethr_high!=null ? wu.wethr_high
+               : wu.wethr_high_f!=null ? wu.wethr_high_f
+               : wu.highest_probable!=null ? wu.highest_probable
+               : null;
+        wuLow  = wu.wethr_low!=null ? wu.wethr_low
+               : wu.wethr_low_f!=null ? wu.wethr_low_f
+               : wu.lowest_probable!=null ? wu.lowest_probable
+               : null;
+        console.log('WU response:', JSON.stringify(wu));
+        console.log('wuHigh:', wuHigh, 'wuLow:', wuLow);
+      }
+      var modelData=processForecasts(forecastRows,station,targetDateStr,nowUtc,wuHigh,wuLow,isTomorrow);
 
-      const wuHigh = wu&&wu.wethr_high!=null ? wu.wethr_high : null;
-      const wuLow  = wu&&wu.wethr_low!=null  ? wu.wethr_low  : null;
-      const modelData = processForecasts(forecastRows, station, wuHigh, wuLow);
+      var store={station,history,latest,wu,units,obs1,obs5,modelData,wuHigh,wuLow,targetDateStr,isTomorrow,at:new Date()};
 
-      fetchedData = { station, history, latest, wu, units, obs1, obs5, modelData, wuHigh, wuLow, at: new Date() };
+      if(isTomorrow){
+        storeTmrw=store;
+        // tomorrow pacing panel removed
+        renderModelTable('tbodyModelsTmrw','modelCountTmrw',modelData,true);
+        renderObsTable('tbody1minTmrw','count1minTmrw',obs1,units);
+        renderObsTable('tbody5minTmrw','count5minTmrw',obs5,units);
+        document.getElementById('tmrwSection').classList.add('visible');
+      } else {
+        storeToday=store;
+        renderPacing('pacingGridToday',latest,wu,units,false);
+        renderModelTable('tbodyModelsToday','modelCountToday',modelData,false);
+        renderObsTable('tbody1minToday','count1minToday',obs1,units);
+        renderObsTable('tbody5minToday','count5minToday',obs5,units);
+        document.getElementById('todaySection').classList.add('visible');
+      }
 
-      renderPacing(latest, wu, units);
-      renderModels(modelData);
-      renderObsTable('tbody1min','count1min',obs1,units);
-      renderObsTable('tbody5min','count5min',obs5,units);
+      setStatus('✓ '+(isTomorrow?"Tomorrow":"Today")+': '+history.length+' obs, '+modelData.length+' models for '+station,'success');
 
-      document.getElementById('dataSection').classList.add('visible');
-      setStatus('✓ Loaded: '+history.length+' obs, '+modelData.length+' models for '+station, 'success');
-
-    } catch(err) {
+    } catch(err){
       setStatus('✗ '+err.message,'error');
     }
 
-    btn.disabled=false;
-    btn.classList.remove('loading');
-    btn.querySelector('.btn-text').textContent='⬇ Fetch Station Data';
+    btn.disabled=false; btn.classList.remove('loading');
+    btn.querySelector('.btn-text').textContent=isTomorrow?'🔭 Tomorrow\'s Data':'📅 Today\'s Data';
   }
 
-  function renderPacing(latest, wu, units) {
-    const u = units==='fahrenheit'?'°F':'°C';
-    const cur = latest?(latest.temperature_display!=null?latest.temperature_display:latest.temperature_f):null;
-    const items = [
-      { label:'Current Temp',   value: cur!=null?cur+u:'N/A' },
-      { label:'Rel. Humidity',  value: latest&&latest.relative_humidity!=null?latest.relative_humidity+'%':'N/A' },
-      { label:'DSM High',       value: latest&&(latest.dsm_high_display!=null||latest.dsm_high_f!=null)?(latest.dsm_high_display!=null?latest.dsm_high_display:latest.dsm_high_f)+u:'N/A' },
-      { label:'WU Wethr High',  value: wu&&wu.wethr_high!=null?wu.wethr_high+u:'N/A' },
-      { label:'WU Wethr Low',   value: wu&&wu.wethr_low!=null?wu.wethr_low+u:'N/A' },
-      { label:'Last Obs (UTC)', value: latest?formatTime(latest.observation_time):'N/A' },
-    ];
-    document.getElementById('pacingGrid').innerHTML = items.map(function(i){
+  function renderPacing(gridId,latest,wu,units,isTomorrow){
+    var u=units==='fahrenheit'?'deg F':'deg C';
+    var items;
+    if(isTomorrow){
+      items=[
+        {label:'WU Wethr High', value:wu&&wu.wethr_high!=null?wu.wethr_high+(units==='fahrenheit'?'\u00b0F':'\u00b0C'):'N/A'},
+        {label:'WU Wethr Low',  value:wu&&wu.wethr_low!=null?wu.wethr_low+(units==='fahrenheit'?'\u00b0F':'\u00b0C'):'N/A'},
+        {label:'Rel. Humidity', value:latest&&latest.relative_humidity!=null?latest.relative_humidity+'%':'N/A'},
+      ];
+    } else {
+      var cur=latest?(latest.temperature_display!=null?latest.temperature_display:latest.temperature_f):null;
+      var uu=units==='fahrenheit'?'\u00b0F':'\u00b0C';
+      items=[
+        {label:'Current Temp',  value:cur!=null?cur+uu:'N/A'},
+        {label:'Rel. Humidity', value:latest&&latest.relative_humidity!=null?latest.relative_humidity+'%':'N/A'},
+        {label:'DSM High',      value:latest&&(latest.dsm_high_display!=null||latest.dsm_high_f!=null)?(latest.dsm_high_display!=null?latest.dsm_high_display:latest.dsm_high_f)+uu:'N/A'},
+        {label:'WU Wethr High', value:wu&&wu.wethr_high!=null?wu.wethr_high+uu:'N/A'},
+        {label:'WU Wethr Low',  value:wu&&wu.wethr_low!=null?wu.wethr_low+uu:'N/A'},
+        {label:'Last Obs (UTC)',value:latest?formatTime(latest.observation_time):'N/A'},
+      ];
+    }
+    document.getElementById(gridId).innerHTML=items.map(function(i){
       return '<div class="pacing-item"><div class="pacing-label">'+i.label+'</div>'
-           + '<div class="pacing-value'+(i.value==='N/A'?' na':'')+'">'+i.value+'</div></div>';
+            +'<div class="pacing-value'+(i.value==='N/A'?' na':'')+'">'+i.value+'</div></div>';
     }).join('');
   }
 
-  function renderModels(modelData) {
-    document.getElementById('modelCount').textContent = modelData.length + ' models';
-    if (!modelData.length) {
-      document.getElementById('tbodyModels').innerHTML = '<tr><td colspan="6" style="color:var(--muted);padding:12px 0;font-family:\'JetBrains Mono\',monospace;font-size:0.75rem;">No forecast data available</td></tr>';
+  function renderModelTable(tbodyId,countId,modelData,isTmrw){
+    document.getElementById(countId).textContent=modelData.length+' models';
+    if(!modelData.length){
+      var cols=isTmrw?4:6;
+      document.getElementById(tbodyId).innerHTML='<tr><td colspan="'+cols+'" style="color:var(--muted);padding:12px 0;font-family:\'JetBrains Mono\',monospace;font-size:0.75rem;">No forecast data available</td></tr>';
       return;
     }
-    document.getElementById('tbodyModels').innerHTML = modelData.map(function(m) {
-      return '<tr>'
-        + '<td class="model-name">'+m.model+'</td>'
-        + '<td class="model-high">'+(m.forecastHigh!=null?m.forecastHigh+'°F':'—')+'</td>'
-        + '<td class="model-time">'+m.highTimeLocal+'</td>'
-        + '<td class="model-pace">'+(m.pacingHigh!=null?m.pacingHigh+'°F':'—')+'</td>'
-        + '<td style="color:var(--muted)">'+m.wuRange+'</td>'
-        + '<td class="'+m.deltaClass+'">'+m.delta+'</td>'
-        + '</tr>';
-    }).join('');
+    if(isTmrw){
+      // Tomorrow: Model | Pacing High | WU Range | Delta only
+      document.getElementById(tbodyId).innerHTML=modelData.map(function(m){
+        return '<tr>'
+          +'<td class="m-name tmrw">'+m.model+'</td>'
+          +'<td style="color:var(--text)">'+(m.pacingHigh!=null?m.pacingHigh+'°F':'—')+'</td>'
+          +'<td style="color:var(--muted)">'+m.wuRange+'</td>'
+          +'<td class="'+m.deltaClass+'">'+m.delta+'</td>'
+          +'</tr>';
+      }).join('');
+    } else {
+      document.getElementById(tbodyId).innerHTML=modelData.map(function(m){
+        return '<tr>'
+          +'<td class="m-name">'+m.model+'</td>'
+          +'<td class="m-high">'+(m.forecastHigh!=null?m.forecastHigh+'°F':'—')+'</td>'
+          +'<td class="m-time">'+m.highTimeLocal+'</td>'
+          +'<td style="color:var(--text)">'+(m.pacingHigh!=null?m.pacingHigh+'°F':'—')+'</td>'
+          +'<td style="color:var(--muted)">'+m.wuRange+'</td>'
+          +'<td class="'+m.deltaClass+'">'+m.delta+'</td>'
+          +'</tr>';
+      }).join('');
+    }
   }
 
-  function renderObsTable(tbodyId, countId, obs, units) {
-    document.getElementById(countId).textContent = obs.length+' records';
-    document.getElementById(tbodyId).innerHTML = obs.length
-      ? obs.map(function(o){ return buildObsRow(o,units); }).join('')
-      : '<tr><td colspan="6" style="color:var(--muted);padding:12px 0;font-family:\'JetBrains Mono\',monospace;font-size:0.75rem;">No observations in this window</td></tr>';
+  function renderObsTable(tbodyId,countId,obs,units){
+    document.getElementById(countId).textContent=obs.length+' records';
+    document.getElementById(tbodyId).innerHTML=obs.length
+      ?obs.map(function(o){return buildObsRow(o,units);}).join('')
+      :'<tr><td colspan="6" style="color:var(--muted);padding:12px 0;font-family:\'JetBrains Mono\',monospace;font-size:0.75rem;">No observations in this window</td></tr>';
   }
 
-  function pad(s,n){ return String(s).padEnd(n); }
+  function pad(s,n){return String(s).padEnd(n);}
 
-  function copyToClipboard() {
-    if (!fetchedData) return;
-    const { station, latest, wu, units, obs1, obs5, modelData, wuHigh, wuLow, at } = fetchedData;
-    const u = units==='fahrenheit'?'°F':'°C';
-    const lines = [];
+  function buildClipboard(store){
+    var lines=[];
+    var u=store.units==='fahrenheit'?'°F':'°C';
+    var dayLabel=store.isTomorrow?'TOMORROW':'TODAY';
 
-    lines.push('=== WETHR.NET STATION SNAPSHOT ===');
-    lines.push('Station : '+station);
-    lines.push('Fetched : '+at.toUTCString());
-    lines.push('Units   : '+units);
+    // AI-ready prompt header
+    if(store.isTomorrow){
+      lines.push("Tomorrow's projection data, pacing from today. calibrate model integrity to our prompt and nail the exact future high tomorrow at "+store.station);
+    } else {
+      lines.push("Here is the "+store.station+" Tape from today, run the prompt to find where we top out.");
+    }
+    lines.push('');
+    lines.push('=== WETHR.NET STATION SNAPSHOT — '+dayLabel+' ('+store.targetDateStr+') ===');
+    lines.push('Station : '+store.station);
+    lines.push('Fetched : '+store.at.toUTCString());
     lines.push('');
 
     lines.push('--- CURRENT CONDITIONS & PACING ---');
-    if (latest) {
-      const cur = latest.temperature_display!=null?latest.temperature_display:latest.temperature_f;
-      lines.push('Current Temperature : '+(cur!=null?cur+u:'N/A'));
-      lines.push('Relative Humidity   : '+(latest.relative_humidity!=null?latest.relative_humidity+'%':'N/A'));
-      const dsmH = latest.dsm_high_display!=null?latest.dsm_high_display:latest.dsm_high_f;
-      if (dsmH!=null) lines.push('DSM High            : '+dsmH+u);
-      lines.push('Last Obs Time (UTC) : '+(latest.observation_time||'N/A'));
-    }
-    if (wu) {
-      lines.push('WU Wethr High : '+wu.wethr_high+u+'  @ '+(wu.time_of_high_utc||'N/A'));
-      lines.push('WU Wethr Low  : '+wu.wethr_low+u+'  @ '+(wu.time_of_low_utc||'N/A'));
+    if(store.isTomorrow){
+      // Tomorrow: skip current-conditions block entirely — model table IS the pacing data
+    } else {
+      if(store.latest){
+        var cur=store.latest.temperature_display!=null?store.latest.temperature_display:store.latest.temperature_f;
+        lines.push('Current Temperature : '+(cur!=null?cur+u:'N/A'));
+        lines.push('Relative Humidity   : '+(store.latest.relative_humidity!=null?store.latest.relative_humidity+'%':'N/A'));
+        var dsmH=store.latest.dsm_high_display!=null?store.latest.dsm_high_display:store.latest.dsm_high_f;
+        if(dsmH!=null) lines.push('DSM High            : '+dsmH+u);
+        lines.push('Last Obs Time (UTC) : '+(store.latest.observation_time||'N/A'));
+      }
+      if(store.wu){
+        lines.push('WU Wethr High : '+store.wu.wethr_high+u+'  @ '+(store.wu.time_of_high_utc||'N/A'));
+        lines.push('WU Wethr Low  : '+store.wu.wethr_low+u+'  @ '+(store.wu.time_of_low_utc||'N/A'));
+      }
     }
     lines.push('');
 
-    lines.push('--- MODEL FORECAST PACING ('+modelData.length+' models) ---');
-    lines.push(pad('Model',22)+' '+pad('Fcst High',10)+' '+pad('High Time',12)+' '+pad('Pacing',10)+' '+pad('WU Range',12)+' Delta');
+    lines.push('--- '+dayLabel+' MODEL FORECAST PACING ('+store.modelData.length+' models) ---');
+    if(store.isTomorrow){
+      lines.push(pad('Model',22)+' '+pad('Pacing High',12)+' '+pad('WU Range',12)+' Delta');
+      lines.push('-'.repeat(65));
+      store.modelData.forEach(function(m){
+        lines.push(pad(m.model,22)+' '+pad(m.pacingHigh!=null?m.pacingHigh+'\u00b0F':'\u2014',12)+' '+pad(m.wuRange,12)+' '+m.delta);
+      });
+    } else {
+      lines.push(pad('Model',22)+' '+pad('Fcst High',10)+' '+pad('High Time',12)+' '+pad('Pacing',10)+' '+pad('WU Range',12)+' Delta');
     lines.push('-'.repeat(85));
-    modelData.forEach(function(m) {
-      lines.push(
-        pad(m.model,22)+' '+
-        pad(m.forecastHigh!=null?m.forecastHigh+'°F':'—',10)+' '+
-        pad(m.highTimeLocal,12)+' '+
-        pad(m.pacingHigh!=null?m.pacingHigh+'°F':'—',10)+' '+
-        pad(m.wuRange,12)+' '+
-        m.delta
-      );
+      store.modelData.forEach(function(m){
+        lines.push(pad(m.model,22)+' '+pad(m.forecastHigh!=null?m.forecastHigh+'\u00b0F':'\u2014',10)+' '+pad(m.highTimeLocal,12)+' '+pad(m.pacingHigh!=null?m.pacingHigh+'\u00b0F':'\u2014',10)+' '+pad(m.wuRange,12)+' '+m.delta);
+      });
+    }
+    lines.push('');
+
+    lines.push('--- 1-MINUTE OBSERVATIONS ('+store.obs1.length+' records, last 2 hrs) ---');
+    lines.push(pad('Time (UTC)',22)+' '+pad('Temp',8)+' '+pad('Dew Pt',8)+' '+pad('RH%',5)+' '+pad('Wind',18)+' Type');
+    lines.push('-'.repeat(80));
+    store.obs1.forEach(function(o){
+      var t=o.product||guessType(o);
+      lines.push(pad(formatTime(o.observation_time),22)+' '+pad(formatTemp(o,store.units),8)+' '+pad(formatDew(o,store.units),8)+' '+pad(o.relative_humidity!=null?o.relative_humidity+'%':'—',5)+' '+pad(formatWind(o),18)+' '+t);
     });
     lines.push('');
 
-    lines.push('--- 1-MINUTE OBSERVATIONS ('+obs1.length+' records, last 2 hrs) ---');
+    lines.push('--- 5-MIN / HOURLY METAR OBSERVATIONS ('+store.obs5.length+' records, last 2 hrs) ---');
     lines.push(pad('Time (UTC)',22)+' '+pad('Temp',8)+' '+pad('Dew Pt',8)+' '+pad('RH%',5)+' '+pad('Wind',18)+' Type');
     lines.push('-'.repeat(80));
-    obs1.forEach(function(o) {
-      const type=o.product||guessType(o);
-      lines.push(pad(formatTime(o.observation_time),22)+' '+pad(formatTemp(o,units),8)+' '+pad(formatDew(o,units),8)+' '+pad(o.relative_humidity!=null?o.relative_humidity+'%':'—',5)+' '+pad(formatWind(o),18)+' '+type);
-    });
-    lines.push('');
-
-    lines.push('--- 5-MIN / HOURLY METAR OBSERVATIONS ('+obs5.length+' records, last 2 hrs) ---');
-    lines.push(pad('Time (UTC)',22)+' '+pad('Temp',8)+' '+pad('Dew Pt',8)+' '+pad('RH%',5)+' '+pad('Wind',18)+' Type');
-    lines.push('-'.repeat(80));
-    obs5.forEach(function(o) {
-      const type=o.product||guessType(o);
-      lines.push(pad(formatTime(o.observation_time),22)+' '+pad(formatTemp(o,units),8)+' '+pad(formatDew(o,units),8)+' '+pad(o.relative_humidity!=null?o.relative_humidity+'%':'—',5)+' '+pad(formatWind(o),18)+' '+type);
+    store.obs5.forEach(function(o){
+      var t=o.product||guessType(o);
+      lines.push(pad(formatTime(o.observation_time),22)+' '+pad(formatTemp(o,store.units),8)+' '+pad(formatDew(o,store.units),8)+' '+pad(o.relative_humidity!=null?o.relative_humidity+'%':'—',5)+' '+pad(formatWind(o),18)+' '+t);
     });
     lines.push('');
     lines.push('=== END OF SNAPSHOT ===');
-
-    const text = lines.join('\n');
-
-    function onCopied() {
-      const btn=document.getElementById('copyBtn'), txt=document.getElementById('copyText');
-      btn.classList.add('copied'); txt.textContent='✓ Copied to Clipboard!';
-      setTimeout(function(){ btn.classList.remove('copied'); txt.textContent='Copy All Data to Clipboard for AI'; },2500);
-    }
-
-    if (navigator.clipboard&&navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(text).then(onCopied).catch(function(){ fallbackCopy(text);onCopied(); });
-    } else { fallbackCopy(text);onCopied(); }
+    return lines.join('\n');
   }
 
-  function fallbackCopy(text) {
-    const ta=document.createElement('textarea'); ta.value=text; ta.style.position='fixed'; ta.style.opacity='0';
-    document.body.appendChild(ta); ta.focus(); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+  function copyToClipboard(day){
+    var isTomorrow=day==='tomorrow';
+    var store=isTomorrow?storeTmrw:storeToday;
+    if(!store) return;
+    var text=buildClipboard(store);
+    var btnId=isTomorrow?'copyTmrwBtn':'copyTodayBtn';
+    var txtId=isTomorrow?'copyTmrwText':'copyTodayText';
+    var origLabel=isTomorrow?"Copy Tomorrow's Data to Clipboard for AI":"Copy Today's Data to Clipboard for AI";
+
+    function onCopied(){
+      var b=document.getElementById(btnId),t=document.getElementById(txtId);
+      b.classList.add('copied'); t.textContent='✓ Copied to Clipboard!';
+      setTimeout(function(){b.classList.remove('copied');t.textContent=origLabel;},2500);
+    }
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(onCopied).catch(function(){fallbackCopy(text);onCopied();});
+    } else {fallbackCopy(text);onCopied();}
+  }
+
+  function fallbackCopy(text){
+    var ta=document.createElement('textarea');ta.value=text;ta.style.position='fixed';ta.style.opacity='0';
+    document.body.appendChild(ta);ta.focus();ta.select();document.execCommand('copy');document.body.removeChild(ta);
   }
 </script>
 </body>
