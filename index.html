@@ -17,340 +17,126 @@
     --text: #e2e8f0;
     --muted: #64748b;
     --danger: #ff4757;
+    --yellow: #ffd166;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'Syne', sans-serif;
-    min-height: 100vh;
-    overflow-x: hidden;
-  }
+  body { background: var(--bg); color: var(--text); font-family: 'Syne', sans-serif; min-height: 100vh; overflow-x: hidden; }
   body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image:
-      linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(0,212,255,0.03) 1px, transparent 1px);
-    background-size: 40px 40px;
-    pointer-events: none;
-    z-index: 0;
+    content: ''; position: fixed; inset: 0;
+    background-image: linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0,212,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px; pointer-events: none; z-index: 0;
   }
-  .container {
-    position: relative;
-    z-index: 1;
-    max-width: 860px;
-    margin: 0 auto;
-    padding: 40px 24px 80px;
-  }
-  header {
-    margin-bottom: 40px;
-    border-bottom: 1px solid var(--border);
-    padding-bottom: 24px;
-  }
-  .logo-row {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 6px;
-  }
-  .logo-dot {
-    width: 10px; height: 10px;
-    border-radius: 50%;
-    background: var(--accent);
-    box-shadow: 0 0 12px var(--accent);
-    animation: pulse 2s ease-in-out infinite;
-  }
-  @keyframes pulse {
-    0%, 100% { opacity: 1; box-shadow: 0 0 12px var(--accent); }
-    50% { opacity: 0.6; box-shadow: 0 0 6px var(--accent); }
-  }
-  h1 {
-    font-size: 1.7rem;
-    font-weight: 800;
-    letter-spacing: -0.5px;
-    color: #fff;
-  }
+  .container { position: relative; z-index: 1; max-width: 980px; margin: 0 auto; padding: 40px 24px 80px; }
+  header { margin-bottom: 40px; border-bottom: 1px solid var(--border); padding-bottom: 24px; }
+  .logo-row { display: flex; align-items: center; gap: 12px; margin-bottom: 6px; }
+  .logo-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 12px var(--accent); animation: pulse 2s ease-in-out infinite; }
+  @keyframes pulse { 0%,100% { opacity:1; box-shadow: 0 0 12px var(--accent); } 50% { opacity:0.6; box-shadow: 0 0 6px var(--accent); } }
+  h1 { font-size: 1.7rem; font-weight: 800; letter-spacing: -0.5px; color: #fff; }
   h1 span { color: var(--accent); }
-  .subtitle {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.72rem;
-    color: var(--muted);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-  }
-  .config-panel {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 24px;
-    margin-bottom: 24px;
-  }
-  .config-panel h2 {
-    font-size: 0.7rem;
-    font-family: 'JetBrains Mono', monospace;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    color: var(--accent);
-    margin-bottom: 20px;
-  }
-  .fields-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 16px;
-  }
+  .subtitle { font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; }
+  .config-panel { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin-bottom: 24px; }
+  .config-panel h2 { font-size: 0.7rem; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.15em; text-transform: uppercase; color: var(--accent); margin-bottom: 20px; }
   .field { display: flex; flex-direction: column; gap: 6px; }
-  .field label {
-    font-size: 0.68rem;
-    font-family: 'JetBrains Mono', monospace;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--muted);
-  }
-  .field select {
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 10px 14px;
-    color: var(--text);
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.85rem;
-    outline: none;
-    transition: border-color 0.2s;
-    width: 100%;
-    appearance: none;
-    -webkit-appearance: none;
-  }
+  .field label { font-size: 0.68rem; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+  .field select { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; color: var(--text); font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; outline: none; transition: border-color 0.2s; width: 100%; appearance: none; -webkit-appearance: none; }
   .field select:focus { border-color: var(--accent); }
   .field select option { background: var(--surface); color: var(--text); }
   .select-wrapper { position: relative; }
-  .select-wrapper::after {
-    content: '▾';
-    position: absolute;
-    right: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--accent);
-    pointer-events: none;
-    font-size: 0.9rem;
-  }
-  .fetch-btn {
-    width: 100%;
-    margin-top: 20px;
-    padding: 14px 24px;
-    background: transparent;
-    border: 1px solid var(--accent);
-    border-radius: 8px;
-    color: var(--accent);
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.85rem;
-    font-weight: 700;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    cursor: pointer;
-    transition: all 0.2s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-  }
+  .select-wrapper::after { content: '▾'; position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: var(--accent); pointer-events: none; font-size: 0.9rem; }
+  .fetch-btn { width: 100%; margin-top: 20px; padding: 14px 24px; background: transparent; border: 1px solid var(--accent); border-radius: 8px; color: var(--accent); font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 10px; }
   .fetch-btn:hover { background: rgba(0,212,255,0.08); box-shadow: 0 0 20px rgba(0,212,255,0.15); }
   .fetch-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-  .fetch-btn .spinner {
-    width: 14px; height: 14px;
-    border: 2px solid rgba(0,212,255,0.3);
-    border-top-color: var(--accent);
-    border-radius: 50%;
-    animation: spin 0.7s linear infinite;
-    display: none;
-  }
+  .fetch-btn .spinner { width: 14px; height: 14px; border: 2px solid rgba(0,212,255,0.3); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; display: none; }
   .fetch-btn.loading .spinner { display: block; }
   .fetch-btn.loading .btn-text { opacity: 0.6; }
   @keyframes spin { to { transform: rotate(360deg); } }
-  .status-bar {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.72rem;
-    color: var(--muted);
-    padding: 10px 0;
-    min-height: 30px;
-  }
+  .status-bar { font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; color: var(--muted); padding: 10px 0; min-height: 30px; }
   .status-bar.error { color: var(--danger); }
   .status-bar.success { color: var(--green); }
   .data-section { display: none; flex-direction: column; gap: 16px; }
   .data-section.visible { display: flex; }
-  .data-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    overflow: hidden;
-  }
-  .card-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 14px 18px;
-    border-bottom: 1px solid var(--border);
-    background: var(--surface2);
-  }
-  .card-title {
-    font-size: 0.68rem;
-    font-family: 'JetBrains Mono', monospace;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    color: var(--accent);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .record-count {
-    font-size: 0.65rem;
-    background: rgba(0,212,255,0.1);
-    border: 1px solid rgba(0,212,255,0.2);
-    border-radius: 4px;
-    padding: 2px 8px;
-    color: var(--accent);
-  }
-  .card-body {
-    padding: 16px 18px;
-    max-height: 280px;
-    overflow-y: auto;
-  }
+  .data-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+  .card-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border-bottom: 1px solid var(--border); background: var(--surface2); }
+  .card-title { font-size: 0.68rem; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.15em; text-transform: uppercase; color: var(--accent); display: flex; align-items: center; gap: 8px; }
+  .record-count { font-size: 0.65rem; background: rgba(0,212,255,0.1); border: 1px solid rgba(0,212,255,0.2); border-radius: 4px; padding: 2px 8px; color: var(--accent); }
+  .card-body { padding: 16px 18px; max-height: 320px; overflow-y: auto; }
+  .card-body.no-max { max-height: none; }
   .card-body::-webkit-scrollbar { width: 4px; }
   .card-body::-webkit-scrollbar-track { background: transparent; }
   .card-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-  .obs-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.75rem;
-  }
-  .obs-table th {
-    text-align: left;
-    color: var(--muted);
-    font-weight: 500;
-    font-size: 0.65rem;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    padding: 0 8px 10px 0;
-    border-bottom: 1px solid var(--border);
-  }
-  .obs-table td {
-    padding: 7px 8px 7px 0;
-    color: var(--text);
-    border-bottom: 1px solid rgba(30,45,69,0.5);
-    vertical-align: middle;
-  }
+  /* pacing grid */
+  .pacing-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(155px, 1fr)); gap: 12px; }
+  .pacing-item { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; }
+  .pacing-label { font-family: 'JetBrains Mono', monospace; font-size: 0.62rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+  .pacing-value { font-family: 'JetBrains Mono', monospace; font-size: 1.15rem; font-weight: 700; color: var(--green); }
+  .pacing-value.na { color: var(--muted); font-size: 0.8rem; }
+  /* obs table */
+  .obs-table { width: 100%; border-collapse: collapse; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; }
+  .obs-table th { text-align: left; color: var(--muted); font-weight: 500; font-size: 0.65rem; letter-spacing: 0.08em; text-transform: uppercase; padding: 0 8px 10px 0; border-bottom: 1px solid var(--border); }
+  .obs-table td { padding: 7px 8px 7px 0; color: var(--text); border-bottom: 1px solid rgba(30,45,69,0.5); vertical-align: middle; }
   .obs-table tr:last-child td { border-bottom: none; }
   .temp-val { color: var(--accent2); font-weight: 700; }
   .time-val { color: var(--muted); }
-  .pacing-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
-    gap: 12px;
-  }
-  .pacing-item {
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 12px 14px;
-  }
-  .pacing-label {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.62rem;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin-bottom: 6px;
-  }
-  .pacing-value {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 1.15rem;
-    font-weight: 700;
-    color: var(--green);
-  }
-  .pacing-value.na { color: var(--muted); font-size: 0.8rem; }
-  .copy-section { margin-top: 8px; }
-  .copy-btn {
-    width: 100%;
-    padding: 16px 24px;
-    background: rgba(0,255,157,0.05);
-    border: 1px solid var(--green);
-    border-radius: 10px;
-    color: var(--green);
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.85rem;
-    font-weight: 700;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    cursor: pointer;
-    transition: all 0.2s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-  }
-  .copy-btn:hover { background: rgba(0,255,157,0.12); box-shadow: 0 0 24px rgba(0,255,157,0.15); }
-  .copy-btn.copied { background: rgba(0,255,157,0.15); }
-  .tag {
-    display: inline-flex;
-    align-items: center;
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.6rem;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-  }
+  /* model table */
+  .model-table { width: 100%; border-collapse: collapse; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; }
+  .model-table th { text-align: left; color: var(--muted); font-weight: 500; font-size: 0.65rem; letter-spacing: 0.08em; text-transform: uppercase; padding: 0 12px 10px 0; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  .model-table td { padding: 8px 12px 8px 0; border-bottom: 1px solid rgba(30,45,69,0.5); vertical-align: middle; white-space: nowrap; }
+  .model-table tr:last-child td { border-bottom: none; }
+  .model-name { color: var(--accent); font-weight: 700; }
+  .model-high { color: var(--accent2); font-weight: 700; }
+  .model-time { color: var(--muted); font-size: 0.7rem; }
+  .model-pace { color: var(--text); }
+  .pace-pos { color: var(--green); }
+  .pace-neg { color: var(--danger); }
+  .pace-zero { color: var(--yellow); }
+  /* tags */
+  .tag { display: inline-flex; align-items: center; padding: 2px 6px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 0.6rem; letter-spacing: 0.05em; text-transform: uppercase; }
   .tag-metar { background: rgba(0,212,255,0.1); color: var(--accent); border: 1px solid rgba(0,212,255,0.2); }
   .tag-hf { background: rgba(255,107,53,0.1); color: var(--accent2); border: 1px solid rgba(255,107,53,0.2); }
   .tag-speci { background: rgba(255,71,87,0.1); color: var(--danger); border: 1px solid rgba(255,71,87,0.2); }
-  @media (max-width: 600px) {
-    h1 { font-size: 1.3rem; }
-  }
+  /* copy */
+  .copy-section { margin-top: 8px; }
+  .copy-btn { width: 100%; padding: 16px 24px; background: rgba(0,255,157,0.05); border: 1px solid var(--green); border-radius: 10px; color: var(--green); font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 10px; }
+  .copy-btn:hover { background: rgba(0,255,157,0.12); box-shadow: 0 0 24px rgba(0,255,157,0.15); }
+  .copy-btn.copied { background: rgba(0,255,157,0.15); }
+  @media (max-width: 600px) { h1 { font-size: 1.3rem; } }
 </style>
 </head>
 <body>
 <div class="container">
-
   <header>
-    <div class="logo-row">
-      <div class="logo-dot"></div>
-      <h1>Wethr<span>.net</span> Station Snapshot</h1>
-    </div>
-    <div class="subtitle">2-hour observation fetch &amp; AI clipboard export — API v2</div>
+    <div class="logo-row"><div class="logo-dot"></div><h1>Wethr<span>.net</span> Station Snapshot</h1></div>
+    <div class="subtitle">Pacing + Model Data + 2-hr Observations — API v2</div>
   </header>
 
   <div class="config-panel">
     <h2>⚙ Select Station</h2>
-    <div class="fields-grid">
-      <div class="field">
-        <label>Station</label>
-        <div class="select-wrapper">
-          <select id="stationSelect">
-            <option value="KLAX">KLAX — Los Angeles, CA</option>
-            <option value="KATL">KATL — Atlanta, GA</option>
-            <option value="KAUS">KAUS — Austin, TX</option>
-            <option value="KBOS">KBOS — Boston, MA</option>
-            <option value="KCLT">KCLT — Charlotte, NC</option>
-            <option value="KMDW">KMDW — Chicago (Midway), IL</option>
-            <option value="KDFW">KDFW — Dallas/Ft Worth, TX</option>
-            <option value="KDCA">KDCA — Washington D.C.</option>
-            <option value="KDTW">KDTW — Detroit, MI</option>
-            <option value="KHOU">KHOU — Houston, TX</option>
-            <option value="KJAX">KJAX — Jacksonville, FL</option>
-            <option value="KLAS">KLAS — Las Vegas, NV</option>
-            <option value="KMIA">KMIA — Miami, FL</option>
-            <option value="KMSP">KMSP — Minneapolis, MN</option>
-            <option value="KOKC">KOKC — Oklahoma City, OK</option>
-            <option value="KPHL">KPHL — Philadelphia, PA</option>
-            <option value="KPHX">KPHX — Phoenix, AZ</option>
-            <option value="KSAT">KSAT — San Antonio, TX</option>
-            <option value="KSFO">KSFO — San Francisco, CA</option>
-            <option value="KSEA">KSEA — Seattle, WA</option>
-            <option value="KLGA">KLGA — New York (LaGuardia)</option>
-          </select>
-        </div>
+    <div class="field">
+      <label>Station</label>
+      <div class="select-wrapper">
+        <select id="stationSelect">
+          <option value="KLAX">KLAX — Los Angeles, CA</option>
+          <option value="KATL">KATL — Atlanta, GA</option>
+          <option value="KAUS">KAUS — Austin, TX</option>
+          <option value="KBOS">KBOS — Boston, MA</option>
+          <option value="KCLT">KCLT — Charlotte, NC</option>
+          <option value="KMDW">KMDW — Chicago (Midway), IL</option>
+          <option value="KDFW">KDFW — Dallas/Ft Worth, TX</option>
+          <option value="KDCA">KDCA — Washington D.C.</option>
+          <option value="KDTW">KDTW — Detroit, MI</option>
+          <option value="KHOU">KHOU — Houston, TX</option>
+          <option value="KJAX">KJAX — Jacksonville, FL</option>
+          <option value="KLAS">KLAS — Las Vegas, NV</option>
+          <option value="KMIA">KMIA — Miami, FL</option>
+          <option value="KMSP">KMSP — Minneapolis, MN</option>
+          <option value="KOKC">KOKC — Oklahoma City, OK</option>
+          <option value="KPHL">KPHL — Philadelphia, PA</option>
+          <option value="KPHX">KPHX — Phoenix, AZ</option>
+          <option value="KSAT">KSAT — San Antonio, TX</option>
+          <option value="KSFO">KSFO — San Francisco, CA</option>
+          <option value="KSEA">KSEA — Seattle, WA</option>
+          <option value="KLGA">KLGA — New York (LaGuardia)</option>
+        </select>
       </div>
     </div>
     <button class="fetch-btn" id="fetchBtn" onclick="fetchAll()">
@@ -363,44 +149,53 @@
 
   <div class="data-section" id="dataSection">
 
+    <!-- Current Conditions -->
+    <div class="data-card">
+      <div class="card-header"><div class="card-title">📊 Current Conditions &amp; Pacing</div></div>
+      <div class="card-body"><div class="pacing-grid" id="pacingGrid"></div></div>
+    </div>
+
+    <!-- Model Table -->
     <div class="data-card">
       <div class="card-header">
-        <div class="card-title">📊 Pacing &amp; Current Conditions</div>
+        <div class="card-title">🌐 Model Forecast Pacing <span class="record-count" id="modelCount">—</span></div>
       </div>
-      <div class="card-body">
-        <div class="pacing-grid" id="pacingGrid"></div>
+      <div class="card-body no-max">
+        <table class="model-table">
+          <thead><tr>
+            <th>Model</th>
+            <th>Fcst High</th>
+            <th>High Time (Local)</th>
+            <th>Pacing High</th>
+            <th>WU Range</th>
+            <th>Delta</th>
+          </tr></thead>
+          <tbody id="tbodyModels"></tbody>
+        </table>
       </div>
     </div>
 
+    <!-- 1-min -->
     <div class="data-card">
       <div class="card-header">
-        <div class="card-title">
-          ⚡ 1-Minute Observations — Last 2 hrs
-          <span class="record-count" id="count1min">—</span>
-        </div>
+        <div class="card-title">⚡ 1-Minute Observations — Last 2 hrs <span class="record-count" id="count1min">—</span></div>
       </div>
       <div class="card-body">
         <table class="obs-table">
-          <thead><tr>
-            <th>Time (UTC)</th><th>Temp</th><th>Dew Pt</th><th>RH%</th><th>Wind</th><th>Type</th>
-          </tr></thead>
+          <thead><tr><th>Time (UTC)</th><th>Temp</th><th>Dew Pt</th><th>RH%</th><th>Wind</th><th>Type</th></tr></thead>
           <tbody id="tbody1min"></tbody>
         </table>
       </div>
     </div>
 
+    <!-- 5-min -->
     <div class="data-card">
       <div class="card-header">
-        <div class="card-title">
-          🕐 5-Min / Hourly METAR Observations — Last 2 hrs
-          <span class="record-count" id="count5min">—</span>
-        </div>
+        <div class="card-title">🕐 5-Min / Hourly METAR — Last 2 hrs <span class="record-count" id="count5min">—</span></div>
       </div>
       <div class="card-body">
         <table class="obs-table">
-          <thead><tr>
-            <th>Time (UTC)</th><th>Temp</th><th>Dew Pt</th><th>RH%</th><th>Wind</th><th>Type</th>
-          </tr></thead>
+          <thead><tr><th>Time (UTC)</th><th>Temp</th><th>Dew Pt</th><th>RH%</th><th>Wind</th><th>Type</th></tr></thead>
           <tbody id="tbody5min"></tbody>
         </table>
       </div>
@@ -408,8 +203,7 @@
 
     <div class="copy-section">
       <button class="copy-btn" id="copyBtn" onclick="copyToClipboard()">
-        <span>📋</span>
-        <span id="copyText">Copy All Data to Clipboard for AI</span>
+        <span>📋</span><span id="copyText">Copy All Data to Clipboard for AI</span>
       </button>
     </div>
 
@@ -418,9 +212,9 @@
 
 <script>
   let fetchedData = null;
-
-  // All calls go to /api/proxy — the Edge Function adds the API key server-side
   const PROXY = '/api/proxy';
+
+  const MODELS = ['GFS','HRRR','NAM','NBM','GEFS','ECMWF-IFS','ICON','GEM-GDPS','JMA','UKMO','ARPEGE','RAP','GFS-MOS','NBS-MOS','NAM-MOS','LAV-MOS','GEM-HRDPS','NAM4KM'];
 
   function setStatus(msg, type) {
     const el = document.getElementById('statusBar');
@@ -428,15 +222,17 @@
     el.className = 'status-bar ' + (type || '');
   }
 
+  function proxyUrl(params) {
+    return PROXY + '?' + new URLSearchParams(params).toString();
+  }
+
   function formatTime(t) {
     if (!t) return '—';
-    return String(t).replace('T', ' ').replace('Z', '').substring(0, 19) + ' UTC';
+    return String(t).replace('T',' ').replace('Z','').substring(0,19) + ' UTC';
   }
 
   function formatTemp(obs, units) {
-    const v = obs.temperature_display != null ? obs.temperature_display
-            : obs.temperature_f != null ? obs.temperature_f
-            : obs.temperature;
+    const v = obs.temperature_display != null ? obs.temperature_display : obs.temperature_f != null ? obs.temperature_f : obs.temperature;
     if (v == null) return '—';
     return v + (units === 'fahrenheit' ? '°F' : '°C');
   }
@@ -444,22 +240,19 @@
   function formatDew(obs, units) {
     const dp = obs.dew_point;
     if (dp == null) return '—';
-    if (units === 'fahrenheit') return Math.round(dp * 9 / 5 + 32) + '°F';
+    if (units === 'fahrenheit') return Math.round(dp * 9/5 + 32) + '°F';
     return dp + '°C';
   }
 
   function formatWind(obs) {
     if (obs.wind_speed == null) return '—';
-    const dir = obs.wind_direction || '—';
-    const gust = obs.wind_gust ? ' G' + obs.wind_gust : '';
-    return dir + ' ' + obs.wind_speed + gust + ' kt';
+    return (obs.wind_direction||'—') + ' ' + obs.wind_speed + (obs.wind_gust ? ' G'+obs.wind_gust : '') + ' kt';
   }
 
   function guessType(obs) {
-    const t = new Date((obs.observation_time || '').replace(' ', 'T').replace(/Z?$/, 'Z'));
-    const m = t.getMinutes();
-    if (m === 53 || m === 0 || m === 20 || m === 50) return 'METAR';
-    if (m % 5 === 0) return 'HF-METAR-5min';
+    const m = new Date((obs.observation_time||'').replace(' ','T').replace(/Z?$/,'Z')).getMinutes();
+    if (m===53||m===0||m===20||m===50) return 'METAR';
+    if (m%5===0) return 'HF-METAR-5min';
     return 'HF-METAR-1min';
   }
 
@@ -471,24 +264,133 @@
   }
 
   function is1Min(obs) {
-    const t = new Date((obs.observation_time || '').replace(' ', 'T').replace(/Z?$/, 'Z'));
-    return t.getMinutes() % 5 !== 0;
+    return new Date((obs.observation_time||'').replace(' ','T').replace(/Z?$/,'Z')).getMinutes() % 5 !== 0;
   }
 
-  function buildRow(obs, units) {
+  function buildObsRow(obs, units) {
     const type = obs.product || guessType(obs);
     return '<tr>'
-      + '<td class="time-val">' + formatTime(obs.observation_time) + '</td>'
-      + '<td class="temp-val">' + formatTemp(obs, units) + '</td>'
-      + '<td>' + formatDew(obs, units) + '</td>'
-      + '<td>' + (obs.relative_humidity != null ? obs.relative_humidity + '%' : '—') + '</td>'
-      + '<td>' + formatWind(obs) + '</td>'
-      + '<td><span class="' + getTagClass(type) + '">' + type + '</span></td>'
+      + '<td class="time-val">'+formatTime(obs.observation_time)+'</td>'
+      + '<td class="temp-val">'+formatTemp(obs,units)+'</td>'
+      + '<td>'+formatDew(obs,units)+'</td>'
+      + '<td>'+(obs.relative_humidity!=null?obs.relative_humidity+'%':'—')+'</td>'
+      + '<td>'+formatWind(obs)+'</td>'
+      + '<td><span class="'+getTagClass(type)+'">'+type+'</span></td>'
       + '</tr>';
   }
 
-  function proxyUrl(params) {
-    return PROXY + '?' + new URLSearchParams(params).toString();
+  // Convert UTC valid_time to local time string given station timezone offset (hours)
+  function utcToLocalTimeStr(utcStr, tzOffsetHours) {
+    if (!utcStr) return '—';
+    const d = new Date(utcStr.replace(' ','T').replace(/Z?$/,'Z'));
+    const local = new Date(d.getTime() + tzOffsetHours * 3600 * 1000);
+    let h = local.getUTCHours();
+    const min = local.getUTCMinutes();
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    h = h % 12 || 12;
+    return h + (min > 0 ? ':' + String(min).padStart(2,'0') : '') + ' ' + ampm;
+  }
+
+  // Get timezone offset hours for a station (approximate, using standard time)
+  const TZ_OFFSETS = {
+    'KLAX':-8,'KSFO':-8,'KSEA':-8,'KLAS':-8,
+    'KPHX':-7,
+    'KMDW':-6,'KAUS':-6,'KDFW':-6,'KHOU':-6,'KMSP':-6,'KBNA':-6,'KMSY':-6,'KOKC':-6,'KSAT':-6,
+    'KATL':-5,'KBOS':-5,'KCLT':-5,'KDCA':-5,'KDTW':-5,'KJAX':-5,'KMIA':-5,'KLGA':-5,'KPHL':-5,'KNYC':-5,
+  };
+
+  // Process forecast data: group by model, find max temp_f per model for today
+  function processForecasts(forecastRows, station, wuHigh, wuLow) {
+    const tzOff = TZ_OFFSETS[station] || -5;
+    // Today's date in station local time
+    const nowUtc = new Date();
+    const nowLocal = new Date(nowUtc.getTime() + tzOff * 3600 * 1000);
+    const todayStr = nowLocal.toISOString().slice(0,10);
+
+    // Group by model, keep only latest run per model
+    const modelMap = {};
+    forecastRows.forEach(function(row) {
+      // Filter to today's valid times only
+      const vt = new Date(row.valid_time.replace(' ','T').replace(/Z?$/,'Z'));
+      const vtLocal = new Date(vt.getTime() + tzOff * 3600 * 1000);
+      const vtDateStr = vtLocal.toISOString().slice(0,10);
+      if (vtDateStr !== todayStr) return;
+
+      const model = row.model;
+      if (!modelMap[model]) modelMap[model] = { model, runTime: row.run_time, rows: [] };
+      // Keep latest run_time per model
+      if (row.run_time > modelMap[model].runTime) {
+        modelMap[model].runTime = row.run_time;
+        modelMap[model].rows = [];
+      }
+      if (row.run_time === modelMap[model].runTime) {
+        modelMap[model].rows.push(row);
+      }
+    });
+
+    // For each model, find max temp_f and its valid_time
+    const results = [];
+    Object.values(modelMap).forEach(function(m) {
+      let maxTemp = null, maxTime = null, maxPacingTemp = null;
+      m.rows.forEach(function(row) {
+        const tf = row.temperature_f;
+        if (tf != null) {
+          if (maxTemp === null || tf > maxTemp) {
+            maxTemp = tf;
+            maxTime = row.valid_time;
+          }
+          // Pacing: find max temp up to now
+          const vt = new Date(row.valid_time.replace(' ','T').replace(/Z?$/,'Z'));
+          if (vt <= nowUtc) {
+            if (maxPacingTemp === null || tf > maxPacingTemp) maxPacingTemp = tf;
+          }
+        }
+      });
+      if (maxTemp === null) return;
+
+      // Extract run hour label e.g. "12Z"
+      const runHour = m.runTime ? (new Date(m.runTime.replace(' ','T').replace(/Z?$/,'Z')).getUTCHours() + 'Z') : '';
+      const modelLabel = m.model + (runHour ? ' (' + runHour + ')' : '');
+
+      // High time in local
+      const highTimeLocal = utcToLocalTimeStr(maxTime, tzOff);
+
+      // Pacing delta vs WU range
+      const pacing = maxPacingTemp !== null ? Math.round(maxPacingTemp * 10) / 10 : null;
+      let deltaStr = '—';
+      let deltaClass = '';
+      if (pacing !== null && wuHigh !== null && wuLow !== null) {
+        const dLow = Math.round((wuLow - pacing) * 10) / 10;
+        const dHigh = Math.round((wuHigh - pacing) * 10) / 10;
+        const sign = function(n) { return n >= 0 ? '+' : ''; };
+        deltaStr = sign(dLow) + dLow + ' to ' + sign(dHigh) + dHigh;
+        // Color: if model is above range = red (negative delta), below = green (positive), within = yellow
+        if (dHigh < 0) deltaClass = 'pace-neg';
+        else if (dLow > 0) deltaClass = 'pace-pos';
+        else deltaClass = 'pace-zero';
+      }
+
+      results.push({
+        model: modelLabel,
+        forecastHigh: Math.round(maxTemp * 10) / 10,
+        highTimeLocal,
+        pacingHigh: pacing,
+        wuRange: wuHigh !== null ? wuLow + '–' + wuHigh + '°F' : '—',
+        delta: deltaStr,
+        deltaClass,
+      });
+    });
+
+    // Sort by MODELS order, then alphabetically for any extras
+    results.sort(function(a,b) {
+      const ai = MODELS.findIndex(function(m) { return a.model.startsWith(m); });
+      const bi = MODELS.findIndex(function(m) { return b.model.startsWith(m); });
+      const av = ai === -1 ? 999 : ai;
+      const bv = bi === -1 ? 999 : bi;
+      return av - bv;
+    });
+
+    return results;
   }
 
   async function fetchAll() {
@@ -498,127 +400,175 @@
     btn.classList.add('loading');
     btn.querySelector('.btn-text').textContent = 'Fetching…';
     document.getElementById('dataSection').classList.remove('visible');
-    setStatus('Connecting to wethr.net…');
+    setStatus('Fetching observations, pacing & model data…');
 
     const now = new Date();
-    const twoHoursAgo = new Date(now.getTime() - 2 * 60 * 60 * 1000);
-    const end = now.toISOString().slice(0, 19) + 'Z';
-    const start = twoHoursAgo.toISOString().slice(0, 19) + 'Z';
+    const twoHoursAgo = new Date(now.getTime() - 2*60*60*1000);
+    const end = now.toISOString().slice(0,19)+'Z';
+    const start = twoHoursAgo.toISOString().slice(0,19)+'Z';
+
+    // Forecast window: start of today UTC to +36 hrs
+    const tzOff = TZ_OFFSETS[station] || -5;
+    const todayLocalMidnight = new Date(now.getTime() + tzOff*3600*1000);
+    todayLocalMidnight.setUTCHours(0,0,0,0);
+    const fcstStart = new Date(todayLocalMidnight.getTime() - tzOff*3600*1000); // back to UTC
+    const fcstEnd = new Date(fcstStart.getTime() + 36*60*60*1000);
+    const fcstStartStr = fcstStart.toISOString().slice(0,19)+'Z';
+    const fcstEndStr = fcstEnd.toISOString().slice(0,19)+'Z';
 
     try {
-      const [r1, r2, r3] = await Promise.allSettled([
-        fetch(proxyUrl({ station_code: station, start_time: start, end_time: end })),
-        fetch(proxyUrl({ station_code: station, mode: 'latest' })),
-        fetch(proxyUrl({ station_code: station, mode: 'wethr_high', logic: 'wu' })),
+      const [r1, r2, r3, r4] = await Promise.allSettled([
+        fetch(proxyUrl({ endpoint:'observations', station_code: station, start_time: start, end_time: end })),
+        fetch(proxyUrl({ endpoint:'observations', station_code: station, mode: 'latest' })),
+        fetch(proxyUrl({ endpoint:'observations', station_code: station, mode: 'wethr_high', logic: 'wu' })),
+        fetch(proxyUrl({ endpoint:'forecasts', location_name: station, start_valid_time: fcstStartStr, end_valid_time: fcstEndStr })),
       ]);
 
-      let history = [], latest = null, wu = null;
-      let units = 'fahrenheit';
+      let history=[], latest=null, wu=null, forecastRows=[];
+      let units='fahrenheit';
 
-      if (r1.status === 'fulfilled' && r1.value.ok) {
+      if (r1.status==='fulfilled'&&r1.value.ok) {
         const d = await r1.value.json();
-        history = Array.isArray(d) ? d : (d.observations || []);
-        if (history[0]) units = history[0].units || units;
+        history = Array.isArray(d)?d:(d.observations||[]);
+        if (history[0]) units = history[0].units||units;
       }
-      if (r2.status === 'fulfilled' && r2.value.ok) {
-        latest = await r2.value.json();
-        units = latest.units || units;
+      if (r2.status==='fulfilled'&&r2.value.ok) { latest = await r2.value.json(); units=latest.units||units; }
+      if (r3.status==='fulfilled'&&r3.value.ok) wu = await r3.value.json();
+      if (r4.status==='fulfilled'&&r4.value.ok) {
+        const fd = await r4.value.json();
+        forecastRows = Array.isArray(fd)?fd:(fd.forecasts||fd.data||[]);
       }
-      if (r3.status === 'fulfilled' && r3.value.ok) wu = await r3.value.json();
 
-      if (!history.length && !latest) throw new Error('No data returned — check station or try again.');
+      if (!history.length&&!latest) throw new Error('No data returned — check station or try again.');
 
-      history.sort(function(a, b) { return new Date(b.observation_time) - new Date(a.observation_time); });
-
+      history.sort(function(a,b){ return new Date(b.observation_time)-new Date(a.observation_time); });
       const obs1 = history.filter(is1Min);
-      const obs5 = history.filter(function(o) { return !is1Min(o); });
+      const obs5 = history.filter(function(o){ return !is1Min(o); });
 
-      fetchedData = { station, history, latest, wu, units, obs1, obs5, at: new Date() };
+      const wuHigh = wu&&wu.wethr_high!=null ? wu.wethr_high : null;
+      const wuLow  = wu&&wu.wethr_low!=null  ? wu.wethr_low  : null;
+      const modelData = processForecasts(forecastRows, station, wuHigh, wuLow);
+
+      fetchedData = { station, history, latest, wu, units, obs1, obs5, modelData, wuHigh, wuLow, at: new Date() };
 
       renderPacing(latest, wu, units);
-      renderTable('tbody1min', 'count1min', obs1, units);
-      renderTable('tbody5min', 'count5min', obs5, units);
+      renderModels(modelData);
+      renderObsTable('tbody1min','count1min',obs1,units);
+      renderObsTable('tbody5min','count5min',obs5,units);
 
       document.getElementById('dataSection').classList.add('visible');
-      setStatus('✓ ' + history.length + ' observations loaded — ' + obs1.length + ' at 1-min, ' + obs5.length + ' at 5-min/METAR.', 'success');
+      setStatus('✓ Loaded: '+history.length+' obs, '+modelData.length+' models for '+station, 'success');
 
-    } catch (err) {
-      setStatus('✗ ' + err.message, 'error');
+    } catch(err) {
+      setStatus('✗ '+err.message,'error');
     }
 
-    btn.disabled = false;
+    btn.disabled=false;
     btn.classList.remove('loading');
-    btn.querySelector('.btn-text').textContent = '⬇ Fetch Station Data';
+    btn.querySelector('.btn-text').textContent='⬇ Fetch Station Data';
   }
 
   function renderPacing(latest, wu, units) {
-    const u = units === 'fahrenheit' ? '°F' : '°C';
-    const cur = latest ? (latest.temperature_display != null ? latest.temperature_display : latest.temperature_f) : null;
+    const u = units==='fahrenheit'?'°F':'°C';
+    const cur = latest?(latest.temperature_display!=null?latest.temperature_display:latest.temperature_f):null;
     const items = [
-      { label: 'Current Temp',   value: cur != null ? cur + u : 'N/A' },
-      { label: 'Rel. Humidity',  value: latest && latest.relative_humidity != null ? latest.relative_humidity + '%' : 'N/A' },
-      { label: 'DSM High',       value: latest && (latest.dsm_high_display != null || latest.dsm_high_f != null) ? (latest.dsm_high_display != null ? latest.dsm_high_display : latest.dsm_high_f) + u : 'N/A' },
-      { label: 'WU Wethr High',  value: wu && wu.wethr_high != null ? wu.wethr_high + u : 'N/A' },
-      { label: 'WU Wethr Low',   value: wu && wu.wethr_low  != null ? wu.wethr_low  + u : 'N/A' },
-      { label: 'Last Obs (UTC)', value: latest ? formatTime(latest.observation_time) : 'N/A' },
+      { label:'Current Temp',   value: cur!=null?cur+u:'N/A' },
+      { label:'Rel. Humidity',  value: latest&&latest.relative_humidity!=null?latest.relative_humidity+'%':'N/A' },
+      { label:'DSM High',       value: latest&&(latest.dsm_high_display!=null||latest.dsm_high_f!=null)?(latest.dsm_high_display!=null?latest.dsm_high_display:latest.dsm_high_f)+u:'N/A' },
+      { label:'WU Wethr High',  value: wu&&wu.wethr_high!=null?wu.wethr_high+u:'N/A' },
+      { label:'WU Wethr Low',   value: wu&&wu.wethr_low!=null?wu.wethr_low+u:'N/A' },
+      { label:'Last Obs (UTC)', value: latest?formatTime(latest.observation_time):'N/A' },
     ];
-    document.getElementById('pacingGrid').innerHTML = items.map(function(i) {
-      return '<div class="pacing-item"><div class="pacing-label">' + i.label + '</div>'
-           + '<div class="pacing-value' + (i.value === 'N/A' ? ' na' : '') + '">' + i.value + '</div></div>';
+    document.getElementById('pacingGrid').innerHTML = items.map(function(i){
+      return '<div class="pacing-item"><div class="pacing-label">'+i.label+'</div>'
+           + '<div class="pacing-value'+(i.value==='N/A'?' na':'')+'">'+i.value+'</div></div>';
     }).join('');
   }
 
-  function renderTable(tbodyId, countId, obs, units) {
-    document.getElementById(countId).textContent = obs.length + ' records';
+  function renderModels(modelData) {
+    document.getElementById('modelCount').textContent = modelData.length + ' models';
+    if (!modelData.length) {
+      document.getElementById('tbodyModels').innerHTML = '<tr><td colspan="6" style="color:var(--muted);padding:12px 0;font-family:\'JetBrains Mono\',monospace;font-size:0.75rem;">No forecast data available</td></tr>';
+      return;
+    }
+    document.getElementById('tbodyModels').innerHTML = modelData.map(function(m) {
+      return '<tr>'
+        + '<td class="model-name">'+m.model+'</td>'
+        + '<td class="model-high">'+(m.forecastHigh!=null?m.forecastHigh+'°F':'—')+'</td>'
+        + '<td class="model-time">'+m.highTimeLocal+'</td>'
+        + '<td class="model-pace">'+(m.pacingHigh!=null?m.pacingHigh+'°F':'—')+'</td>'
+        + '<td style="color:var(--muted)">'+m.wuRange+'</td>'
+        + '<td class="'+m.deltaClass+'">'+m.delta+'</td>'
+        + '</tr>';
+    }).join('');
+  }
+
+  function renderObsTable(tbodyId, countId, obs, units) {
+    document.getElementById(countId).textContent = obs.length+' records';
     document.getElementById(tbodyId).innerHTML = obs.length
-      ? obs.map(function(o) { return buildRow(o, units); }).join('')
+      ? obs.map(function(o){ return buildObsRow(o,units); }).join('')
       : '<tr><td colspan="6" style="color:var(--muted);padding:12px 0;font-family:\'JetBrains Mono\',monospace;font-size:0.75rem;">No observations in this window</td></tr>';
   }
 
-  function pad(s, n) { return String(s).padEnd(n); }
+  function pad(s,n){ return String(s).padEnd(n); }
 
   function copyToClipboard() {
     if (!fetchedData) return;
-    const { station, latest, wu, units, obs1, obs5, at } = fetchedData;
-    const u = units === 'fahrenheit' ? '°F' : '°C';
+    const { station, latest, wu, units, obs1, obs5, modelData, wuHigh, wuLow, at } = fetchedData;
+    const u = units==='fahrenheit'?'°F':'°C';
     const lines = [];
 
     lines.push('=== WETHR.NET STATION SNAPSHOT ===');
-    lines.push('Station : ' + station);
-    lines.push('Fetched : ' + at.toUTCString());
-    lines.push('Units   : ' + units);
+    lines.push('Station : '+station);
+    lines.push('Fetched : '+at.toUTCString());
+    lines.push('Units   : '+units);
     lines.push('');
 
-    lines.push('--- PACING / CURRENT CONDITIONS ---');
+    lines.push('--- CURRENT CONDITIONS & PACING ---');
     if (latest) {
-      const cur = latest.temperature_display != null ? latest.temperature_display : latest.temperature_f;
-      lines.push('Current Temperature : ' + (cur != null ? cur + u : 'N/A'));
-      lines.push('Relative Humidity   : ' + (latest.relative_humidity != null ? latest.relative_humidity + '%' : 'N/A'));
-      const dsmH = latest.dsm_high_display != null ? latest.dsm_high_display : latest.dsm_high_f;
-      if (dsmH != null) lines.push('DSM High            : ' + dsmH + u);
-      lines.push('Last Obs Time (UTC) : ' + (latest.observation_time || 'N/A'));
+      const cur = latest.temperature_display!=null?latest.temperature_display:latest.temperature_f;
+      lines.push('Current Temperature : '+(cur!=null?cur+u:'N/A'));
+      lines.push('Relative Humidity   : '+(latest.relative_humidity!=null?latest.relative_humidity+'%':'N/A'));
+      const dsmH = latest.dsm_high_display!=null?latest.dsm_high_display:latest.dsm_high_f;
+      if (dsmH!=null) lines.push('DSM High            : '+dsmH+u);
+      lines.push('Last Obs Time (UTC) : '+(latest.observation_time||'N/A'));
     }
     if (wu) {
-      lines.push('Wethr High (WU) : ' + wu.wethr_high + u + '  @ ' + (wu.time_of_high_utc || 'N/A'));
-      lines.push('Wethr Low  (WU) : ' + wu.wethr_low  + u + '  @ ' + (wu.time_of_low_utc  || 'N/A'));
+      lines.push('WU Wethr High : '+wu.wethr_high+u+'  @ '+(wu.time_of_high_utc||'N/A'));
+      lines.push('WU Wethr Low  : '+wu.wethr_low+u+'  @ '+(wu.time_of_low_utc||'N/A'));
     }
     lines.push('');
 
-    lines.push('--- 1-MINUTE OBSERVATIONS (' + obs1.length + ' records, last 2 hrs) ---');
-    lines.push(pad('Time (UTC)', 22) + ' ' + pad('Temp', 8) + ' ' + pad('Dew Pt', 8) + ' ' + pad('RH%', 5) + ' ' + pad('Wind', 18) + ' Type');
-    lines.push('-'.repeat(80));
-    obs1.forEach(function(o) {
-      const type = o.product || guessType(o);
-      lines.push(pad(formatTime(o.observation_time), 22) + ' ' + pad(formatTemp(o, units), 8) + ' ' + pad(formatDew(o, units), 8) + ' ' + pad(o.relative_humidity != null ? o.relative_humidity + '%' : '—', 5) + ' ' + pad(formatWind(o), 18) + ' ' + type);
+    lines.push('--- MODEL FORECAST PACING ('+modelData.length+' models) ---');
+    lines.push(pad('Model',22)+' '+pad('Fcst High',10)+' '+pad('High Time',12)+' '+pad('Pacing',10)+' '+pad('WU Range',12)+' Delta');
+    lines.push('-'.repeat(85));
+    modelData.forEach(function(m) {
+      lines.push(
+        pad(m.model,22)+' '+
+        pad(m.forecastHigh!=null?m.forecastHigh+'°F':'—',10)+' '+
+        pad(m.highTimeLocal,12)+' '+
+        pad(m.pacingHigh!=null?m.pacingHigh+'°F':'—',10)+' '+
+        pad(m.wuRange,12)+' '+
+        m.delta
+      );
     });
     lines.push('');
 
-    lines.push('--- 5-MIN / HOURLY METAR OBSERVATIONS (' + obs5.length + ' records, last 2 hrs) ---');
-    lines.push(pad('Time (UTC)', 22) + ' ' + pad('Temp', 8) + ' ' + pad('Dew Pt', 8) + ' ' + pad('RH%', 5) + ' ' + pad('Wind', 18) + ' Type');
+    lines.push('--- 1-MINUTE OBSERVATIONS ('+obs1.length+' records, last 2 hrs) ---');
+    lines.push(pad('Time (UTC)',22)+' '+pad('Temp',8)+' '+pad('Dew Pt',8)+' '+pad('RH%',5)+' '+pad('Wind',18)+' Type');
+    lines.push('-'.repeat(80));
+    obs1.forEach(function(o) {
+      const type=o.product||guessType(o);
+      lines.push(pad(formatTime(o.observation_time),22)+' '+pad(formatTemp(o,units),8)+' '+pad(formatDew(o,units),8)+' '+pad(o.relative_humidity!=null?o.relative_humidity+'%':'—',5)+' '+pad(formatWind(o),18)+' '+type);
+    });
+    lines.push('');
+
+    lines.push('--- 5-MIN / HOURLY METAR OBSERVATIONS ('+obs5.length+' records, last 2 hrs) ---');
+    lines.push(pad('Time (UTC)',22)+' '+pad('Temp',8)+' '+pad('Dew Pt',8)+' '+pad('RH%',5)+' '+pad('Wind',18)+' Type');
     lines.push('-'.repeat(80));
     obs5.forEach(function(o) {
-      const type = o.product || guessType(o);
-      lines.push(pad(formatTime(o.observation_time), 22) + ' ' + pad(formatTemp(o, units), 8) + ' ' + pad(formatDew(o, units), 8) + ' ' + pad(o.relative_humidity != null ? o.relative_humidity + '%' : '—', 5) + ' ' + pad(formatWind(o), 18) + ' ' + type);
+      const type=o.product||guessType(o);
+      lines.push(pad(formatTime(o.observation_time),22)+' '+pad(formatTemp(o,units),8)+' '+pad(formatDew(o,units),8)+' '+pad(o.relative_humidity!=null?o.relative_humidity+'%':'—',5)+' '+pad(formatWind(o),18)+' '+type);
     });
     lines.push('');
     lines.push('=== END OF SNAPSHOT ===');
@@ -626,32 +576,19 @@
     const text = lines.join('\n');
 
     function onCopied() {
-      const btn = document.getElementById('copyBtn');
-      const txt = document.getElementById('copyText');
-      btn.classList.add('copied');
-      txt.textContent = '✓ Copied to Clipboard!';
-      setTimeout(function() {
-        btn.classList.remove('copied');
-        txt.textContent = 'Copy All Data to Clipboard for AI';
-      }, 2500);
+      const btn=document.getElementById('copyBtn'), txt=document.getElementById('copyText');
+      btn.classList.add('copied'); txt.textContent='✓ Copied to Clipboard!';
+      setTimeout(function(){ btn.classList.remove('copied'); txt.textContent='Copy All Data to Clipboard for AI'; },2500);
     }
 
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(text).then(onCopied).catch(function() { fallbackCopy(text); onCopied(); });
-    } else {
-      fallbackCopy(text); onCopied();
-    }
+    if (navigator.clipboard&&navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(onCopied).catch(function(){ fallbackCopy(text);onCopied(); });
+    } else { fallbackCopy(text);onCopied(); }
   }
 
   function fallbackCopy(text) {
-    const ta = document.createElement('textarea');
-    ta.value = text;
-    ta.style.position = 'fixed';
-    ta.style.opacity = '0';
-    document.body.appendChild(ta);
-    ta.focus(); ta.select();
-    document.execCommand('copy');
-    document.body.removeChild(ta);
+    const ta=document.createElement('textarea'); ta.value=text; ta.style.position='fixed'; ta.style.opacity='0';
+    document.body.appendChild(ta); ta.focus(); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
   }
 </script>
 </body>
