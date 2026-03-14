@@ -1,0 +1,1 @@
+# wethr-station-snapshot
