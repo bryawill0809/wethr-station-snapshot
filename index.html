@@ -184,24 +184,12 @@
 
     <div class="data-card">
       <div class="card-header">
-        <div class="card-title">⚡ 1-Min Observations — Last 2 hrs <span class="record-count" id="count1minToday">—</span></div>
+        <div class="card-title">🕐 All Observations — Last 2 hrs (1min / 5min / Hourly) <span class="record-count" id="countObsToday">—</span></div>
       </div>
       <div class="card-body">
         <table class="obs-table">
           <thead><tr><th>Time (UTC)</th><th>Temp</th><th>Dew Pt</th><th>RH%</th><th>Wind</th><th>Type</th></tr></thead>
-          <tbody id="tbody1minToday"></tbody>
-        </table>
-      </div>
-    </div>
-
-    <div class="data-card">
-      <div class="card-header">
-        <div class="card-title">🕐 5-Min / Hourly METAR — Last 2 hrs <span class="record-count" id="count5minToday">—</span></div>
-      </div>
-      <div class="card-body">
-        <table class="obs-table">
-          <thead><tr><th>Time (UTC)</th><th>Temp</th><th>Dew Pt</th><th>RH%</th><th>Wind</th><th>Type</th></tr></thead>
-          <tbody id="tbody5minToday"></tbody>
+          <tbody id="tbodyObsToday"></tbody>
         </table>
       </div>
     </div>
@@ -231,24 +219,12 @@
 
     <div class="data-card">
       <div class="card-header">
-        <div class="card-title tmrw-title">⚡ 1-Min Observations — Last 2 hrs <span class="record-count tmrw" id="count1minTmrw">—</span></div>
+        <div class="card-title tmrw-title">🕐 All Observations — Last 2 hrs (1min / 5min / Hourly) <span class="record-count tmrw" id="countObsTmrw">—</span></div>
       </div>
       <div class="card-body">
         <table class="obs-table">
           <thead><tr><th>Time (UTC)</th><th>Temp</th><th>Dew Pt</th><th>RH%</th><th>Wind</th><th>Type</th></tr></thead>
-          <tbody id="tbody1minTmrw"></tbody>
-        </table>
-      </div>
-    </div>
-
-    <div class="data-card">
-      <div class="card-header">
-        <div class="card-title tmrw-title">🕐 5-Min / Hourly METAR — Last 2 hrs <span class="record-count tmrw" id="count5minTmrw">—</span></div>
-      </div>
-      <div class="card-body">
-        <table class="obs-table">
-          <thead><tr><th>Time (UTC)</th><th>Temp</th><th>Dew Pt</th><th>RH%</th><th>Wind</th><th>Type</th></tr></thead>
-          <tbody id="tbody5minTmrw"></tbody>
+          <tbody id="tbodyObsTmrw"></tbody>
         </table>
       </div>
     </div>
@@ -452,8 +428,8 @@
       }
 
       history.sort(function(a,b){return new Date(b.observation_time)-new Date(a.observation_time);});
-      var obs1=history.filter(is1Min);
-      var obs5=history.filter(function(o){return !is1Min(o);});
+      var obs1=history; // all obs combined, sorted newest first
+      var obs5=[];      // unused — kept for clipboard compat
 
       // Extract WU high/low — handle all possible field names from API v2
       var wuHigh=null, wuLow=null;
@@ -477,15 +453,13 @@
         storeTmrw=store;
         // tomorrow pacing panel removed
         renderModelTable('tbodyModelsTmrw','modelCountTmrw',modelData,true);
-        renderObsTable('tbody1minTmrw','count1minTmrw',obs1,units);
-        renderObsTable('tbody5minTmrw','count5minTmrw',obs5,units);
+        renderObsTable('tbodyObsTmrw','countObsTmrw',history,units);
         document.getElementById('tmrwSection').classList.add('visible');
       } else {
         storeToday=store;
         renderPacing('pacingGridToday',latest,wu,units,false);
         renderModelTable('tbodyModelsToday','modelCountToday',modelData,false);
-        renderObsTable('tbody1minToday','count1minToday',obs1,units);
-        renderObsTable('tbody5minToday','count5minToday',obs5,units);
+        renderObsTable('tbodyObsToday','countObsToday',history,units);
         document.getElementById('todaySection').classList.add('visible');
       }
 
@@ -628,19 +602,21 @@
     });
     lines.push('');
 
-    lines.push('--- 1-MINUTE OBSERVATIONS ('+store.obs1.length+' records, last 2 hrs) ---');
-    lines.push(pad('Time (UTC)',22)+' '+pad('Temp',8)+' '+pad('Dew Pt',8)+' '+pad('RH%',5)+' '+pad('Wind',18)+' Type');
-    lines.push('-'.repeat(80));
-    store.obs1.forEach(function(o){
-      var t=o.product||guessType(o);
-      lines.push(pad(formatTime(o.observation_time),22)+' '+pad(formatTemp(o,store.units),8)+' '+pad(formatDew(o,store.units),8)+' '+pad(o.relative_humidity!=null?o.relative_humidity+'%':'—',5)+' '+pad(formatWind(o),18)+' '+t);
-    });
-    lines.push('');
+    // If tomorrow, also include today's model pacing table for reference
+    if(store.isTomorrow && storeToday && storeToday.modelData && storeToday.modelData.length){
+      lines.push('--- TODAY MODEL FORECAST PACING ('+storeToday.modelData.length+' models) ---');
+      lines.push(pad('Model',22)+' '+pad('Fcst High',10)+' '+pad('High Time',12)+' '+pad('Pacing',10)+' '+pad('WU Range',12)+' Delta');
+      lines.push('-'.repeat(85));
+      storeToday.modelData.forEach(function(m){
+        lines.push(pad(m.model,22)+' '+pad(m.forecastHigh!=null?m.forecastHigh+'°F':'—',10)+' '+pad(m.highTimeLocal,12)+' '+pad(m.pacingHigh!=null?m.pacingHigh+'°F':'—',10)+' '+pad(m.wuRange,12)+' '+m.delta);
+      });
+      lines.push('');
+    }
 
-    lines.push('--- 5-MIN / HOURLY METAR OBSERVATIONS ('+store.obs5.length+' records, last 2 hrs) ---');
+    lines.push('--- ALL OBSERVATIONS — LAST 2 HRS (1min / 5min / Hourly) ('+store.history.length+' records) ---');
     lines.push(pad('Time (UTC)',22)+' '+pad('Temp',8)+' '+pad('Dew Pt',8)+' '+pad('RH%',5)+' '+pad('Wind',18)+' Type');
     lines.push('-'.repeat(80));
-    store.obs5.forEach(function(o){
+    store.history.forEach(function(o){
       var t=o.product||guessType(o);
       lines.push(pad(formatTime(o.observation_time),22)+' '+pad(formatTemp(o,store.units),8)+' '+pad(formatDew(o,store.units),8)+' '+pad(o.relative_humidity!=null?o.relative_humidity+'%':'—',5)+' '+pad(formatWind(o),18)+' '+t);
     });
