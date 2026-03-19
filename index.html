@@ -176,7 +176,7 @@
       </div>
       <div class="card-body no-max">
         <table class="model-table">
-          <thead><tr><th>Model</th><th>Fcst High</th><th>High Time (Local)</th><th>Pacing</th><th>Current</th><th>Pace</th></tr></thead>
+          <thead><tr><th>Model</th><th>Fcst High</th><th>High Time (Local)</th><th>Model Now</th><th>Current</th><th>Pace</th></tr></thead>
           <tbody id="tbodyModelsToday"></tbody>
         </table>
       </div>
@@ -211,7 +211,7 @@
       </div>
       <div class="card-body no-max">
         <table class="model-table">
-          <thead><tr><th>Model</th><th>Fcst High</th><th>High Time (Local)</th><th>Pacing</th><th>Current</th><th>Pace</th></tr></thead>
+          <thead><tr><th>Model</th><th>Fcst High</th><th>High Time (Local)</th><th>Model Now</th><th>Current</th><th>Pace</th></tr></thead>
           <tbody id="tbodyModelsTmrw"></tbody>
         </table>
       </div>
@@ -332,17 +332,24 @@
     var results=[];
     Object.values(modelMap).forEach(function(m){
       var maxTemp=null,maxTime=null,maxPacing=null;
+      var closestRow=null, closestDiff=Infinity;
       m.rows.forEach(function(row){
         var tf=row.temperature_f;
         if(tf==null) return;
         if(maxTemp===null||tf>maxTemp){maxTemp=tf;maxTime=row.valid_time;}
-        // pacing: for tomorrow we use ALL rows (full day hasn't happened yet, so the forecast itself IS the pace)
-        // for today we only count rows up to now
+        // Find the model's expected temp closest to right now
         var vt=new Date(row.valid_time.replace(' ','T').replace(/Z?$/,'Z'));
-        if(isTomorrow || vt<=nowUtc){
+        var diff=Math.abs(vt.getTime()-nowUtc.getTime());
+        if(diff<closestDiff){closestDiff=diff;closestRow=row;}
+        // For tomorrow use full day max as pacing fallback
+        if(isTomorrow){
           if(maxPacing===null||tf>maxPacing) maxPacing=tf;
         }
       });
+      // Model's current expected temp = closest valid_time to now
+      if(closestRow&&closestRow.temperature_f!=null){
+        maxPacing=Math.round(closestRow.temperature_f*10)/10;
+      }
       if(maxTemp===null) return;
 
       var runHour=m.runTime?new Date(m.runTime.replace(' ','T').replace(/Z?$/,'Z')).getUTCHours()+'Z':'';
@@ -350,19 +357,19 @@
       var highTimeLocal=utcToLocalTimeStr(maxTime,tzOff);
 
       var deltaStr='—',deltaClass='';
-      if(maxTemp!==null&&currentTemp!==null){
-        // Pace = forecast high minus current temp range (low to high)
+      if(maxPacing!==null&&currentTemp!==null){
+        // Pace = Model's current expected temp minus current observed temp range
         var cLow  = (currentLow!=null)  ? currentLow  : currentTemp;
         var cHigh = (currentHigh!=null) ? currentHigh : currentTemp;
-        var dLow  = Math.round((maxTemp-cHigh)*10)/10; // fcst - current high = tightest gap
-        var dHigh = Math.round((maxTemp-cLow)*10)/10;  // fcst - current low  = widest gap
+        var dLow  = Math.round((maxPacing-cHigh)*10)/10; // model - current high
+        var dHigh = Math.round((maxPacing-cLow)*10)/10;  // model - current low
         var sign = function(n){ return n>=0?'+':''; };
         if(cLow===cHigh){
           deltaStr = sign(dLow)+dLow;
         } else {
           deltaStr = sign(dLow)+dLow+' to '+sign(dHigh)+dHigh;
         }
-        // Red = positive (model forecasting above current), Blue = negative (model below current)
+        // Red = positive (model above current), Blue = negative (model below current)
         deltaClass = dHigh<0 ? 'pace-pos' : dLow>0 ? 'pace-neg' : 'pace-zero';
       }
 
@@ -599,7 +606,7 @@
 
     function modelSection(label, data){
       lines.push('--- '+label+' ('+data.length+' models) ---');
-      lines.push(pad('Model',22)+' '+pad('Fcst High',10)+' '+pad('High Time',12)+' '+pad('Pacing',10)+' '+pad('Current',10)+' Pace');
+      lines.push(pad('Model',22)+' '+pad('Fcst High',10)+' '+pad('High Time',12)+' '+pad('Model Now',10)+' '+pad('Current',10)+' Pace');
       lines.push('-'.repeat(85));
       data.forEach(function(m){
         lines.push(pad(m.model,22)+' '+pad(m.forecastHigh!=null?m.forecastHigh+'°F':'—',10)+' '+pad(m.highTimeLocal,12)+' '+pad(m.pacingHigh!=null?m.pacingHigh+'°F':'—',10)+' '+pad(m.actualTemp||'—',10)+' '+m.delta);
