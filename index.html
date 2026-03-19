@@ -176,7 +176,7 @@
       </div>
       <div class="card-body no-max">
         <table class="model-table">
-          <thead><tr><th>Model</th><th>Fcst High</th><th>High Time (Local)</th><th>Pacing</th><th>Actual (WU)</th><th>Pace</th></tr></thead>
+          <thead><tr><th>Model</th><th>Fcst High</th><th>High Time (Local)</th><th>Pacing</th><th>Current</th><th>Pace</th></tr></thead>
           <tbody id="tbodyModelsToday"></tbody>
         </table>
       </div>
@@ -211,7 +211,7 @@
       </div>
       <div class="card-body no-max">
         <table class="model-table">
-          <thead><tr><th>Model</th><th>Fcst High</th><th>High Time (Local)</th><th>Pacing</th><th>Actual (WU)</th><th>Pace</th></tr></thead>
+          <thead><tr><th>Model</th><th>Fcst High</th><th>High Time (Local)</th><th>Pacing</th><th>Current</th><th>Pace</th></tr></thead>
           <tbody id="tbodyModelsTmrw"></tbody>
         </table>
       </div>
@@ -364,7 +364,7 @@
         forecastHigh:Math.round(maxTemp*10)/10,
         highTimeLocal:highTimeLocal,
         pacingHigh:maxPacing!==null?Math.round(maxPacing*10)/10:null,
-        wuRange:wuHigh!==null?wuLow+'–'+wuHigh+'°F':'—',
+        actualTemp:currentTemp!=null?currentTemp+'°F':'—',
         delta:deltaStr,
         deltaClass:deltaClass
       });
@@ -548,7 +548,7 @@
           +'<td class="m-high">'+(m.forecastHigh!=null?m.forecastHigh+'°F':'—')+'</td>'
           +'<td class="m-time">'+m.highTimeLocal+'</td>'
           +'<td style="color:var(--text)">'+(m.pacingHigh!=null?m.pacingHigh+'°F':'—')+'</td>'
-          +'<td style="color:var(--muted)">'+m.wuRange+'</td>'
+          +'<td style="color:var(--green)">'+m.actualTemp+'</td>'
           +'<td class="'+m.deltaClass+'">'+m.delta+'</td>'
           +'</tr>';
       }).join('');
@@ -559,7 +559,7 @@
           +'<td class="m-high">'+(m.forecastHigh!=null?m.forecastHigh+'°F':'—')+'</td>'
           +'<td class="m-time">'+m.highTimeLocal+'</td>'
           +'<td style="color:var(--text)">'+(m.pacingHigh!=null?m.pacingHigh+'°F':'—')+'</td>'
-          +'<td style="color:var(--muted)">'+m.wuRange+'</td>'
+          +'<td style="color:var(--green)">'+m.actualTemp+'</td>'
           +'<td class="'+m.deltaClass+'">'+m.delta+'</td>'
           +'</tr>';
       }).join('');
@@ -581,10 +581,10 @@
 
     function modelSection(label, data){
       lines.push('--- '+label+' ('+data.length+' models) ---');
-      lines.push(pad('Model',22)+' '+pad('Fcst High',10)+' '+pad('High Time',12)+' '+pad('Pacing',10)+' '+pad('Actual (WU)',13)+' Pace');
+      lines.push(pad('Model',22)+' '+pad('Fcst High',10)+' '+pad('High Time',12)+' '+pad('Pacing',10)+' '+pad('Current',10)+' Pace');
       lines.push('-'.repeat(85));
       data.forEach(function(m){
-        lines.push(pad(m.model,22)+' '+pad(m.forecastHigh!=null?m.forecastHigh+'°F':'—',10)+' '+pad(m.highTimeLocal,12)+' '+pad(m.pacingHigh!=null?m.pacingHigh+'°F':'—',10)+' '+pad(m.wuRange,13)+' '+m.delta);
+        lines.push(pad(m.model,22)+' '+pad(m.forecastHigh!=null?m.forecastHigh+'°F':'—',10)+' '+pad(m.highTimeLocal,12)+' '+pad(m.pacingHigh!=null?m.pacingHigh+'°F':'—',10)+' '+pad(m.actualTemp||'—',10)+' '+m.delta);
       });
       lines.push('');
     }
