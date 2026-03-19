@@ -316,7 +316,7 @@
     return result.toISOString().slice(0,10);
   }
 
-  function processForecasts(rows,station,targetDateStr,nowUtc,wuHigh,wuLow,isTomorrow,currentTemp,currentLow,currentHigh,nowRows){
+  function processForecasts(rows,station,targetDateStr,nowUtc,wuHigh,wuLow,isTomorrow,currentTemp,currentLow,currentHigh){
     var tzOff=TZ_OFFSETS[station]||-5;
     var modelMap={};
     rows.forEach(function(row){
@@ -340,28 +340,16 @@
           if(maxPacing===null||tf>maxPacing) maxPacing=tf;
         }
       });
-      // Model Now: find this model's temp closest to now from the narrow nowRows window
-      if(!isTomorrow && nowRows && nowRows.length){
+      // Model Now: pick valid_time from latest run closest to current time
+      if(!isTomorrow){
         var closestRow=null, closestDiff=Infinity;
-        nowRows.forEach(function(row){
-          if(row.model!==m.model) return;
+        m.rows.forEach(function(row){
           if(row.temperature_f==null) return;
           var vt=new Date(row.valid_time.replace(' ','T').replace(/Z?$/,'Z'));
           var diff=Math.abs(vt.getTime()-nowUtc.getTime());
           if(diff<closestDiff){closestDiff=diff;closestRow=row;}
         });
         if(closestRow) maxPacing=Math.round(closestRow.temperature_f*10)/10;
-      }
-      // Fallback: use closest from full day rows if nowRows had nothing for this model
-      if(!isTomorrow && maxPacing===null){
-        var closestRow2=null, closestDiff2=Infinity;
-        m.rows.forEach(function(row){
-          if(row.temperature_f==null) return;
-          var vt=new Date(row.valid_time.replace(' ','T').replace(/Z?$/,'Z'));
-          var diff=Math.abs(vt.getTime()-nowUtc.getTime());
-          if(diff<closestDiff2){closestDiff2=diff;closestRow2=row;}
-        });
-        if(closestRow2) maxPacing=Math.round(closestRow2.temperature_f*10)/10;
       }
       if(maxTemp===null) return;
 
@@ -429,9 +417,7 @@
     var fcstEnd=new Date(fcstStart.getTime()+30*3600000);
     var fcstStartStr=fcstStart.toISOString().slice(0,19)+'Z';
     var fcstEndStr=fcstEnd.toISOString().slice(0,19)+'Z';
-    // Narrow window around NOW for Model Now (±3 hours)
-    var nowWindowStart=new Date(nowUtc.getTime()-3*3600000).toISOString().slice(0,19)+'Z';
-    var nowWindowEnd=new Date(nowUtc.getTime()+3*3600000).toISOString().slice(0,19)+'Z';
+
 
     // Obs window: last 2 hours (same for both)
     var obsEnd=nowUtc.toISOString().slice(0,19)+'Z';
@@ -443,9 +429,8 @@
         fetch(proxyUrl({endpoint:'observations',station_code:station,mode:'latest'})),
         fetch(proxyUrl({endpoint:'observations',station_code:station,mode:'wethr_high',logic:'wu'})),
         fetch(proxyUrl({endpoint:'forecasts',location_name:station,start_valid_time:fcstStartStr,end_valid_time:fcstEndStr})),
-        fetch(proxyUrl({endpoint:'forecasts',location_name:station,start_valid_time:nowWindowStart,end_valid_time:nowWindowEnd})),
       ]);
-      var r1=results[0],r2=results[1],r3=results[2],r4=results[3],r5=results[4];
+      var r1=results[0],r2=results[1],r3=results[2],r4=results[3];
 
       var history=[],latest=null,wu=null,forecastRows=[],units='fahrenheit';
 
@@ -456,17 +441,9 @@
       }
       if(r2.status==='fulfilled'&&r2.value.ok){latest=await r2.value.json();units=latest.units||units;}
       if(r3.status==='fulfilled'&&r3.value.ok) wu=await r3.value.json();
-      var nowRows=[];
       if(r4.status==='fulfilled'&&r4.value.ok){
         var fd=await r4.value.json();
         forecastRows=Array.isArray(fd)?fd:(fd.forecasts||fd.data||[]);
-      }
-      if(r5.status==='fulfilled'&&r5.value.ok){
-        var fd5=await r5.value.json();
-        nowRows=Array.isArray(fd5)?fd5:(fd5.forecasts||fd5.data||[]);
-        // Log a sample to see what valid_times look like
-        var sample=nowRows.filter(function(r){return r.model==='GFS'||r.model==='HRRR';}).slice(0,6);
-        console.log('nowRows sample:', JSON.stringify(sample.map(function(r){return {model:r.model,valid_time:r.valid_time,temp_f:r.temperature_f};})));
       }
 
       history.sort(function(a,b){return new Date(b.observation_time)-new Date(a.observation_time);});
@@ -507,7 +484,7 @@
         if(currentLow!==null) currentTemp=currentLow;
       }
       console.log('currentTemp:', currentTemp, 'range:', currentLow, '-', currentHigh);
-      var modelData=processForecasts(forecastRows,station,targetDateStr,nowUtc,wuHigh,wuLow,isTomorrow,currentTemp,currentLow,currentHigh,nowRows);
+      var modelData=processForecasts(forecastRows,station,targetDateStr,nowUtc,wuHigh,wuLow,isTomorrow,currentTemp,currentLow,currentHigh);
 
       var store={station,history,latest,wu,units,obs1,obs5,modelData,wuHigh,wuLow,targetDateStr,isTomorrow,at:new Date()};
 
