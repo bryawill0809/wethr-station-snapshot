@@ -444,12 +444,23 @@
         console.log('WU response:', JSON.stringify(wu));
         console.log('wuHigh:', wuHigh, 'wuLow:', wuLow);
       }
+      // Get current temp — try latest first, fall back to most recent history observation
       var currentTemp=null;
       if(latest){
         currentTemp = latest.temperature_display!=null ? latest.temperature_display
                     : latest.temperature_f!=null ? latest.temperature_f
+                    : latest.temperature!=null ? Math.round((latest.temperature*9/5+32)*10)/10
                     : null;
       }
+      if(currentTemp===null && history.length>0){
+        var h0=history[0];
+        currentTemp = h0.temperature_display!=null ? h0.temperature_display
+                    : h0.temperature_f!=null ? h0.temperature_f
+                    : h0.temperature!=null ? Math.round((h0.temperature*9/5+32)*10)/10
+                    : null;
+      }
+      console.log('latest:', JSON.stringify(latest));
+      console.log('currentTemp resolved:', currentTemp);
       var modelData=processForecasts(forecastRows,station,targetDateStr,nowUtc,wuHigh,wuLow,isTomorrow,currentTemp);
 
       var store={station,history,latest,wu,units,obs1,obs5,modelData,wuHigh,wuLow,targetDateStr,isTomorrow,at:new Date()};
@@ -667,3 +678,4 @@
 </script>
 </body>
 </html>
+
