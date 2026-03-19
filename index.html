@@ -316,7 +316,7 @@
     return result.toISOString().slice(0,10);
   }
 
-  function processForecasts(rows,station,targetDateStr,nowUtc,wuHigh,wuLow,isTomorrow){
+  function processForecasts(rows,station,targetDateStr,nowUtc,wuHigh,wuLow,isTomorrow,currentTemp){
     var tzOff=TZ_OFFSETS[station]||-5;
     var modelMap={};
     rows.forEach(function(row){
@@ -350,13 +350,13 @@
       var highTimeLocal=utcToLocalTimeStr(maxTime,tzOff);
 
       var deltaStr='—',deltaClass='';
-      if(maxPacing!==null&&maxTemp!==null){
-        // Pace = forecast high minus current pacing high (how far model still needs to climb)
-        var pace=Math.round((maxTemp-maxPacing)*10)/10;
+      if(maxTemp!==null&&currentTemp!==null){
+        // Pace = forecast high minus current observed temp
+        var pace=Math.round((maxTemp-currentTemp)*10)/10;
         var sign=pace>=0?'+':'';
         deltaStr=sign+pace;
-        // Red = model already above forecast (overshot), Blue = model below forecast (needs to climb)
-        deltaClass=pace<0?'pace-neg':'pace-pos';
+        // Positive (model above current temp) = red, Negative (model below current temp) = blue
+        deltaClass=pace>0?'pace-neg':'pace-pos';
       }
 
       results.push({
@@ -444,7 +444,13 @@
         console.log('WU response:', JSON.stringify(wu));
         console.log('wuHigh:', wuHigh, 'wuLow:', wuLow);
       }
-      var modelData=processForecasts(forecastRows,station,targetDateStr,nowUtc,wuHigh,wuLow,isTomorrow);
+      var currentTemp=null;
+      if(latest){
+        currentTemp = latest.temperature_display!=null ? latest.temperature_display
+                    : latest.temperature_f!=null ? latest.temperature_f
+                    : null;
+      }
+      var modelData=processForecasts(forecastRows,station,targetDateStr,nowUtc,wuHigh,wuLow,isTomorrow,currentTemp);
 
       var store={station,history,latest,wu,units,obs1,obs5,modelData,wuHigh,wuLow,targetDateStr,isTomorrow,at:new Date()};
 
