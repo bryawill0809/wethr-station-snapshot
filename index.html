@@ -85,7 +85,7 @@
   .m-name.tmrw { color: var(--purple); }
   .m-high { color: var(--accent2); font-weight: 700; }
   .m-time { color: var(--muted); font-size: 0.7rem; }
-  .pace-pos { color: var(--green); }
+  .pace-pos { color: var(--accent); }
   .pace-neg { color: var(--danger); }
   .pace-zero { color: var(--yellow); }
 
@@ -176,7 +176,7 @@
       </div>
       <div class="card-body no-max">
         <table class="model-table">
-          <thead><tr><th>Model</th><th>Fcst High</th><th>High Time (Local)</th><th>Pacing High</th><th>WU Range</th><th>Delta</th></tr></thead>
+          <thead><tr><th>Model</th><th>Fcst High</th><th>High Time (Local)</th><th>Pacing</th><th>Actual (WU)</th><th>Pace</th></tr></thead>
           <tbody id="tbodyModelsToday"></tbody>
         </table>
       </div>
@@ -211,20 +211,8 @@
       </div>
       <div class="card-body no-max">
         <table class="model-table">
-          <thead><tr><th>Model</th><th>Fcst High</th><th>High Time (Local)</th><th>Pacing High</th><th>WU Range</th><th>Delta</th></tr></thead>
+          <thead><tr><th>Model</th><th>Fcst High</th><th>High Time (Local)</th><th>Pacing</th><th>Actual (WU)</th><th>Pace</th></tr></thead>
           <tbody id="tbodyModelsTmrw"></tbody>
-        </table>
-      </div>
-    </div>
-
-    <div class="data-card">
-      <div class="card-header">
-        <div class="card-title tmrw-title">🕐 All Observations — Last 2 hrs (5min / Hourly) <span class="record-count tmrw" id="countObsTmrw">—</span></div>
-      </div>
-      <div class="card-body">
-        <table class="obs-table">
-          <thead><tr><th>Time (UTC)</th><th>Temp</th><th>Dew Pt</th><th>RH%</th><th>Wind</th><th>Type</th></tr></thead>
-          <tbody id="tbodyObsTmrw"></tbody>
         </table>
       </div>
     </div>
@@ -316,8 +304,16 @@
   }
 
   function getLocalDateStr(nowUtc,tzOff,daysAhead){
-    var d=new Date(nowUtc.getTime()+tzOff*3600000+(daysAhead||0)*86400000);
-    return d.toISOString().slice(0,10);
+    // Convert UTC to station local time using station's standard time offset
+    // Then add calendar days cleanly at midnight to avoid DST edge cases
+    var localMs = nowUtc.getTime() + tzOff*3600000;
+    var localDate = new Date(localMs);
+    // Get the date string at the station's local midnight
+    var y = localDate.getUTCFullYear();
+    var mo = localDate.getUTCMonth();
+    var d = localDate.getUTCDate() + (daysAhead||0);
+    var result = new Date(Date.UTC(y, mo, d));
+    return result.toISOString().slice(0,10);
   }
 
   function processForecasts(rows,station,targetDateStr,nowUtc,wuHigh,wuLow,isTomorrow){
@@ -354,12 +350,13 @@
       var highTimeLocal=utcToLocalTimeStr(maxTime,tzOff);
 
       var deltaStr='—',deltaClass='';
-      if(maxPacing!==null&&wuHigh!==null&&wuLow!==null){
-        var dLow=Math.round((wuLow-maxPacing)*10)/10;
-        var dHigh=Math.round((wuHigh-maxPacing)*10)/10;
-        var sign=function(n){return n>=0?'+':''};
-        deltaStr=sign(dLow)+dLow+' to '+sign(dHigh)+dHigh;
-        deltaClass=dHigh<0?'pace-neg':dLow>0?'pace-pos':'pace-zero';
+      if(maxPacing!==null&&maxTemp!==null){
+        // Pace = forecast high minus current pacing high (how far model still needs to climb)
+        var pace=Math.round((maxTemp-maxPacing)*10)/10;
+        var sign=pace>=0?'+':'';
+        deltaStr=sign+pace;
+        // Red = model already above forecast (overshot), Blue = model below forecast (needs to climb)
+        deltaClass=pace<0?'pace-neg':'pace-pos';
       }
 
       results.push({
@@ -393,6 +390,7 @@
     var tzOff=TZ_OFFSETS[station]||-5;
     var nowUtc=new Date();
     var targetDateStr=getLocalDateStr(nowUtc,tzOff,isTomorrow?1:0);
+    console.log('fetchDay:', day, station, 'targetDate:', targetDateStr);
 
     // Forecast window: full target day in UTC
     var localMidnight=new Date(targetDateStr+'T00:00:00.000Z');
@@ -406,31 +404,21 @@
     var obsStart=new Date(nowUtc.getTime()-2*3600000).toISOString().slice(0,19)+'Z';
 
     try {
-      // Fetch in two 1-hour chunks to maximize HF-METAR 1-min coverage
-      var midTime=new Date(nowUtc.getTime()-1*3600000).toISOString().slice(0,19)+'Z';
-
-      var [r1,r1b,r2,r3,r4]=await Promise.allSettled([
-        fetch(proxyUrl({endpoint:'observations',station_code:station,start_time:midTime,end_time:obsEnd})),
-        fetch(proxyUrl({endpoint:'observations',station_code:station,start_time:obsStart,end_time:midTime})),
+      var results=await Promise.allSettled([
+        fetch(proxyUrl({endpoint:'observations',station_code:station,start_time:obsStart,end_time:obsEnd})),
         fetch(proxyUrl({endpoint:'observations',station_code:station,mode:'latest'})),
         fetch(proxyUrl({endpoint:'observations',station_code:station,mode:'wethr_high',logic:'wu'})),
         fetch(proxyUrl({endpoint:'forecasts',location_name:station,start_valid_time:fcstStartStr,end_valid_time:fcstEndStr})),
       ]);
+      var r1=results[0],r2=results[1],r3=results[2],r4=results[3];
 
       var history=[],latest=null,wu=null,forecastRows=[],units='fahrenheit';
 
-      // Merge both hourly chunks, deduplicate by observation_time
-      var seenTimes={};
-      function mergeObs(arr){
-        (Array.isArray(arr)?arr:(arr.observations||[])).forEach(function(o){
-          if(!seenTimes[o.observation_time]){
-            seenTimes[o.observation_time]=true;
-            history.push(o);
-          }
-        });
+      if(r1.status==='fulfilled'&&r1.value.ok){
+        var d=await r1.value.json();
+        history=Array.isArray(d)?d:(d.observations||[]);
+        if(history[0]) units=history[0].units||units;
       }
-      if(r1.status==='fulfilled'&&r1.value.ok){ var d=await r1.value.json(); mergeObs(d); if(history[0]) units=history[0].units||units; }
-      if(r1b.status==='fulfilled'&&r1b.value.ok){ var d2=await r1b.value.json(); mergeObs(d2); }
       if(r2.status==='fulfilled'&&r2.value.ok){latest=await r2.value.json();units=latest.units||units;}
       if(r3.status==='fulfilled'&&r3.value.ok) wu=await r3.value.json();
       if(r4.status==='fulfilled'&&r4.value.ok){
@@ -464,7 +452,7 @@
         storeTmrw=store;
         // tomorrow pacing panel removed
         renderModelTable('tbodyModelsTmrw','modelCountTmrw',modelData,true);
-        renderObsTable('tbodyObsTmrw','countObsTmrw',history,units);
+        // obs not shown on tomorrow screen — included in clipboard only
         document.getElementById('tmrwSection').classList.add('visible');
       } else {
         storeToday=store;
@@ -493,7 +481,8 @@
       }
 
     } catch(err){
-      setStatus('✗ '+err.message,'error');
+      console.error('fetchDay error:', err);
+      setStatus('✗ '+err.message+' (check console for details)','error');
     }
 
     btn.disabled=false; btn.classList.remove('loading');
@@ -575,10 +564,10 @@
 
     function modelSection(label, data){
       lines.push('--- '+label+' ('+data.length+' models) ---');
-      lines.push(pad('Model',22)+' '+pad('Fcst High',10)+' '+pad('High Time',12)+' '+pad('Pacing',10)+' '+pad('WU Range',12)+' Delta');
+      lines.push(pad('Model',22)+' '+pad('Fcst High',10)+' '+pad('High Time',12)+' '+pad('Pacing',10)+' '+pad('Actual (WU)',13)+' Pace');
       lines.push('-'.repeat(85));
       data.forEach(function(m){
-        lines.push(pad(m.model,22)+' '+pad(m.forecastHigh!=null?m.forecastHigh+'°F':'—',10)+' '+pad(m.highTimeLocal,12)+' '+pad(m.pacingHigh!=null?m.pacingHigh+'°F':'—',10)+' '+pad(m.wuRange,12)+' '+m.delta);
+        lines.push(pad(m.model,22)+' '+pad(m.forecastHigh!=null?m.forecastHigh+'°F':'—',10)+' '+pad(m.highTimeLocal,12)+' '+pad(m.pacingHigh!=null?m.pacingHigh+'°F':'—',10)+' '+pad(m.wuRange,13)+' '+m.delta);
       });
       lines.push('');
     }
@@ -672,4 +661,5 @@
 </script>
 </body>
 </html>
+
 
