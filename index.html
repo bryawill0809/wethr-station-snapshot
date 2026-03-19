@@ -340,20 +340,30 @@
           if(maxPacing===null||tf>maxPacing) maxPacing=tf;
         }
       });
-      // Model Now: pick the most recent past valid_time (last step <= now)
-      // Fall back to nearest future step if no past steps exist yet
+      // Model Now: linearly interpolate between the surrounding valid_time steps
       if(!isTomorrow){
-        var bestPastRow=null, bestFutureRow=null;
-        var bestPastDiff=Infinity, bestFutureDiff=Infinity;
+        var beforeRow=null, afterRow=null;
+        var beforeDiff=Infinity, afterDiff=Infinity;
         m.rows.forEach(function(row){
           if(row.temperature_f==null) return;
           var vt=new Date(row.valid_time.replace(' ','T').replace(/Z?$/,'Z'));
-          var diff=nowUtc.getTime()-vt.getTime(); // positive = past, negative = future
-          if(diff>=0 && diff<bestPastDiff){bestPastDiff=diff;bestPastRow=row;}
-          if(diff<0 && Math.abs(diff)<bestFutureDiff){bestFutureDiff=Math.abs(diff);bestFutureRow=row;}
+          var diff=nowUtc.getTime()-vt.getTime(); // positive=past, negative=future
+          if(diff>=0 && diff<beforeDiff){beforeDiff=diff;beforeRow=row;}
+          if(diff<0 && Math.abs(diff)<afterDiff){afterDiff=Math.abs(diff);afterRow=row;}
         });
-        var modelNowRow=bestPastRow||bestFutureRow;
-        if(modelNowRow) maxPacing=Math.round(modelNowRow.temperature_f*10)/10;
+        if(beforeRow && afterRow){
+          // Interpolate: weight by how close now is to each step
+          var t0=new Date(beforeRow.valid_time.replace(' ','T').replace(/Z?$/,'Z')).getTime();
+          var t1=new Date(afterRow.valid_time.replace(' ','T').replace(/Z?$/,'Z')).getTime();
+          var tNow=nowUtc.getTime();
+          var frac=(tNow-t0)/(t1-t0); // 0=at before step, 1=at after step
+          var interp=parseFloat(beforeRow.temperature_f)+(parseFloat(afterRow.temperature_f)-parseFloat(beforeRow.temperature_f))*frac;
+          maxPacing=Math.round(interp*10)/10;
+        } else if(beforeRow){
+          maxPacing=Math.round(parseFloat(beforeRow.temperature_f)*10)/10;
+        } else if(afterRow){
+          maxPacing=Math.round(parseFloat(afterRow.temperature_f)*10)/10;
+        }
       }
       if(maxTemp===null) return;
 
@@ -448,20 +458,7 @@
       if(r4.status==='fulfilled'&&r4.value.ok){
         var fd=await r4.value.json();
         forecastRows=Array.isArray(fd)?fd:(fd.forecasts||fd.data||[]);
-        // Debug: show unique valid_times per model to understand resolution
-        var debugMap={};
-        forecastRows.forEach(function(r){
-          if(r.model==='GFS'||r.model==='HRRR'||r.model==='NBM'){
-            if(!debugMap[r.model]) debugMap[r.model]={run:r.run_time,steps:[]};
-            if(r.run_time>=debugMap[r.model].run){
-              if(r.run_time>debugMap[r.model].run){debugMap[r.model]={run:r.run_time,steps:[]};}
-              debugMap[r.model].steps.push({valid:r.valid_time,tf:r.temperature_f});
-            }
-          }
-        });
-        Object.keys(debugMap).forEach(function(m){
-          console.log(m+' run:'+debugMap[m].run+' steps('+debugMap[m].steps.length+'):', JSON.stringify(debugMap[m].steps));
-        });
+
       }
 
       history.sort(function(a,b){return new Date(b.observation_time)-new Date(a.observation_time);});
@@ -725,5 +722,6 @@
 </script>
 </body>
 </html>
+
 
 
