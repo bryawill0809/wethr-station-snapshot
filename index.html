@@ -340,16 +340,20 @@
           if(maxPacing===null||tf>maxPacing) maxPacing=tf;
         }
       });
-      // Model Now: pick valid_time from latest run closest to current time
+      // Model Now: pick the most recent past valid_time (last step <= now)
+      // Fall back to nearest future step if no past steps exist yet
       if(!isTomorrow){
-        var closestRow=null, closestDiff=Infinity;
+        var bestPastRow=null, bestFutureRow=null;
+        var bestPastDiff=Infinity, bestFutureDiff=Infinity;
         m.rows.forEach(function(row){
           if(row.temperature_f==null) return;
           var vt=new Date(row.valid_time.replace(' ','T').replace(/Z?$/,'Z'));
-          var diff=Math.abs(vt.getTime()-nowUtc.getTime());
-          if(diff<closestDiff){closestDiff=diff;closestRow=row;}
+          var diff=nowUtc.getTime()-vt.getTime(); // positive = past, negative = future
+          if(diff>=0 && diff<bestPastDiff){bestPastDiff=diff;bestPastRow=row;}
+          if(diff<0 && Math.abs(diff)<bestFutureDiff){bestFutureDiff=Math.abs(diff);bestFutureRow=row;}
         });
-        if(closestRow) maxPacing=Math.round(closestRow.temperature_f*10)/10;
+        var modelNowRow=bestPastRow||bestFutureRow;
+        if(modelNowRow) maxPacing=Math.round(modelNowRow.temperature_f*10)/10;
       }
       if(maxTemp===null) return;
 
@@ -444,6 +448,20 @@
       if(r4.status==='fulfilled'&&r4.value.ok){
         var fd=await r4.value.json();
         forecastRows=Array.isArray(fd)?fd:(fd.forecasts||fd.data||[]);
+        // Debug: show unique valid_times per model to understand resolution
+        var debugMap={};
+        forecastRows.forEach(function(r){
+          if(r.model==='GFS'||r.model==='HRRR'||r.model==='NBM'){
+            if(!debugMap[r.model]) debugMap[r.model]={run:r.run_time,steps:[]};
+            if(r.run_time>=debugMap[r.model].run){
+              if(r.run_time>debugMap[r.model].run){debugMap[r.model]={run:r.run_time,steps:[]};}
+              debugMap[r.model].steps.push({valid:r.valid_time,tf:r.temperature_f});
+            }
+          }
+        });
+        Object.keys(debugMap).forEach(function(m){
+          console.log(m+' run:'+debugMap[m].run+' steps('+debugMap[m].steps.length+'):', JSON.stringify(debugMap[m].steps));
+        });
       }
 
       history.sort(function(a,b){return new Date(b.observation_time)-new Date(a.observation_time);});
@@ -707,4 +725,5 @@
 </script>
 </body>
 </html>
+
 
