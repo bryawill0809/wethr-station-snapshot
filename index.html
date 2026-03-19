@@ -464,6 +464,9 @@
       if(r5.status==='fulfilled'&&r5.value.ok){
         var fd5=await r5.value.json();
         nowRows=Array.isArray(fd5)?fd5:(fd5.forecasts||fd5.data||[]);
+        // Log a sample to see what valid_times look like
+        var sample=nowRows.filter(function(r){return r.model==='GFS'||r.model==='HRRR';}).slice(0,6);
+        console.log('nowRows sample:', JSON.stringify(sample.map(function(r){return {model:r.model,valid_time:r.valid_time,temp_f:r.temperature_f};})));
       }
 
       history.sort(function(a,b){return new Date(b.observation_time)-new Date(a.observation_time);});
