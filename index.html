@@ -358,18 +358,20 @@
 
       var deltaStr='—',deltaClass='';
       if(maxPacing!==null&&currentTemp!==null){
-        // Pace = Model's current expected temp minus current observed temp range
+        // Pace = Current observed - Model Now (how much hotter/cooler reality is vs model)
+        // Positive = reality running HOT vs model (red)
+        // Negative = reality running COOL vs model (blue)
         var cLow  = (currentLow!=null)  ? currentLow  : currentTemp;
         var cHigh = (currentHigh!=null) ? currentHigh : currentTemp;
-        var dLow  = Math.round((maxPacing-cHigh)*10)/10; // model - current high
-        var dHigh = Math.round((maxPacing-cLow)*10)/10;  // model - current low
+        var dLow  = Math.round((cLow  - maxPacing)*10)/10; // current low  - model
+        var dHigh = Math.round((cHigh - maxPacing)*10)/10; // current high - model
         var sign = function(n){ return n>=0?'+':''; };
         if(cLow===cHigh){
           deltaStr = sign(dLow)+dLow;
         } else {
           deltaStr = sign(dLow)+dLow+' to '+sign(dHigh)+dHigh;
         }
-        // Red = positive (model above current), Blue = negative (model below current)
+        // Red = positive (reality hotter than model), Blue = negative (reality cooler than model)
         deltaClass = dHigh<0 ? 'pace-pos' : dLow>0 ? 'pace-neg' : 'pace-zero';
       }
 
@@ -703,4 +705,5 @@
 </script>
 </body>
 </html>
+
 
