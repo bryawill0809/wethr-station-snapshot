@@ -316,7 +316,7 @@
     return result.toISOString().slice(0,10);
   }
 
-  function processForecasts(rows,station,targetDateStr,nowUtc,wuHigh,wuLow,isTomorrow,currentTemp){
+  function processForecasts(rows,station,targetDateStr,nowUtc,wuHigh,wuLow,isTomorrow,currentTemp,currentLow,currentHigh){
     var tzOff=TZ_OFFSETS[station]||-5;
     var modelMap={};
     rows.forEach(function(row){
@@ -351,12 +351,19 @@
 
       var deltaStr='—',deltaClass='';
       if(maxTemp!==null&&currentTemp!==null){
-        // Pace = forecast high minus current observed temp
-        var pace=Math.round((maxTemp-currentTemp)*10)/10;
-        var sign=pace>=0?'+':'';
-        deltaStr=sign+pace;
-        // Positive (model above current temp) = red, Negative (model below current temp) = blue
-        deltaClass=pace>0?'pace-neg':'pace-pos';
+        // Pace = forecast high minus current temp range (low to high)
+        var cLow  = (currentLow!=null)  ? currentLow  : currentTemp;
+        var cHigh = (currentHigh!=null) ? currentHigh : currentTemp;
+        var dLow  = Math.round((maxTemp-cHigh)*10)/10; // fcst - current high = tightest gap
+        var dHigh = Math.round((maxTemp-cLow)*10)/10;  // fcst - current low  = widest gap
+        var sign = function(n){ return n>=0?'+':''; };
+        if(cLow===cHigh){
+          deltaStr = sign(dLow)+dLow;
+        } else {
+          deltaStr = sign(dLow)+dLow+' to '+sign(dHigh)+dHigh;
+        }
+        // Red = positive (model forecasting above current), Blue = negative (model below current)
+        deltaClass = dHigh<0 ? 'pace-pos' : dLow>0 ? 'pace-neg' : 'pace-zero';
       }
 
       results.push({
@@ -364,7 +371,9 @@
         forecastHigh:Math.round(maxTemp*10)/10,
         highTimeLocal:highTimeLocal,
         pacingHigh:maxPacing!==null?Math.round(maxPacing*10)/10:null,
-        actualTemp:currentTemp!=null?currentTemp+'°F':'—',
+        actualTemp:(currentLow!=null&&currentHigh!=null)
+          ? (currentLow===currentHigh ? currentLow+'°F' : currentLow+'–'+currentHigh+'°F')
+          : (currentTemp!=null?currentTemp+'°F':'—'),
         delta:deltaStr,
         deltaClass:deltaClass
       });
@@ -444,24 +453,27 @@
         console.log('WU response:', JSON.stringify(wu));
         console.log('wuHigh:', wuHigh, 'wuLow:', wuLow);
       }
-      // Current temp: use most recent history observation (latest endpoint unreliable)
-      var currentTemp=null;
+      // Current temp range from most recent history observation
+      var currentTemp=null, currentLow=null, currentHigh=null;
       if(history.length>0){
         var h0=history[0];
+        // Use lowest_probable/highest_probable for the F range display
+        currentLow  = h0.lowest_probable!=null  ? h0.lowest_probable
+                    : h0.lowest_probable_f!=null ? h0.lowest_probable_f
+                    : null;
+        currentHigh = h0.highest_probable!=null  ? h0.highest_probable
+                    : h0.highest_probable_f!=null ? h0.highest_probable_f
+                    : null;
+        // currentTemp is the midpoint for pace calculation
         currentTemp = h0.temperature_display!=null ? h0.temperature_display
                     : h0.temperature_f!=null ? h0.temperature_f
                     : h0.temperature!=null ? Math.round((h0.temperature*9/5+32)*10)/10
                     : null;
+        // If we have a range, use low as the base for pace (conservative)
+        if(currentLow!==null) currentTemp=currentLow;
       }
-      // Fall back to latest if history empty
-      if(currentTemp===null && latest){
-        currentTemp = latest.temperature_display!=null ? latest.temperature_display
-                    : latest.temperature_f!=null ? latest.temperature_f
-                    : latest.temperature!=null ? Math.round((latest.temperature*9/5+32)*10)/10
-                    : null;
-      }
-      console.log('currentTemp:', currentTemp, 'from history[0]:', history.length>0?history[0].observation_time:'none');
-      var modelData=processForecasts(forecastRows,station,targetDateStr,nowUtc,wuHigh,wuLow,isTomorrow,currentTemp);
+      console.log('currentTemp:', currentTemp, 'range:', currentLow, '-', currentHigh);
+      var modelData=processForecasts(forecastRows,station,targetDateStr,nowUtc,wuHigh,wuLow,isTomorrow,currentTemp,currentLow,currentHigh);
 
       var store={station,history,latest,wu,units,obs1,obs5,modelData,wuHigh,wuLow,targetDateStr,isTomorrow,at:new Date()};
 
@@ -519,7 +531,13 @@
       var cur=latest?(latest.temperature_display!=null?latest.temperature_display:latest.temperature_f):null;
       var uu=units==='fahrenheit'?'\u00b0F':'\u00b0C';
       items=[
-        {label:'Current Temp',  value:cur!=null?cur+uu:'N/A'},
+        {label:'Current Temp',  value:(function(){
+          if(latest&&latest.lowest_probable!=null&&latest.highest_probable!=null){
+            var lo=latest.lowest_probable,hi=latest.highest_probable;
+            return lo===hi?lo+uu:lo+'–'+hi+uu;
+          }
+          return cur!=null?cur+uu:'N/A';
+        })()},
         {label:'Rel. Humidity', value:latest&&latest.relative_humidity!=null?latest.relative_humidity+'%':'N/A'},
         {label:'DSM High',      value:latest&&(latest.dsm_high_display!=null||latest.dsm_high_f!=null)?(latest.dsm_high_display!=null?latest.dsm_high_display:latest.dsm_high_f)+uu:'N/A'},
         {label:'WU Wethr High', value:wu&&wu.wethr_high!=null?wu.wethr_high+uu:'N/A'},
