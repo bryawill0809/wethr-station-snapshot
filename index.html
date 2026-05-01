@@ -188,7 +188,7 @@
       </div>
       <div class="card-body">
         <table class="obs-table">
-          <thead><tr><th>Time (UTC)</th><th>Temp</th><th>Dew Pt</th><th>RH%</th><th>Wind</th><th>Type</th></tr></thead>
+          <thead><tr><th>Time (UTC)</th><th>Temp</th><th>Dew Pt</th><th>RH%</th><th>Wind</th><th>Sky</th><th>Type</th></tr></thead>
           <tbody id="tbodyObsToday"></tbody>
         </table>
       </div>
@@ -264,6 +264,19 @@
     return (obs.wind_direction||'—')+' '+obs.wind_speed+(obs.wind_gust?' G'+obs.wind_gust:'')+' kt';
   }
 
+  function formatSky(obs){
+    if(!obs.cloud_layer_count || obs.cloud_layer_count===0) return 'CLR';
+    var layers=[];
+    for(var i=1;i<=3;i++){
+      var cov=obs['cloud_'+i+'_coverage'];
+      var ht=obs['cloud_'+i+'_height'];
+      if(!cov) break;
+      var htStr=ht?Math.round(ht/100)*100+'ft':'';
+      layers.push(cov+(htStr?' '+htStr:''));
+    }
+    return layers.join(' ') || 'CLR';
+  }
+
   function guessType(obs){
     var m=new Date((obs.observation_time||'').replace(' ','T').replace(/Z?$/,'Z')).getMinutes();
     if(m===53||m===0||m===20||m===50) return 'METAR';
@@ -289,6 +302,7 @@
       +'<td>'+formatDew(obs,units)+'</td>'
       +'<td>'+(obs.relative_humidity!=null?obs.relative_humidity+'%':'—')+'</td>'
       +'<td>'+formatWind(obs)+'</td>'
+      +'<td style="color:var(--muted);font-size:0.7rem">'+formatSky(obs)+'</td>'
       +'<td><span class="'+getTagClass(type)+'">'+type+'</span></td>'
       +'</tr>';
   }
@@ -467,6 +481,9 @@
         forecastRows=Array.isArray(fd)?fd:(fd.forecasts||fd.data||[]);
       }
       var accuracyData={};
+      if(r5&&r5.status==='fulfilled'&&!r5.value.ok){
+        console.log('Accuracy API unavailable (status '+r5.value.status+') — requires Developer tier');
+      }
       if(r5&&r5.status==='fulfilled'&&r5.value.ok){
         var ac=await r5.value.json();
         if(ac.per_model){
@@ -481,7 +498,6 @@
         console.log('accuracy ranks:', JSON.stringify(accuracyData));
       }
 
-      if(history.length>0) console.log('obs fields:', JSON.stringify(Object.keys(history[0])), 'sample:', JSON.stringify(history[0]));
       history.sort(function(a,b){return new Date(b.observation_time)-new Date(a.observation_time);});
       var obs1=history; // all obs combined, sorted newest first
       var obs5=[];      // unused — kept for clipboard compat
@@ -664,11 +680,11 @@
 
     function obsSection(label, history, units){
       lines.push('--- '+label+' ('+history.length+' records) ---');
-      lines.push(pad('Time (UTC)',22)+' '+pad('Temp',8)+' '+pad('Dew Pt',8)+' '+pad('RH%',5)+' '+pad('Wind',18)+' Type');
-      lines.push('-'.repeat(80));
+      lines.push(pad('Time (UTC)',22)+' '+pad('Temp',8)+' '+pad('Dew Pt',8)+' '+pad('RH%',5)+' '+pad('Wind',18)+' '+pad('Sky',12)+' Type');
+      lines.push('-'.repeat(90));
       history.forEach(function(o){
         var t=o.product||guessType(o);
-        lines.push(pad(formatTime(o.observation_time),22)+' '+pad(formatTemp(o,units),8)+' '+pad(formatDew(o,units),8)+' '+pad(o.relative_humidity!=null?o.relative_humidity+'%':'—',5)+' '+pad(formatWind(o),18)+' '+t);
+        lines.push(pad(formatTime(o.observation_time),22)+' '+pad(formatTemp(o,units),8)+' '+pad(formatDew(o,units),8)+' '+pad(o.relative_humidity!=null?o.relative_humidity+'%':'—',5)+' '+pad(formatWind(o),18)+' '+pad(formatSky(o),12)+' '+(o.product||guessType(o)));
       });
       lines.push('');
     }
