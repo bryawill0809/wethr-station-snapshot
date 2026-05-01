@@ -176,7 +176,7 @@
       </div>
       <div class="card-body no-max">
         <table class="model-table">
-          <thead><tr><th>Model</th><th>Fcst High</th><th>High Time (Local)</th><th>Model Now</th><th>Current</th><th>Pace</th></tr></thead>
+          <thead><tr><th>Rank</th><th>Model</th><th>Fcst High</th><th>High Time (Local)</th><th>Model Now</th><th>Current</th><th>Pace</th><th>7d MAE</th><th>7d Bias</th></tr></thead>
           <tbody id="tbodyModelsToday"></tbody>
         </table>
       </div>
@@ -211,7 +211,7 @@
       </div>
       <div class="card-body no-max">
         <table class="model-table">
-          <thead><tr><th>Model</th><th>Fcst High</th><th>High Time (Local)</th><th>Model Now</th><th>Current</th><th>Pace</th></tr></thead>
+          <thead><tr><th>Rank</th><th>Model</th><th>Fcst High</th><th>High Time (Local)</th><th>Model Now</th><th>Current</th><th>Pace</th><th>7d MAE</th><th>7d Bias</th></tr></thead>
           <tbody id="tbodyModelsTmrw"></tbody>
         </table>
       </div>
@@ -316,7 +316,7 @@
     return result.toISOString().slice(0,10);
   }
 
-  function processForecasts(rows,station,targetDateStr,nowUtc,wuHigh,wuLow,isTomorrow,currentTemp,currentLow,currentHigh){
+  function processForecasts(rows,station,targetDateStr,nowUtc,wuHigh,wuLow,isTomorrow,currentTemp,currentLow,currentHigh,accuracyData){
     var tzOff=TZ_OFFSETS[station]||-5;
     var modelMap={};
     rows.forEach(function(row){
@@ -390,6 +390,9 @@
         deltaClass = dHigh<0 ? 'pace-pos' : dLow>0 ? 'pace-neg' : 'pace-zero';
       }
 
+      // Match accuracy by base model name (strip run hour)
+      var baseModel=m.model;
+      var acc=accuracyData&&accuracyData[baseModel]?accuracyData[baseModel]:null;
       results.push({
         model:modelLabel,
         forecastHigh:Math.round(maxTemp*10)/10,
@@ -399,7 +402,10 @@
           ? (currentLow===currentHigh ? currentLow+'°F' : currentLow+'–'+currentHigh+'°F')
           : (currentTemp!=null?currentTemp+'°F':'—'),
         delta:deltaStr,
-        deltaClass:deltaClass
+        deltaClass:deltaClass,
+        rank:acc?acc.rank:null,
+        mae:acc?acc.mae:null,
+        bias:acc?acc.bias:null,
       });
     });
 
@@ -443,8 +449,9 @@
         fetch(proxyUrl({endpoint:'observations',station_code:station,mode:'latest'})),
         fetch(proxyUrl({endpoint:'observations',station_code:station,mode:'wethr_high',logic:'wu'})),
         fetch(proxyUrl({endpoint:'forecasts',location_name:station,start_valid_time:fcstStartStr,end_valid_time:fcstEndStr})),
+        fetch(proxyUrl({endpoint:'accuracy',station_code:station,window:'7d'})),
       ]);
-      var r1=results[0],r2=results[1],r3=results[2],r4=results[3];
+      var r1=results[0],r2=results[1],r3=results[2],r4=results[3],r5=results[4];
 
       var history=[],latest=null,wu=null,forecastRows=[],units='fahrenheit';
 
@@ -458,9 +465,23 @@
       if(r4.status==='fulfilled'&&r4.value.ok){
         var fd=await r4.value.json();
         forecastRows=Array.isArray(fd)?fd:(fd.forecasts||fd.data||[]);
-
+      }
+      var accuracyData={};
+      if(r5&&r5.status==='fulfilled'&&r5.value.ok){
+        var ac=await r5.value.json();
+        if(ac.per_model){
+          var ranked=Object.keys(ac.per_model).map(function(m){
+            return {model:m,mae:ac.per_model[m].mae,bias:ac.per_model[m].bias};
+          });
+          ranked.sort(function(a,b){return a.mae-b.mae;});
+          ranked.forEach(function(r,i){
+            accuracyData[r.model]={rank:i+1,mae:r.mae,bias:r.bias};
+          });
+        }
+        console.log('accuracy ranks:', JSON.stringify(accuracyData));
       }
 
+      if(history.length>0) console.log('obs fields:', JSON.stringify(Object.keys(history[0])), 'sample:', JSON.stringify(history[0]));
       history.sort(function(a,b){return new Date(b.observation_time)-new Date(a.observation_time);});
       var obs1=history; // all obs combined, sorted newest first
       var obs5=[];      // unused — kept for clipboard compat
@@ -499,7 +520,7 @@
         if(currentLow!==null) currentTemp=currentLow;
       }
       console.log('currentTemp:', currentTemp, 'range:', currentLow, '-', currentHigh);
-      var modelData=processForecasts(forecastRows,station,targetDateStr,nowUtc,wuHigh,wuLow,isTomorrow,currentTemp,currentLow,currentHigh);
+      var modelData=processForecasts(forecastRows,station,targetDateStr,nowUtc,wuHigh,wuLow,isTomorrow,currentTemp,currentLow,currentHigh,accuracyData);
 
       var store={station,history,latest,wu,units,obs1,obs5,modelData,wuHigh,wuLow,targetDateStr,isTomorrow,at:new Date()};
 
@@ -598,13 +619,21 @@
       }).join('');
     } else {
       document.getElementById(tbodyId).innerHTML=modelData.map(function(m){
+        var rankStr=m.rank!=null?'#'+m.rank:'—';
+        var rankCls=m.rank===1?'style="color:var(--yellow);font-weight:700"':m.rank!=null&&m.rank<=3?'style="color:var(--green)"':'style="color:var(--muted)"';
+        var maeStr=m.mae!=null?m.mae+'°':'—';
+        var biasStr=m.bias!=null?(m.bias>=0?'+':'')+m.bias+'°':'—';
+        var biasCls=m.bias!=null?(m.bias>0?'style="color:var(--accent2)"':m.bias<0?'style="color:var(--accent)"':'style="color:var(--muted)"'):'';
         return '<tr>'
-          +'<td class="m-name">'+m.model+'</td>'
+          +'<td '+rankCls+'>'+rankStr+'</td>'
+          +'<td class="m-name'+(isTmrw?' tmrw':'')+'">'+m.model+'</td>'
           +'<td class="m-high">'+(m.forecastHigh!=null?m.forecastHigh+'°F':'—')+'</td>'
           +'<td class="m-time">'+m.highTimeLocal+'</td>'
           +'<td style="color:var(--text)">'+(m.pacingHigh!=null?m.pacingHigh+'°F':'—')+'</td>'
           +'<td style="color:var(--green)">'+m.actualTemp+'</td>'
           +'<td class="'+m.deltaClass+'">'+m.delta+'</td>'
+          +'<td style="color:var(--muted)">'+maeStr+'</td>'
+          +'<td '+biasCls+'>'+biasStr+'</td>'
           +'</tr>';
       }).join('');
     }
@@ -625,10 +654,10 @@
 
     function modelSection(label, data){
       lines.push('--- '+label+' ('+data.length+' models) ---');
-      lines.push(pad('Model',22)+' '+pad('Fcst High',10)+' '+pad('High Time',12)+' '+pad('Model Now',10)+' '+pad('Current',10)+' Pace');
+      lines.push(pad('Rank',5)+' '+pad('Model',22)+' '+pad('Fcst High',10)+' '+pad('High Time',12)+' '+pad('Model Now',10)+' '+pad('Current',10)+' '+pad('Pace',14)+' '+pad('7d MAE',8)+' Bias');
       lines.push('-'.repeat(85));
       data.forEach(function(m){
-        lines.push(pad(m.model,22)+' '+pad(m.forecastHigh!=null?m.forecastHigh+'°F':'—',10)+' '+pad(m.highTimeLocal,12)+' '+pad(m.pacingHigh!=null?m.pacingHigh+'°F':'—',10)+' '+pad(m.actualTemp||'—',10)+' '+m.delta);
+        lines.push(pad(m.rank!=null?'#'+m.rank:'—',5)+' '+pad(m.model,22)+' '+pad(m.forecastHigh!=null?m.forecastHigh+'°F':'—',10)+' '+pad(m.highTimeLocal,12)+' '+pad(m.pacingHigh!=null?m.pacingHigh+'°F':'—',10)+' '+pad(m.actualTemp||'—',10)+' '+pad(m.delta,14)+' '+pad(m.mae!=null?m.mae+'°':'—',8)+' '+(m.bias!=null?(m.bias>=0?'+':'')+m.bias+'°':'—'));
       });
       lines.push('');
     }
@@ -722,6 +751,5 @@
 </script>
 </body>
 </html>
-
 
 
