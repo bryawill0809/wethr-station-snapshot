@@ -6,12 +6,15 @@ export default async (request, context) => {
   const url = new URL(request.url);
   const params = url.searchParams;
 
-  // Route to correct wethr.net endpoint based on ?endpoint= param
   const endpoint = params.get('endpoint') || 'observations';
   params.delete('endpoint');
 
   const upstreamPath = endpoint === 'forecasts'
     ? 'https://wethr.net/api/v2/forecasts.php'
+    : endpoint === 'accuracy'
+    ? 'https://wethr.net/api/v2/model_accuracy.php'
+    : endpoint === 'nws'
+    ? 'https://wethr.net/api/v2/nws_forecasts.php'
     : 'https://wethr.net/api/v2/observations.php';
 
   const upstream = upstreamPath + '?' + params.toString();
@@ -37,4 +40,3 @@ export default async (request, context) => {
 export const config = {
   path: '/api/proxy',
 };
-
