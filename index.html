@@ -480,7 +480,7 @@
         fetch(proxyUrl({endpoint:'observations',station_code:station,mode:'wethr_high',logic:'wu'})),
         fetch(proxyUrl({endpoint:'forecasts',location_name:station,start_valid_time:fcstStartStr,end_valid_time:fcstEndStr})),
         fetch(proxyUrl({endpoint:'accuracy',station_code:station,window:'7d'})),
-        fetch(proxyUrl({endpoint:'forecasts',station_code:station,start_valid_time:fcstStartStr,end_valid_time:fcstEndStr})),
+        fetch(proxyUrl({endpoint:'nws',station_code:station,date:targetDateStr})),
       ]);
       var r1=results[0],r2=results[1],r3=results[2],r4=results[3],r5=results[4],r6=results[5];
 
@@ -549,19 +549,23 @@
       var nwsEvolution=nwsEvolutionLog[station+'-'+targetDateStr]||[];
       var nwsHigh=null, nwsLow=null;
       try {
-        if(r6&&r6.status==='fulfilled'&&r6.value.ok){
-          var r6data=await r6.value.json();
-          var r6rows=Array.isArray(r6data)?r6data:(r6data.forecasts||r6data.data||[]);
-          // Merge r6 rows into forecastRows, deduplicating by model+run_time+valid_time
-          var existingKeys=new Set(forecastRows.map(function(r){return r.model+'|'+r.run_time+'|'+r.valid_time;}));
-          r6rows.forEach(function(r){
-            var k=r.model+'|'+r.run_time+'|'+r.valid_time;
-            if(!existingKeys.has(k)){ forecastRows.push(r); existingKeys.add(k); }
-          });
-          // Extract NWS model rows for evolution tracking
-          var nwsModelRows=forecastRows.filter(function(r){ return r.model&&r.model.indexOf('NWS')===0; });
-          console.log('r6 rows:', r6rows.length, 'NWS model rows after merge:', nwsModelRows.length,
-            'models:', JSON.stringify([...new Set(r6rows.map(function(r){return r.model;}))]));
+        if(r6&&r6.status==='fulfilled'){
+          if(r6.value.ok){
+            var r6data=await r6.value.json();
+            var r6rows=Array.isArray(r6data)?r6data:(r6data.forecasts||r6data.data||r6data.nws_forecasts||[]);
+            console.log('r6 NWS rows:', r6rows.length, 'sample:', JSON.stringify(r6rows.slice(0,2)));
+            // Merge r6 rows into forecastRows
+            var existingKeys=new Set(forecastRows.map(function(r){return r.model+'|'+r.run_time+'|'+r.valid_time;}));
+            r6rows.forEach(function(r){
+              // Normalize NWS model name
+              if(!r.model) r.model='NWS';
+              var k=r.model+'|'+r.run_time+'|'+r.valid_time;
+              if(!existingKeys.has(k)){ forecastRows.push(r); existingKeys.add(k); }
+            });
+          } else {
+            var errText=await r6.value.text();
+            console.log('r6 NWS error status:', r6.value.status, errText.substring(0,200));
+          }
         }
       } catch(e){ console.log('r6 parse error:',e.message); }
       try {
@@ -937,6 +941,7 @@
 </script>
 </body>
 </html>
+
 
 
 
