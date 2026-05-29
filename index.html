@@ -556,6 +556,8 @@
           });
           if(maxTf!==null) nwsEvolution.push({run:run,high:Math.round(maxTf*10)/10});
         });
+        var allModels=[...new Set(forecastRows.map(function(r){return r.model;}))].sort();
+        console.log('All models in forecastRows:', JSON.stringify(allModels));
         console.log('NWS Evolution:',nwsEvolution.length,'runs from forecastRows, NWS rows:',nwsRows.length);
       } catch(e){ console.log('NWS evolution error:',e.message); }
       console.log('NWS evolution final:', nwsEvolution.length,'runs', JSON.stringify(nwsEvolution.slice(0,3)));
@@ -882,4 +884,5 @@
 </script>
 </body>
 </html>
+
 
