@@ -500,10 +500,7 @@
                 var shortTermMatch=raw.match(/\.SHORT TERM[\s\S]*?(?=\.\.[A-Z]|\$\$)/i);
                 var discMatch=raw.match(/\.DISCUSSION[\s\S]*?(?=\.\.[A-Z]|\$\$)/i);
                 var nearTermMatch=raw.match(/\.NEAR TERM[\s\S]*?(?=\.\.[A-Z]|\$\$)/i);
-                nwsDiscussion=[nearTermMatch,shortTermMatch,discMatch]
-                  .filter(Boolean).map(function(m){return m[0].trim();}).join('
-
-');
+                nwsDiscussion=[nearTermMatch,shortTermMatch,discMatch].filter(Boolean).map(function(m){return m[0].trim();}).join('\n\n');
                 if(!nwsDiscussion) nwsDiscussion=raw.substring(0,2000);
               }
             }
@@ -822,6 +819,3 @@
 </script>
 </body>
 </html>
-
-
-
