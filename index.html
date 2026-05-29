@@ -478,7 +478,7 @@
         fetch(proxyUrl({endpoint:'observations',station_code:station,mode:'wethr_high',logic:'wu'})),
         fetch(proxyUrl({endpoint:'forecasts',location_name:station,start_valid_time:fcstStartStr,end_valid_time:fcstEndStr})),
         fetch(proxyUrl({endpoint:'accuracy',station_code:station,window:'7d'})),
-        fetch(proxyUrl({endpoint:'nws',station_code:station,start_valid_time:fcstStartStr,end_valid_time:fcstEndStr})),
+        fetch(proxyUrl({endpoint:'observations',station_code:station,mode:'wethr_high',logic:'nws'})),
       ]);
       var r1=results[0],r2=results[1],r3=results[2],r4=results[3],r5=results[4],r6=results[5];
 
@@ -545,18 +545,18 @@
       }
       // NWS Forecast Evolution — from dedicated NWS endpoint (r6) or forecastRows fallback
       var nwsEvolution=[];
-      var nwsForecastRows=[];
+      var nwsHigh=null, nwsLow=null;
       try {
         if(r6&&r6.status==='fulfilled'&&r6.value.ok){
-          var nwsFd=await r6.value.json();
-          nwsForecastRows=Array.isArray(nwsFd)?nwsFd:(nwsFd.forecasts||nwsFd.data||[]);
-          console.log('NWS dedicated rows:',nwsForecastRows.length);
+          var nwsData=await r6.value.json();
+          nwsHigh = nwsData.wethr_high!=null ? nwsData.wethr_high : null;
+          nwsLow  = nwsData.wethr_low!=null  ? nwsData.wethr_low  : null;
+          console.log('NWS wethr_high:', nwsHigh, 'wethr_low:', nwsLow);
         }
       } catch(e){ console.log('r6 NWS parse error:',e.message); }
       try {
-        // Use dedicated NWS rows if available, else fall back to forecastRows NWS entries
-        var nwsRows=nwsForecastRows.length>0 ? nwsForecastRows :
-                    forecastRows.filter(function(r){ return r.model==='NWS'||r.model==='NWS-AFD'; });
+        // NWS evolution: use nwsHigh as the current NWS forecast
+        var nwsRows=forecastRows.filter(function(r){ return r.model==='NWS'||r.model==='NWS-AFD'; });
         // Group by run_time to show evolution of the NWS forecast across updates
         var runMap={};
         nwsRows.forEach(function(r){
@@ -643,7 +643,7 @@
       console.log('currentTemp:', currentTemp, 'range:', currentLow, '-', currentHigh);
       var modelData=processForecasts(forecastRows,station,targetDateStr,nowUtc,wuHigh,wuLow,isTomorrow,currentTemp,currentLow,currentHigh,accuracyData);
 
-      var store={station,history,latest,wu,units,obs1,obs5,modelData,wuHigh,wuLow,targetDateStr,isTomorrow,nwsDiscussion,nwsEvolution,at:new Date()};
+      var store={station,history,latest,wu,units,obs1,obs5,modelData,wuHigh,wuLow,nwsHigh,nwsLow,targetDateStr,isTomorrow,nwsDiscussion,nwsEvolution,at:new Date()};
 
       if(isTomorrow){
         storeTmrw=store;
@@ -653,7 +653,7 @@
         document.getElementById('tmrwSection').classList.add('visible');
       } else {
         storeToday=store;
-        renderPacing('pacingGridToday',latest,wu,units,false);
+        renderPacing('pacingGridToday',latest,wu,units,false,nwsHigh,nwsLow);
         renderModelTable('tbodyModelsToday','modelCountToday',modelData,false);
         renderObsTable('tbodyObsToday','countObsToday',history,units);
         document.getElementById('todaySection').classList.add('visible');
@@ -686,7 +686,7 @@
     btn.querySelector('.btn-text').textContent=isTomorrow?'🔭 Tomorrow\'s Data':'📅 Today\'s Data';
   }
 
-  function renderPacing(gridId,latest,wu,units,isTomorrow){
+  function renderPacing(gridId,latest,wu,units,isTomorrow,nwsHi,nwsLo){
     var u=units==='fahrenheit'?'deg F':'deg C';
     var items;
     if(isTomorrow){
@@ -710,6 +710,8 @@
         {label:'DSM High',      value:latest&&(latest.dsm_high_display!=null||latest.dsm_high_f!=null)?(latest.dsm_high_display!=null?latest.dsm_high_display:latest.dsm_high_f)+uu:'N/A'},
         {label:'WU Wethr High', value:wu&&wu.wethr_high!=null?wu.wethr_high+uu:'N/A'},
         {label:'WU Wethr Low',  value:wu&&wu.wethr_low!=null?wu.wethr_low+uu:'N/A'},
+        {label:'NWS Wethr High',value:nwsHi!=null?nwsHi+uu:'N/A'},
+        {label:'NWS Wethr Low', value:nwsLo!=null?nwsLo+uu:'N/A'},
         {label:'Last Obs (UTC)',value:latest?formatTime(latest.observation_time):'N/A'},
       ];
     }
@@ -820,6 +822,8 @@
         lines.push('WU Wethr High : '+store.wu.wethr_high+u+'  @ '+(store.wu.time_of_high_utc||'N/A'));
         lines.push('WU Wethr Low  : '+store.wu.wethr_low+u+'  @ '+(store.wu.time_of_low_utc||'N/A'));
       }
+    if(store.nwsHigh!=null) lines.push('NWS Wethr High : '+store.nwsHigh+u);
+    if(store.nwsLow!=null)  lines.push('NWS Wethr Low  : '+store.nwsLow+u);
       lines.push('');
 
       // Today model pacing
@@ -895,5 +899,6 @@
 </script>
 </body>
 </html>
+
 
 
