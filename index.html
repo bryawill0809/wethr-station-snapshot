@@ -547,29 +547,34 @@
       }
       // NWS Forecast Evolution — from dedicated NWS endpoint (r6) or forecastRows fallback
       var nwsEvolution=nwsEvolutionLog[station+'-'+targetDateStr]||[];
-      var nwsHigh=null, nwsLow=null;
+      var nwsFcst=null;
       try {
-        if(r6&&r6.status==='fulfilled'){
-          if(r6.value.ok){
-            var r6data=await r6.value.json();
-            var r6rows=Array.isArray(r6data)?r6data:(r6data.forecasts||r6data.data||r6data.nws_forecasts||[]);
-            console.log('r6 NWS rows:', r6rows.length, 'sample:', JSON.stringify(r6rows.slice(0,2)));
-            console.log('r6 NWS raw keys:', JSON.stringify(Object.keys(r6data)));
-            console.log('r6 NWS full raw:', JSON.stringify(r6data).substring(0,500));
-            // Merge r6 rows into forecastRows
-            var existingKeys=new Set(forecastRows.map(function(r){return r.model+'|'+r.run_time+'|'+r.valid_time;}));
-            r6rows.forEach(function(r){
-              // Normalize NWS model name
-              if(!r.model) r.model='NWS';
-              var k=r.model+'|'+r.run_time+'|'+r.valid_time;
-              if(!existingKeys.has(k)){ forecastRows.push(r); existingKeys.add(k); }
+        if(r6&&r6.status==='fulfilled'&&r6.value.ok){
+          nwsFcst=await r6.value.json();
+          // nwsFcst: {high, low, version, hourly_temps[25], forecast_date}
+          // Build synthetic forecast rows for NWS in the model table
+          var tzOff4=TZ_OFFSETS[station]||-5;
+          var nwsVersion='NWS (V'+nwsFcst.version+')';
+          var fcstDateLocal=new Date(targetDateStr+'T00:00:00.000Z');
+          if(nwsFcst.hourly_temps){
+            nwsFcst.hourly_temps.forEach(function(tf,hr){
+              if(tf==null) return;
+              var utcMs=fcstDateLocal.getTime()+(hr-tzOff4)*3600000;
+              var vtStr=new Date(utcMs).toISOString().slice(0,19).replace('T',' ');
+              forecastRows.push({model:nwsVersion,run_time:nwsFcst.timestamp?nwsFcst.timestamp.replace('T',' ').slice(0,19):'',valid_time:vtStr,temperature_f:tf});
             });
-          } else {
-            var errText=await r6.value.text();
-            console.log('r6 NWS error status:', r6.value.status, errText.substring(0,200));
           }
+          // Track NWS evolution
+          var evoKey=station+'-'+targetDateStr;
+          if(!nwsEvolutionLog[evoKey]) nwsEvolutionLog[evoKey]=[];
+          var lastEntry=nwsEvolutionLog[evoKey].slice(-1)[0];
+          var newEntry={time:new Date().toISOString().slice(11,16)+' UTC',high:nwsFcst.high,low:nwsFcst.low,version:'V'+nwsFcst.version};
+          if(!lastEntry||lastEntry.high!==nwsFcst.high||lastEntry.low!==nwsFcst.low){
+            nwsEvolutionLog[evoKey].push(newEntry);
+          }
+          console.log('NWS '+nwsVersion+' high:',nwsFcst.high,'low:',nwsFcst.low);
         }
-      } catch(e){ console.log('r6 parse error:',e.message); }
+      } catch(e){ console.log('r6 NWS parse error:',e.message); }
       try {
         // NWS evolution: use nwsHigh as the current NWS forecast
         var nwsRows=forecastRows.filter(function(r){ return r.model&&r.model.indexOf('NWS')===0; });
@@ -623,32 +628,10 @@
       var obs1=history; // all obs combined, sorted newest first
       var obs5=[];      // unused — kept for clipboard compat
 
-      // Extract NWS wethr high from NWS model rows projected high for today
-      var nwsModelRowsForHigh=forecastRows.filter(function(r){
-        return r.model&&r.model.indexOf('NWS')===0;
-      });
-      if(nwsModelRowsForHigh.length>0){
-        var tzOff3=TZ_OFFSETS[station]||-5;
-        nwsModelRowsForHigh.forEach(function(r){
-          var vt=new Date((r.valid_time||'').replace(' ','T').replace(/Z?$/,'Z'));
-          var vtLocal=new Date(vt.getTime()+tzOff3*3600000);
-          if(vtLocal.toISOString().slice(0,10)===targetDateStr){
-            var tf=parseFloat(r.temperature_f);
-            if(!isNaN(tf)&&(nwsHigh===null||tf>nwsHigh)) nwsHigh=tf;
-            if(!isNaN(tf)&&(nwsLow===null||tf<nwsLow)) nwsLow=tf;
-          }
-        });
-        if(nwsHigh!==null) nwsHigh=Math.round(nwsHigh*10)/10;
-        if(nwsLow!==null)  nwsLow=Math.round(nwsLow*10)/10;
-        // Track evolution
-        var evoKey=station+'-'+targetDateStr;
-        if(!nwsEvolutionLog[evoKey]) nwsEvolutionLog[evoKey]=[];
-        var lastEntry=nwsEvolutionLog[evoKey].slice(-1)[0];
-        var newEntry={time:new Date().toISOString().slice(11,16)+' UTC',high:nwsHigh,low:nwsLow};
-        if(!lastEntry||lastEntry.high!==nwsHigh||lastEntry.low!==nwsLow){
-          nwsEvolutionLog[evoKey].push(newEntry);
-        }
-        console.log('NWS from model rows: high=',nwsHigh,'low=',nwsLow);
+      // Use nwsFcst for NWS High/Low pacing panel
+      if(nwsFcst){
+        nwsHigh=nwsFcst.high!=null?nwsFcst.high:null;
+        nwsLow=nwsFcst.low!=null?nwsFcst.low:null;
       }
 
       // Extract WU high/low — handle all possible field names from API v2
@@ -943,6 +926,7 @@
 </script>
 </body>
 </html>
+
 
 
 
