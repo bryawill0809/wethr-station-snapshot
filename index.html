@@ -211,7 +211,7 @@
       </div>
       <div class="card-body no-max">
         <table class="model-table">
-          <thead><tr><th>Rank</th><th>Model</th><th>Fcst High</th><th>High Time (Local)</th><th>Model Now</th><th>Current</th><th>Pace</th><th>7d MAE</th><th>7d Bias</th></tr></thead>
+          <thead><tr><th>Rank</th><th>Model</th><th>Fcst High</th><th>High Time (Local)</th><th>7d MAE</th><th>7d Bias</th></tr></thead>
           <tbody id="tbodyModelsTmrw"></tbody>
         </table>
       </div>
@@ -229,6 +229,20 @@
   var storeToday = null, storeTmrw = null;
   var PROXY = '/api/proxy';
   var MODELS = ['GFS','HRRR','NAM','NBM','GEFS','ECMWF-IFS','ICON','GEM-GDPS','JMA','UKMO','ARPEGE','RAP','GFS-MOS','NBS-MOS','NAM-MOS','LAV-MOS','GEM-HRDPS','NAM4KM'];
+  var NWS_GRIDS = {
+    'KLAX':{office:'LOX',x:152,y:31}, 'KATL':{office:'FFC',x:55,y:76},
+    'KAUS':{office:'EWX',x:82,y:84}, 'KBOS':{office:'BOX',x:70,y:73},
+    'KCLT':{office:'GSP',x:53,y:57}, 'KMDW':{office:'LOT',x:76,y:73},
+    'KDFW':{office:'FWD',x:82,y:98}, 'KDCA':{office:'LWX',x:96,y:62},
+    'KDTW':{office:'DTX',x:65,y:65}, 'KHOU':{office:'HGX',x:61,y:73},
+    'KJAX':{office:'JAX',x:55,y:60}, 'KLAS':{office:'VEF',x:38,y:74},
+    'KMIA':{office:'MFL',x:107,y:37},'KMSP':{office:'MPX',x:100,y:76},
+    'KOKC':{office:'OUN',x:68,y:97}, 'KPHL':{office:'PHI',x:71,y:65},
+    'KPHX':{office:'PSR',x:161,y:50},'KSAT':{office:'EWX',x:68,y:71},
+    'KSFO':{office:'MTR',x:97,y:83}, 'KSEA':{office:'SEW',x:124,y:67},
+    'KLGA':{office:'OKX',x:38,y:37},
+  };
+
   var TZ_OFFSETS = {
     'KLAX':-8,'KSFO':-8,'KSEA':-8,'KLAS':-8,'KPHX':-7,
     'KMDW':-6,'KAUS':-6,'KDFW':-6,'KHOU':-6,'KMSP':-6,'KBNA':-6,'KMSY':-6,'KOKC':-6,'KSAT':-6,
@@ -467,6 +481,36 @@
       ]);
       var r1=results[0],r2=results[1],r3=results[2],r4=results[3],r5=results[4];
 
+      // NWS Forecast Discussion — fetched directly from api.weather.gov (free, no auth)
+      var nwsDiscussion='';
+      var nwsGrid=NWS_GRIDS[station];
+      if(nwsGrid){
+        try {
+          var nwsResp=await fetch('https://api.weather.gov/offices/'+nwsGrid.office+'/products?type=AFD&limit=1');
+          if(nwsResp.ok){
+            var nwsList=await nwsResp.json();
+            if(nwsList['@graph']&&nwsList['@graph'].length>0){
+              var nwsProductUrl=nwsList['@graph'][0]['@id'];
+              var nwsProduct=await fetch(nwsProductUrl);
+              if(nwsProduct.ok){
+                var nwsData=await nwsProduct.json();
+                // Extract just the temperature/short term section
+                var raw=nwsData.productText||'';
+                // Grab SHORT TERM and DISCUSSION sections
+                var shortTermMatch=raw.match(/\.SHORT TERM[\s\S]*?(?=\.\.[A-Z]|\$\$)/i);
+                var discMatch=raw.match(/\.DISCUSSION[\s\S]*?(?=\.\.[A-Z]|\$\$)/i);
+                var nearTermMatch=raw.match(/\.NEAR TERM[\s\S]*?(?=\.\.[A-Z]|\$\$)/i);
+                nwsDiscussion=[nearTermMatch,shortTermMatch,discMatch]
+                  .filter(Boolean).map(function(m){return m[0].trim();}).join('
+
+');
+                if(!nwsDiscussion) nwsDiscussion=raw.substring(0,2000);
+              }
+            }
+          }
+        } catch(e){ console.log('NWS discussion fetch error:',e.message); }
+      }
+
       var history=[],latest=null,wu=null,forecastRows=[],units='fahrenheit';
 
       if(r1.status==='fulfilled'&&r1.value.ok){
@@ -538,7 +582,7 @@
       console.log('currentTemp:', currentTemp, 'range:', currentLow, '-', currentHigh);
       var modelData=processForecasts(forecastRows,station,targetDateStr,nowUtc,wuHigh,wuLow,isTomorrow,currentTemp,currentLow,currentHigh,accuracyData);
 
-      var store={station,history,latest,wu,units,obs1,obs5,modelData,wuHigh,wuLow,targetDateStr,isTomorrow,at:new Date()};
+      var store={station,history,latest,wu,units,obs1,obs5,modelData,wuHigh,wuLow,targetDateStr,isTomorrow,nwsDiscussion,at:new Date()};
 
       if(isTomorrow){
         storeTmrw=store;
@@ -622,15 +666,20 @@
       return;
     }
     if(isTmrw){
-      // Tomorrow: full 6 columns same as today
+      // Tomorrow: Rank / Model / Fcst High / High Time / MAE / Bias only
       document.getElementById(tbodyId).innerHTML=modelData.map(function(m){
+        var rankStr=m.rank!=null?'#'+m.rank:'—';
+        var rankCls=m.rank===1?'style="color:var(--yellow);font-weight:700"':m.rank!=null&&m.rank<=3?'style="color:var(--green)"':'style="color:var(--muted)"';
+        var maeStr=m.mae!=null?m.mae+'°':'—';
+        var biasStr=m.bias!=null?(m.bias>=0?'+':'')+m.bias+'°':'—';
+        var biasCls=m.bias!=null?(m.bias>0?'style="color:var(--accent2)"':m.bias<0?'style="color:var(--accent)"':'style="color:var(--muted)"'):'';
         return '<tr>'
+          +'<td '+rankCls+'>'+rankStr+'</td>'
           +'<td class="m-name tmrw">'+m.model+'</td>'
           +'<td class="m-high">'+(m.forecastHigh!=null?m.forecastHigh+'°F':'—')+'</td>'
           +'<td class="m-time">'+m.highTimeLocal+'</td>'
-          +'<td style="color:var(--text)">'+(m.pacingHigh!=null?m.pacingHigh+'°F':'—')+'</td>'
-          +'<td style="color:var(--green)">'+m.actualTemp+'</td>'
-          +'<td class="'+m.deltaClass+'">'+m.delta+'</td>'
+          +'<td style="color:var(--muted)">'+maeStr+'</td>'
+          +'<td '+biasCls+'>'+biasStr+'</td>'
           +'</tr>';
       }).join('');
     } else {
@@ -691,7 +740,7 @@
 
     if(!store.isTomorrow){
       // ── TODAY ──────────────────────────────────────────────────────
-      lines.push("Here is the "+store.station+" Tape from today, run the prompt to find where we top out.");
+      lines.push("Here is the "+store.station+" Tape from today, stay in forensic meteorologist mode and run the ongoing prompt in this thread to pin point the exact high temp for today at "+store.station+".");
       lines.push('');
       lines.push('Station : '+store.station+'   Fetched : '+store.at.toUTCString());
       lines.push('');
@@ -720,7 +769,7 @@
 
     } else {
       // ── TOMORROW ───────────────────────────────────────────────────
-      lines.push("Tomorrow's projection data, pacing from today. calibrate model integrity to our prompt and nail the exact future high tomorrow at "+store.station);
+      lines.push("Tomorrow's projection data, pacing from today. calibrate model integrity, stay in forensic meteorologist mode and run the ongoing prompt in this thread to pin point the exact high temp for tomorrow at "+store.station);
       lines.push('');
       lines.push('Station : '+store.station+'   Fetched : '+store.at.toUTCString());
       lines.push('');
@@ -737,6 +786,12 @@
       modelSection('TOMORROW MODEL FORECAST PACING', store.modelData);
     }
 
+    // NWS Forecast Discussion
+    if(store.nwsDiscussion){
+      lines.push('--- NWS FORECAST DISCUSSION ---');
+      lines.push(store.nwsDiscussion);
+      lines.push('');
+    }
     lines.push('=== END OF SNAPSHOT ===');
     return lines.join('\n');
   }
@@ -767,5 +822,6 @@
 </script>
 </body>
 </html>
+
 
 
