@@ -14,7 +14,7 @@ export default async (request, context) => {
     : endpoint === 'accuracy'
     ? 'https://wethr.net/api/v2/model_accuracy.php'
     : endpoint === 'nws'
-    ? 'https://wethr.net/api/v2/nws_forecasts.php'
+    ? 'https://wethr.net/api/v2/nws_forecast.php'
     : 'https://wethr.net/api/v2/observations.php';
 
   const upstream = upstreamPath + '?' + params.toString();
@@ -40,3 +40,4 @@ export default async (request, context) => {
 export const config = {
   path: '/api/proxy',
 };
+
