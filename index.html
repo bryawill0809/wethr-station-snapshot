@@ -503,57 +503,62 @@
                   var raw=prodData.productText||'';
                   // Extract SHORT TERM / NEAR TERM / DISCUSSION sections
                   var sections=[];
-                  var sections=[]; var parts=raw.split(/\n\.[A-Z]/);
+                  // AFD uses && as section separator, .SECTION headers
+                  var sections=[];
+                  var parts=raw.split('&&');
                   parts.forEach(function(p){
-                    var up=p.toUpperCase();
-                    if(up.indexOf('NEAR TERM')===0||up.indexOf('SHORT TERM')===0||up.indexOf('DISCUSSION')===0){
-                      sections.push(p.trim());
+                    var trimmed=p.trim();
+                    if(trimmed.match(/^\.(NEAR TERM|SHORT TERM|LONG TERM|DISCUSSION|SYNOPSIS)/i)){
+                      sections.push(trimmed);
                     }
                   });
-                  // lines below replaced
-
-
-
-
-
-
-
-
-
-
-
-                  console.log('NWS AFD loaded, length:',nwsDiscussion.length,'chars');
+                  if(sections.length){
+                    nwsDiscussion=sections.slice(0,4).join('\n\n&&\n\n');
+                  } else {
+                    // Fallback: strip header lines, return body text
+                    var bodyLines=raw.split('\n').filter(function(l){
+                      return l.trim().length>0 && !l.match(/^(FXUS|NWS |[A-Z]{4}[0-9]|[0-9]{3,}|AREA FORECAST)/);
+                    });
+                    nwsDiscussion=bodyLines.join('\n').trim().substring(0,3000);
+                  }
                 }
               }
             }
           }
-        } catch(e){ console.log('NWS discussion fetch error:',e.message); }
+        } catch(e){ console.log('NWS discussion fetch ERROR:',e.message,e.stack); }
+        console.log('NWS discussion final:', nwsDiscussion?'GOT '+nwsDiscussion.length+' chars':'EMPTY');
       }
 
-      // NWS Forecast Evolution — pull NWS model forecast versions from wethr API
+      // NWS Forecast Evolution — filter NWS rows from already-fetched forecastRows
+      // forecastRows is already populated above, just extract NWS model entries
       var nwsEvolution=[];
       try {
-        var nwsEvResp=await fetch(proxyUrl({endpoint:'forecasts',location_name:station,model:'NWS',start_valid_time:fcstStartStr,end_valid_time:fcstEndStr}));
-        if(nwsEvResp.ok){
-          var nwsEvData=await nwsEvResp.json();
-          var nwsRows=Array.isArray(nwsEvData)?nwsEvData:(nwsEvData.forecasts||nwsEvData.data||[]);
-          // Group by run_time to show evolution across forecast versions
-          var runMap={};
-          nwsRows.forEach(function(r){
-            if(!runMap[r.run_time]) runMap[r.run_time]=[];
-            runMap[r.run_time].push(r);
+        var nwsRows=forecastRows.filter(function(r){ return r.model==='NWS'; });
+        // Group by run_time to show evolution of the NWS forecast across updates
+        var runMap={};
+        nwsRows.forEach(function(r){
+          var rt=r.run_time||r.issued_time||'';
+          if(!runMap[rt]) runMap[rt]=[];
+          runMap[rt].push(r);
+        });
+        // For each run, find the projected high for the target day
+        var tzOff2=TZ_OFFSETS[station]||-5;
+        Object.keys(runMap).sort().forEach(function(run){
+          var rows=runMap[run];
+          var maxTf=null;
+          rows.forEach(function(r){
+            var vt=new Date((r.valid_time||'').replace(' ','T').replace(/Z?$/,'Z'));
+            var vtLocal=new Date(vt.getTime()+tzOff2*3600000);
+            if(vtLocal.toISOString().slice(0,10)===targetDateStr){
+              var tf=parseFloat(r.temperature_f);
+              if(!isNaN(tf)&&(maxTf===null||tf>maxTf)) maxTf=tf;
+            }
           });
-          // Build evolution: each run's projected high for today/tomorrow
-          Object.keys(runMap).sort().forEach(function(run){
-            var rows=runMap[run];
-            var maxTf=null;
-            rows.forEach(function(r){ if(r.temperature_f&&(maxTf===null||r.temperature_f>maxTf)) maxTf=r.temperature_f; });
-            if(maxTf!==null) nwsEvolution.push({run:run,high:Math.round(maxTf*10)/10});
-          });
-          console.log('NWS Evolution:',nwsEvolution.length,'runs');
-        }
-      } catch(e){ console.log('NWS evolution fetch error:',e.message); }
-
+          if(maxTf!==null) nwsEvolution.push({run:run,high:Math.round(maxTf*10)/10});
+        });
+        console.log('NWS Evolution:',nwsEvolution.length,'runs from forecastRows, NWS rows:',nwsRows.length);
+      } catch(e){ console.log('NWS evolution error:',e.message); }
+      console.log('NWS evolution final:', nwsEvolution.length,'runs', JSON.stringify(nwsEvolution.slice(0,3)));
       var history=[],latest=null,wu=null,forecastRows=[],units='fahrenheit';
 
       if(r1.status==='fulfilled'&&r1.value.ok){
@@ -829,6 +834,7 @@
       modelSection('TOMORROW MODEL FORECAST PACING', store.modelData);
     }
 
+    console.log('clipboard NWS disc:', store.nwsDiscussion?store.nwsDiscussion.length:'MISSING', 'evo:', store.nwsEvolution?store.nwsEvolution.length:'MISSING');
     // NWS Forecast Evolution
     if(store.nwsEvolution&&store.nwsEvolution.length){
       lines.push('--- NWS FORECAST EVOLUTION ('+store.nwsEvolution.length+' runs) ---');
