@@ -478,8 +478,9 @@
         fetch(proxyUrl({endpoint:'observations',station_code:station,mode:'wethr_high',logic:'wu'})),
         fetch(proxyUrl({endpoint:'forecasts',location_name:station,start_valid_time:fcstStartStr,end_valid_time:fcstEndStr})),
         fetch(proxyUrl({endpoint:'accuracy',station_code:station,window:'7d'})),
+        fetch(proxyUrl({endpoint:'nws',station_code:station,start_valid_time:fcstStartStr,end_valid_time:fcstEndStr})),
       ]);
-      var r1=results[0],r2=results[1],r3=results[2],r4=results[3],r5=results[4];
+      var r1=results[0],r2=results[1],r3=results[2],r4=results[3],r5=results[4],r6=results[5];
 
       // NWS Forecast Discussion — from api.weather.gov (free, no auth needed)
       var nwsDiscussion='';
@@ -530,6 +531,7 @@
       }
 
 
+      var history=[],latest=null,wu=null,forecastRows=[],units='fahrenheit';
       if(r1.status==='fulfilled'&&r1.value.ok){
         var d=await r1.value.json();
         history=Array.isArray(d)?d:(d.observations||[]);
@@ -541,11 +543,20 @@
         var fd=await r4.value.json();
         forecastRows=Array.isArray(fd)?fd:(fd.forecasts||fd.data||[]);
       }
-      // NWS Forecast Evolution — filter NWS rows from already-fetched forecastRows
-      // forecastRows is already populated above, just extract NWS model entries
+      // NWS Forecast Evolution — from dedicated NWS endpoint (r6) or forecastRows fallback
       var nwsEvolution=[];
+      var nwsForecastRows=[];
       try {
-        var nwsRows=forecastRows.filter(function(r){ return r.model==='NWS'; });
+        if(r6&&r6.status==='fulfilled'&&r6.value.ok){
+          var nwsFd=await r6.value.json();
+          nwsForecastRows=Array.isArray(nwsFd)?nwsFd:(nwsFd.forecasts||nwsFd.data||[]);
+          console.log('NWS dedicated rows:',nwsForecastRows.length);
+        }
+      } catch(e){ console.log('r6 NWS parse error:',e.message); }
+      try {
+        // Use dedicated NWS rows if available, else fall back to forecastRows NWS entries
+        var nwsRows=nwsForecastRows.length>0 ? nwsForecastRows :
+                    forecastRows.filter(function(r){ return r.model==='NWS'||r.model==='NWS-AFD'; });
         // Group by run_time to show evolution of the NWS forecast across updates
         var runMap={};
         nwsRows.forEach(function(r){
@@ -573,7 +584,7 @@
         console.log('NWS Evolution:',nwsEvolution.length,'runs from forecastRows, NWS rows:',nwsRows.length);
       } catch(e){ console.log('NWS evolution error:',e.message); }
       console.log('NWS evolution final:', nwsEvolution.length,'runs', JSON.stringify(nwsEvolution.slice(0,3)));
-      var history=[],latest=null,wu=null,forecastRows=[],units='fahrenheit';
+      // variables declared above via individual r1/r2/r3/r4 assignments
       var accuracyData={};
       if(r5&&r5.status==='fulfilled'&&!r5.value.ok){
         console.log('Accuracy API unavailable (status '+r5.value.status+') — requires Developer tier');
