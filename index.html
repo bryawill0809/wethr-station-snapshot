@@ -568,7 +568,7 @@
           var evoKey=station+'-'+targetDateStr;
           if(!nwsEvolutionLog[evoKey]) nwsEvolutionLog[evoKey]=[];
           var lastEntry=nwsEvolutionLog[evoKey].slice(-1)[0];
-          var newEntry={time:new Date().toISOString().slice(11,16)+' UTC',high:nwsFcst.high,low:nwsFcst.low,version:'V'+nwsFcst.version};
+          var nowStr=new Date().toUTCString().replace(/.*?(\d{2}:\d{2}:\d{2}).*/, '$1')+' UTC'; var newEntry={time:nowStr,high:nwsFcst.high,low:nwsFcst.low!=null?nwsFcst.low:null,version:'V'+nwsFcst.version};
           if(!lastEntry||lastEntry.high!==nwsFcst.high||lastEntry.low!==nwsFcst.low){
             nwsEvolutionLog[evoKey].push(newEntry);
           }
@@ -882,10 +882,10 @@
     // NWS Forecast Evolution
     if(store.nwsEvolution&&store.nwsEvolution.length){
       lines.push('--- NWS FORECAST EVOLUTION ('+store.nwsEvolution.length+' snapshots this session) ---');
-      lines.push(pad('Fetched At',12)+' '+pad('NWS High',10)+' NWS Low');
+      lines.push(pad('Fetched At',14)+' '+pad('Ver',6)+' '+pad('NWS High',10)+' NWS Low');
       lines.push('-'.repeat(40));
       store.nwsEvolution.forEach(function(e){
-        lines.push(pad(e.time,12)+' '+pad(e.high!=null?e.high+'°F':'—',10)+' '+(e.low!=null?e.low+'°F':'—'));
+        lines.push(pad(e.time||'?',14)+' '+pad(e.version||'',6)+' '+pad(e.high!=null?e.high+'°F':'—',10)+' '+(e.low!=null?e.low+'°F':'—'));
       });
       lines.push('');
     }
