@@ -554,6 +554,8 @@
             var r6data=await r6.value.json();
             var r6rows=Array.isArray(r6data)?r6data:(r6data.forecasts||r6data.data||r6data.nws_forecasts||[]);
             console.log('r6 NWS rows:', r6rows.length, 'sample:', JSON.stringify(r6rows.slice(0,2)));
+            console.log('r6 NWS raw keys:', JSON.stringify(Object.keys(r6data)));
+            console.log('r6 NWS full raw:', JSON.stringify(r6data).substring(0,500));
             // Merge r6 rows into forecastRows
             var existingKeys=new Set(forecastRows.map(function(r){return r.model+'|'+r.run_time+'|'+r.valid_time;}));
             r6rows.forEach(function(r){
@@ -941,6 +943,7 @@
 </script>
 </body>
 </html>
+
 
 
 
