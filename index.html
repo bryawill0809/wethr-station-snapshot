@@ -481,32 +481,78 @@
       ]);
       var r1=results[0],r2=results[1],r3=results[2],r4=results[3],r5=results[4];
 
-      // NWS Forecast Discussion — fetched directly from api.weather.gov (free, no auth)
+      // NWS Forecast Discussion — from api.weather.gov (free, no auth needed)
       var nwsDiscussion='';
       var nwsGrid=NWS_GRIDS[station];
       if(nwsGrid){
         try {
-          var nwsResp=await fetch('https://api.weather.gov/offices/'+nwsGrid.office+'/products?type=AFD&limit=1');
+          // Get latest AFD (Area Forecast Discussion) for this office
+          var afdUrl='https://api.weather.gov/products/types/AFD/locations/'+nwsGrid.office;
+          var nwsResp=await fetch(afdUrl,{headers:{'Accept':'application/json','User-Agent':'wethr-station-snapshot'}});
           if(nwsResp.ok){
             var nwsList=await nwsResp.json();
-            if(nwsList['@graph']&&nwsList['@graph'].length>0){
-              var nwsProductUrl=nwsList['@graph'][0]['@id'];
-              var nwsProduct=await fetch(nwsProductUrl);
-              if(nwsProduct.ok){
-                var nwsData=await nwsProduct.json();
-                // Extract just the temperature/short term section
-                var raw=nwsData.productText||'';
-                // Grab SHORT TERM and DISCUSSION sections
-                var shortTermMatch=raw.match(/\.SHORT TERM[\s\S]*?(?=\.\.[A-Z]|\$\$)/i);
-                var discMatch=raw.match(/\.DISCUSSION[\s\S]*?(?=\.\.[A-Z]|\$\$)/i);
-                var nearTermMatch=raw.match(/\.NEAR TERM[\s\S]*?(?=\.\.[A-Z]|\$\$)/i);
-                nwsDiscussion=[nearTermMatch,shortTermMatch,discMatch].filter(Boolean).map(function(m){return m[0].trim();}).join('\n\n');
-                if(!nwsDiscussion) nwsDiscussion=raw.substring(0,2000);
+            var graph=nwsList['@graph']||[];
+            if(graph.length>0){
+              // Fetch the most recent AFD product
+              var productId=graph[0].id||graph[0]['@id']||'';
+              if(productId){
+                var prodUrl='https://api.weather.gov/products/'+productId;
+                var prodResp=await fetch(prodUrl,{headers:{'Accept':'application/json','User-Agent':'wethr-station-snapshot'}});
+                if(prodResp.ok){
+                  var prodData=await prodResp.json();
+                  var raw=prodData.productText||'';
+                  // Extract SHORT TERM / NEAR TERM / DISCUSSION sections
+                  var sections=[];
+                  var sections=[]; var parts=raw.split(/\n\.[A-Z]/);
+                  parts.forEach(function(p){
+                    var up=p.toUpperCase();
+                    if(up.indexOf('NEAR TERM')===0||up.indexOf('SHORT TERM')===0||up.indexOf('DISCUSSION')===0){
+                      sections.push(p.trim());
+                    }
+                  });
+                  // lines below replaced
+
+
+
+
+
+
+
+
+
+
+
+                  console.log('NWS AFD loaded, length:',nwsDiscussion.length,'chars');
+                }
               }
             }
           }
         } catch(e){ console.log('NWS discussion fetch error:',e.message); }
       }
+
+      // NWS Forecast Evolution — pull NWS model forecast versions from wethr API
+      var nwsEvolution=[];
+      try {
+        var nwsEvResp=await fetch(proxyUrl({endpoint:'forecasts',location_name:station,model:'NWS',start_valid_time:fcstStartStr,end_valid_time:fcstEndStr}));
+        if(nwsEvResp.ok){
+          var nwsEvData=await nwsEvResp.json();
+          var nwsRows=Array.isArray(nwsEvData)?nwsEvData:(nwsEvData.forecasts||nwsEvData.data||[]);
+          // Group by run_time to show evolution across forecast versions
+          var runMap={};
+          nwsRows.forEach(function(r){
+            if(!runMap[r.run_time]) runMap[r.run_time]=[];
+            runMap[r.run_time].push(r);
+          });
+          // Build evolution: each run's projected high for today/tomorrow
+          Object.keys(runMap).sort().forEach(function(run){
+            var rows=runMap[run];
+            var maxTf=null;
+            rows.forEach(function(r){ if(r.temperature_f&&(maxTf===null||r.temperature_f>maxTf)) maxTf=r.temperature_f; });
+            if(maxTf!==null) nwsEvolution.push({run:run,high:Math.round(maxTf*10)/10});
+          });
+          console.log('NWS Evolution:',nwsEvolution.length,'runs');
+        }
+      } catch(e){ console.log('NWS evolution fetch error:',e.message); }
 
       var history=[],latest=null,wu=null,forecastRows=[],units='fahrenheit';
 
@@ -579,7 +625,7 @@
       console.log('currentTemp:', currentTemp, 'range:', currentLow, '-', currentHigh);
       var modelData=processForecasts(forecastRows,station,targetDateStr,nowUtc,wuHigh,wuLow,isTomorrow,currentTemp,currentLow,currentHigh,accuracyData);
 
-      var store={station,history,latest,wu,units,obs1,obs5,modelData,wuHigh,wuLow,targetDateStr,isTomorrow,nwsDiscussion,at:new Date()};
+      var store={station,history,latest,wu,units,obs1,obs5,modelData,wuHigh,wuLow,targetDateStr,isTomorrow,nwsDiscussion,nwsEvolution,at:new Date()};
 
       if(isTomorrow){
         storeTmrw=store;
@@ -783,6 +829,17 @@
       modelSection('TOMORROW MODEL FORECAST PACING', store.modelData);
     }
 
+    // NWS Forecast Evolution
+    if(store.nwsEvolution&&store.nwsEvolution.length){
+      lines.push('--- NWS FORECAST EVOLUTION ('+store.nwsEvolution.length+' runs) ---');
+      lines.push(pad('Run Time (UTC)',22)+' Projected High');
+      lines.push('-'.repeat(40));
+      store.nwsEvolution.forEach(function(e){
+        lines.push(pad(e.run,22)+' '+e.high+'°F');
+      });
+      lines.push('');
+    }
+
     // NWS Forecast Discussion
     if(store.nwsDiscussion){
       lines.push('--- NWS FORECAST DISCUSSION ---');
@@ -819,3 +876,4 @@
 </script>
 </body>
 </html>
+
