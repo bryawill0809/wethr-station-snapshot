@@ -26,7 +26,6 @@
   h1 { font-size: 1.7rem; font-weight: 800; letter-spacing: -0.5px; color: #fff; }
   h1 span { color: var(--accent); }
   .subtitle { font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; }
-
   .config-panel { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin-bottom: 24px; }
   .config-panel h2 { font-size: 0.7rem; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.15em; text-transform: uppercase; color: var(--accent); margin-bottom: 20px; }
   .field { display: flex; flex-direction: column; gap: 6px; }
@@ -36,47 +35,47 @@
   .field select option { background: var(--surface); color: var(--text); }
   .select-wrapper { position: relative; }
   .select-wrapper::after { content: '▾'; position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: var(--accent); pointer-events: none; font-size: 0.9rem; }
-
-  .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 20px; }
+  .btn-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-top: 20px; }
   .fetch-btn { width: 100%; padding: 14px 24px; background: transparent; border: 1px solid var(--accent); border-radius: 8px; color: var(--accent); font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
   .fetch-btn:hover { background: rgba(0,212,255,0.08); box-shadow: 0 0 20px rgba(0,212,255,0.15); }
   .fetch-btn:disabled { opacity: 0.4; cursor: not-allowed; }
   .fetch-btn.tmrw { border-color: var(--purple); color: var(--purple); }
   .fetch-btn.tmrw:hover { background: rgba(167,139,250,0.08); box-shadow: 0 0 20px rgba(167,139,250,0.15); }
+  .fetch-btn.ambient { border-color: var(--yellow); color: var(--yellow); }
+  .fetch-btn.ambient:hover { background: rgba(255,209,102,0.08); box-shadow: 0 0 20px rgba(255,209,102,0.15); }
   .fetch-btn .spinner { width: 13px; height: 13px; border: 2px solid rgba(0,212,255,0.3); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; display: none; }
   .fetch-btn.tmrw .spinner { border-color: rgba(167,139,250,0.3); border-top-color: var(--purple); }
+  .fetch-btn.ambient .spinner { border-color: rgba(255,209,102,0.3); border-top-color: var(--yellow); }
   .fetch-btn.loading .spinner { display: block; }
   .fetch-btn.loading .btn-text { opacity: 0.6; }
   @keyframes spin { to { transform: rotate(360deg); } }
-
   .status-bar { font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; color: var(--muted); padding: 10px 0; min-height: 30px; }
   .status-bar.error { color: var(--danger); }
   .status-bar.success { color: var(--green); }
-
   .day-section { display: none; flex-direction: column; gap: 16px; margin-bottom: 32px; }
   .day-section.visible { display: flex; }
   .day-label { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; letter-spacing: 0.18em; text-transform: uppercase; padding: 6px 0 10px; border-bottom: 1px solid var(--border); margin-bottom: 4px; }
   .day-label.today { color: var(--accent); }
   .day-label.tomorrow { color: var(--purple); }
-
+  .day-label.ambient-label { color: var(--yellow); }
   .data-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
   .card-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border-bottom: 1px solid var(--border); background: var(--surface2); }
   .card-title { font-size: 0.68rem; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.15em; text-transform: uppercase; color: var(--accent); display: flex; align-items: center; gap: 8px; }
   .card-title.tmrw-title { color: var(--purple); }
+  .card-title.ambient-title { color: var(--yellow); }
   .record-count { font-size: 0.65rem; background: rgba(0,212,255,0.1); border: 1px solid rgba(0,212,255,0.2); border-radius: 4px; padding: 2px 8px; color: var(--accent); }
   .record-count.tmrw { background: rgba(167,139,250,0.1); border-color: rgba(167,139,250,0.2); color: var(--purple); }
+  .record-count.ambient { background: rgba(255,209,102,0.1); border-color: rgba(255,209,102,0.2); color: var(--yellow); }
   .card-body { padding: 16px 18px; max-height: 320px; overflow-y: auto; }
   .card-body.no-max { max-height: none; }
   .card-body::-webkit-scrollbar { width: 4px; }
   .card-body::-webkit-scrollbar-track { background: transparent; }
   .card-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-
   .pacing-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(155px, 1fr)); gap: 12px; }
   .pacing-item { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; }
   .pacing-label { font-family: 'JetBrains Mono', monospace; font-size: 0.62rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
   .pacing-value { font-family: 'JetBrains Mono', monospace; font-size: 1.15rem; font-weight: 700; color: var(--green); }
   .pacing-value.na { color: var(--muted); font-size: 0.8rem; }
-
   .model-table { width: 100%; border-collapse: collapse; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; }
   .model-table th { text-align: left; color: var(--muted); font-weight: 500; font-size: 0.65rem; letter-spacing: 0.08em; text-transform: uppercase; padding: 0 12px 10px 0; border-bottom: 1px solid var(--border); white-space: nowrap; }
   .model-table td { padding: 8px 12px 8px 0; border-bottom: 1px solid rgba(30,45,69,0.5); vertical-align: middle; white-space: nowrap; }
@@ -88,7 +87,6 @@
   .pace-pos { color: var(--accent); }
   .pace-neg { color: var(--danger); }
   .pace-zero { color: var(--yellow); }
-
   .obs-table { width: 100%; border-collapse: collapse; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; }
   .obs-table th { text-align: left; color: var(--muted); font-weight: 500; font-size: 0.65rem; letter-spacing: 0.08em; text-transform: uppercase; padding: 0 8px 10px 0; border-bottom: 1px solid var(--border); }
   .obs-table td { padding: 7px 8px 7px 0; color: var(--text); border-bottom: 1px solid rgba(30,45,69,0.5); vertical-align: middle; }
@@ -99,7 +97,6 @@
   .tag-metar { background: rgba(0,212,255,0.1); color: var(--accent); border: 1px solid rgba(0,212,255,0.2); }
   .tag-hf { background: rgba(255,107,53,0.1); color: var(--accent2); border: 1px solid rgba(255,107,53,0.2); }
   .tag-speci { background: rgba(255,71,87,0.1); color: var(--danger); border: 1px solid rgba(255,71,87,0.2); }
-
   .copy-section { margin-top: 4px; }
   .copy-btn { width: 100%; padding: 14px 24px; background: rgba(0,255,157,0.05); border: 1px solid var(--green); border-radius: 10px; color: var(--green); font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 10px; }
   .copy-btn:hover { background: rgba(0,255,157,0.12); box-shadow: 0 0 24px rgba(0,255,157,0.15); }
@@ -107,16 +104,17 @@
   .copy-btn.tmrw-copy { background: rgba(167,139,250,0.05); border-color: var(--purple); color: var(--purple); }
   .copy-btn.tmrw-copy:hover { background: rgba(167,139,250,0.12); box-shadow: 0 0 24px rgba(167,139,250,0.15); }
   .copy-btn.tmrw-copy.copied { background: rgba(167,139,250,0.15); }
-
+  .copy-btn.ambient-copy { background: rgba(255,209,102,0.05); border-color: var(--yellow); color: var(--yellow); }
+  .copy-btn.ambient-copy:hover { background: rgba(255,209,102,0.12); box-shadow: 0 0 24px rgba(255,209,102,0.15); }
+  .copy-btn.ambient-copy.copied { background: rgba(255,209,102,0.15); }
   @media (max-width: 600px) { h1 { font-size: 1.3rem; } .btn-row { grid-template-columns: 1fr; } }
 </style>
 </head>
 <body>
 <div class="container">
-
   <header>
     <div class="logo-row"><div class="logo-dot"></div><h1>Wethr<span>.net</span> Station Snapshot</h1></div>
-    <div class="subtitle">Pacing · Model Forecasts · 2-hr Observations — API v2</div>
+    <div class="subtitle">Pacing · Model Forecasts · 2-hr Observations · Nearby Stations — API v2</div>
   </header>
 
   <div class="config-panel">
@@ -156,6 +154,9 @@
       <button class="fetch-btn tmrw" id="fetchTmrwBtn" onclick="fetchDay('tomorrow')">
         <div class="spinner"></div><span class="btn-text">🔭 Tomorrow's Data</span>
       </button>
+      <button class="fetch-btn ambient" id="fetchAmbientBtn" onclick="fetchAmbient()">
+        <div class="spinner"></div><span class="btn-text">📡 Nearby Stations</span>
+      </button>
     </div>
   </div>
 
@@ -164,12 +165,10 @@
   <!-- TODAY SECTION -->
   <div class="day-section" id="todaySection">
     <div class="day-label today">📅 Today</div>
-
     <div class="data-card">
       <div class="card-header"><div class="card-title">📊 Current Conditions &amp; Pacing</div></div>
       <div class="card-body"><div class="pacing-grid" id="pacingGridToday"></div></div>
     </div>
-
     <div class="data-card">
       <div class="card-header">
         <div class="card-title">🌐 Today — Model Forecast Pacing <span class="record-count" id="modelCountToday">—</span></div>
@@ -181,7 +180,6 @@
         </table>
       </div>
     </div>
-
     <div class="data-card">
       <div class="card-header">
         <div class="card-title">🕐 All Observations — Last 2 hrs (5min / Hourly) <span class="record-count" id="countObsToday">—</span></div>
@@ -193,7 +191,6 @@
         </table>
       </div>
     </div>
-
     <div class="copy-section">
       <button class="copy-btn" id="copyTodayBtn" onclick="copyToClipboard('today')">
         <span>📋</span><span id="copyTodayText">📋 Re-copy to Clipboard</span>
@@ -204,7 +201,6 @@
   <!-- TOMORROW SECTION -->
   <div class="day-section" id="tmrwSection">
     <div class="day-label tomorrow">🔭 Tomorrow</div>
-
     <div class="data-card">
       <div class="card-header">
         <div class="card-title tmrw-title">🌐 Tomorrow — Model Pacing Details <span class="record-count tmrw" id="modelCountTmrw">—</span></div>
@@ -216,7 +212,6 @@
         </table>
       </div>
     </div>
-
     <div class="copy-section">
       <button class="copy-btn tmrw-copy" id="copyTmrwBtn" onclick="copyToClipboard('tomorrow')">
         <span>📋</span><span id="copyTmrwText">📋 Re-copy to Clipboard</span>
@@ -224,127 +219,81 @@
     </div>
   </div>
 
+  <!-- NEARBY STATIONS SECTION -->
+  <div class="day-section" id="ambientSection">
+    <div class="day-label ambient-label">📡 Nearby Stations</div>
+    <div class="data-card">
+      <div class="card-header">
+        <div class="card-title ambient-title">
+          🌡 Closest Stations to <span id="ambientStationLabel">—</span>
+          <span class="record-count ambient" id="ambientCount">—</span>
+        </div>
+      </div>
+      <div class="card-body no-max">
+        <table class="obs-table">
+          <thead><tr>
+            <th>Station ID</th><th>Name</th><th>Distance</th><th>Temp</th><th>RH%</th><th>Wind</th><th>Elev</th><th>Updated (UTC)</th>
+          </tr></thead>
+          <tbody id="tbodyAmbient"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="copy-section">
+      <button class="copy-btn ambient-copy" id="copyAmbientBtn" onclick="copyAmbient()">
+        <span>📋</span><span id="copyAmbientText">Copy Nearby Station Data to Clipboard</span>
+      </button>
+    </div>
+  </div>
+
 </div>
 <script>
-  var storeToday = null, storeTmrw = null;
-  // NWS Evolution: track NWS high/low across fetches within this session
-  var nwsEvolutionLog = {}; // keyed by station+date
-  var PROXY = '/api/proxy';
-  var MODELS = ['GFS','HRRR','NAM','NBM','GEFS','ECMWF-IFS','ICON','GEM-GDPS','JMA','UKMO','ARPEGE','RAP','GFS-MOS','NBS-MOS','NAM-MOS','LAV-MOS','GEM-HRDPS','NAM4KM'];
-  var NWS_GRIDS = {
-    'KLAX':{office:'LOX',x:152,y:31}, 'KATL':{office:'FFC',x:55,y:76},
-    'KAUS':{office:'EWX',x:82,y:84}, 'KBOS':{office:'BOX',x:70,y:73},
-    'KCLT':{office:'GSP',x:53,y:57}, 'KMDW':{office:'LOT',x:76,y:73},
-    'KDFW':{office:'FWD',x:82,y:98}, 'KDCA':{office:'LWX',x:96,y:62},
-    'KDTW':{office:'DTX',x:65,y:65}, 'KHOU':{office:'HGX',x:61,y:73},
-    'KJAX':{office:'JAX',x:55,y:60}, 'KLAS':{office:'VEF',x:38,y:74},
-    'KMIA':{office:'MFL',x:107,y:37},'KMSP':{office:'MPX',x:100,y:76},
-    'KOKC':{office:'OUN',x:68,y:97}, 'KPHL':{office:'PHI',x:71,y:65},
-    'KPHX':{office:'PSR',x:161,y:50},'KSAT':{office:'EWX',x:68,y:71},
-    'KSFO':{office:'MTR',x:97,y:83}, 'KSEA':{office:'SEW',x:124,y:67},
-    'KLGA':{office:'OKX',x:38,y:37},
+  var storeToday=null, storeTmrw=null, storeAmbient=null;
+  var nwsEvolutionLog={};
+  var PROXY='/api/proxy';
+  var MESONET_TOKEN='KuygC4YdjsmZzPCxmCsnAidM6VxccvypkOxOe21ubS';
+  var MESONET_RADIUS=25;
+  var MODELS=['GFS','HRRR','NAM','NBM','GEFS','ECMWF-IFS','ICON','GEM-GDPS','JMA','UKMO','ARPEGE','RAP','GFS-MOS','NBS-MOS','NAM-MOS','LAV-MOS','GEM-HRDPS','NAM4KM'];
+  var NWS_GRIDS={
+    'KLAX':{office:'LOX'},'KATL':{office:'FFC'},'KAUS':{office:'EWX'},'KBOS':{office:'BOX'},
+    'KCLT':{office:'GSP'},'KMDW':{office:'LOT'},'KDFW':{office:'FWD'},'KDCA':{office:'LWX'},
+    'KDTW':{office:'DTX'},'KHOU':{office:'HGX'},'KJAX':{office:'JAX'},'KLAS':{office:'VEF'},
+    'KMIA':{office:'MFL'},'KMSP':{office:'MPX'},'KOKC':{office:'OUN'},'KPHL':{office:'PHI'},
+    'KPHX':{office:'PSR'},'KSAT':{office:'EWX'},'KSFO':{office:'MTR'},'KSEA':{office:'SEW'},
+    'KLGA':{office:'OKX'},
   };
-
-  var TZ_OFFSETS = {
+  var STATION_COORDS={
+    'KLAX':{lat:33.9425,lon:-118.4081},'KATL':{lat:33.6407,lon:-84.4277},
+    'KAUS':{lat:30.1945,lon:-97.6699},'KBOS':{lat:42.3656,lon:-71.0096},
+    'KCLT':{lat:35.214,lon:-80.9431},'KMDW':{lat:41.7868,lon:-87.7522},
+    'KDFW':{lat:32.8998,lon:-97.0403},'KDCA':{lat:38.8521,lon:-77.0377},
+    'KDTW':{lat:42.2124,lon:-83.3534},'KHOU':{lat:29.6454,lon:-95.2789},
+    'KJAX':{lat:30.4941,lon:-81.6879},'KLAS':{lat:36.084,lon:-115.1537},
+    'KMIA':{lat:25.7959,lon:-80.287},'KMSP':{lat:44.882,lon:-93.2218},
+    'KOKC':{lat:35.3931,lon:-97.6007},'KPHL':{lat:39.8719,lon:-75.2411},
+    'KPHX':{lat:33.4373,lon:-112.0078},'KSAT':{lat:29.5337,lon:-98.4698},
+    'KSFO':{lat:37.6213,lon:-122.379},'KSEA':{lat:47.4502,lon:-122.3088},
+    'KLGA':{lat:40.7773,lon:-73.8726},
+  };
+  var TZ_OFFSETS={
     'KLAX':-8,'KSFO':-8,'KSEA':-8,'KLAS':-8,'KPHX':-7,
     'KMDW':-6,'KAUS':-6,'KDFW':-6,'KHOU':-6,'KMSP':-6,'KBNA':-6,'KMSY':-6,'KOKC':-6,'KSAT':-6,
     'KATL':-5,'KBOS':-5,'KCLT':-5,'KDCA':-5,'KDTW':-5,'KJAX':-5,'KMIA':-5,'KLGA':-5,'KPHL':-5,'KNYC':-5
   };
 
-  function proxyUrl(p){ return PROXY+'?'+new URLSearchParams(p).toString(); }
-
-  function setStatus(msg,type){
-    var el=document.getElementById('statusBar');
-    el.textContent=msg; el.className='status-bar '+(type||'');
-  }
-
-  function formatTime(t){
-    if(!t) return '—';
-    return String(t).replace('T',' ').replace('Z','').substring(0,19)+' UTC';
-  }
-
-  function formatTemp(obs,units){
-    var v=obs.temperature_display!=null?obs.temperature_display:obs.temperature_f!=null?obs.temperature_f:obs.temperature;
-    if(v==null) return '—';
-    return v+(units==='fahrenheit'?'°F':'°C');
-  }
-
-  function formatDew(obs,units){
-    var dp=obs.dew_point;
-    if(dp==null) return '—';
-    return units==='fahrenheit'?Math.round(dp*9/5+32)+'°F':dp+'°C';
-  }
-
-  function formatWind(obs){
-    if(obs.wind_speed==null) return '—';
-    return (obs.wind_direction||'—')+' '+obs.wind_speed+(obs.wind_gust?' G'+obs.wind_gust:'')+' kt';
-  }
-
-  function formatSky(obs){
-    if(!obs.cloud_layer_count || obs.cloud_layer_count===0) return 'CLR';
-    var layers=[];
-    for(var i=1;i<=3;i++){
-      var cov=obs['cloud_'+i+'_coverage'];
-      var ht=obs['cloud_'+i+'_height'];
-      if(!cov) break;
-      var htStr=ht?Math.round(ht/100)*100+'ft':'';
-      layers.push(cov+(htStr?' '+htStr:''));
-    }
-    return layers.join(' ') || 'CLR';
-  }
-
-  function guessType(obs){
-    var m=new Date((obs.observation_time||'').replace(' ','T').replace(/Z?$/,'Z')).getMinutes();
-    if(m===53||m===0||m===20||m===50) return 'METAR';
-    return m%5===0?'HF-METAR-5min':'HF-METAR-1min';
-  }
-
-  function getTagClass(t){
-    if(t.includes('1min')) return 'tag tag-hf';
-    if(t.includes('5min')) return 'tag tag-metar';
-    if(t.includes('SPECI')) return 'tag tag-speci';
-    return 'tag tag-metar';
-  }
-
-  function is1Min(obs){
-    return new Date((obs.observation_time||'').replace(' ','T').replace(/Z?$/,'Z')).getMinutes()%5!==0;
-  }
-
-  function buildObsRow(obs,units){
-    var type=obs.product||guessType(obs);
-    return '<tr>'
-      +'<td class="time-val">'+formatTime(obs.observation_time)+'</td>'
-      +'<td class="temp-val">'+formatTemp(obs,units)+'</td>'
-      +'<td>'+formatDew(obs,units)+'</td>'
-      +'<td>'+(obs.relative_humidity!=null?obs.relative_humidity+'%':'—')+'</td>'
-      +'<td>'+formatWind(obs)+'</td>'
-      +'<td style="color:var(--muted);font-size:0.7rem">'+formatSky(obs)+'</td>'
-      +'<td><span class="'+getTagClass(type)+'">'+type+'</span></td>'
-      +'</tr>';
-  }
-
-  function utcToLocalTimeStr(utcStr,tzOff){
-    if(!utcStr) return '—';
-    var d=new Date(utcStr.replace(' ','T').replace(/Z?$/,'Z'));
-    var local=new Date(d.getTime()+tzOff*3600000);
-    var h=local.getUTCHours(),min=local.getUTCMinutes();
-    var ampm=h>=12?'PM':'AM';
-    h=h%12||12;
-    return h+(min>0?':'+String(min).padStart(2,'0'):'')+' '+ampm;
-  }
-
-  function getLocalDateStr(nowUtc,tzOff,daysAhead){
-    // Convert UTC to station local time using station's standard time offset
-    // Then add calendar days cleanly at midnight to avoid DST edge cases
-    var localMs = nowUtc.getTime() + tzOff*3600000;
-    var localDate = new Date(localMs);
-    // Get the date string at the station's local midnight
-    var y = localDate.getUTCFullYear();
-    var mo = localDate.getUTCMonth();
-    var d = localDate.getUTCDate() + (daysAhead||0);
-    var result = new Date(Date.UTC(y, mo, d));
-    return result.toISOString().slice(0,10);
-  }
+  function proxyUrl(p){return PROXY+'?'+new URLSearchParams(p).toString();}
+  function setStatus(msg,type){var el=document.getElementById('statusBar');el.textContent=msg;el.className='status-bar '+(type||'');}
+  function formatTime(t){if(!t)return '—';return String(t).replace('T',' ').replace('Z','').substring(0,19)+' UTC';}
+  function formatTemp(obs,units){var v=obs.temperature_display!=null?obs.temperature_display:obs.temperature_f!=null?obs.temperature_f:obs.temperature;if(v==null)return '—';return v+(units==='fahrenheit'?'°F':'°C');}
+  function formatDew(obs,units){var dp=obs.dew_point;if(dp==null)return '—';return units==='fahrenheit'?Math.round(dp*9/5+32)+'°F':dp+'°C';}
+  function formatWind(obs){if(obs.wind_speed==null)return '—';return (obs.wind_direction||'—')+' '+obs.wind_speed+(obs.wind_gust?' G'+obs.wind_gust:'')+' kt';}
+  function formatSky(obs){if(!obs.cloud_layer_count||obs.cloud_layer_count===0)return 'CLR';var layers=[];for(var i=1;i<=3;i++){var cov=obs['cloud_'+i+'_coverage'];var ht=obs['cloud_'+i+'_height'];if(!cov)break;var htStr=ht?Math.round(ht/100)*100+'ft':'';layers.push(cov+(htStr?' '+htStr:''));}return layers.join(' ')||'CLR';}
+  function guessType(obs){var m=new Date((obs.observation_time||'').replace(' ','T').replace(/Z?$/,'Z')).getMinutes();if(m===53||m===0||m===20||m===50)return 'METAR';return m%5===0?'HF-METAR-5min':'HF-METAR-1min';}
+  function getTagClass(t){if(t.includes('1min'))return 'tag tag-hf';if(t.includes('5min'))return 'tag tag-metar';if(t.includes('SPECI'))return 'tag tag-speci';return 'tag tag-metar';}
+  function buildObsRow(obs,units){var type=obs.product||guessType(obs);return '<tr>'+'<td class="time-val">'+formatTime(obs.observation_time)+'</td>'+'<td class="temp-val">'+formatTemp(obs,units)+'</td>'+'<td>'+formatDew(obs,units)+'</td>'+'<td>'+(obs.relative_humidity!=null?obs.relative_humidity+'%':'—')+'</td>'+'<td>'+formatWind(obs)+'</td>'+'<td style="color:var(--muted);font-size:0.7rem">'+formatSky(obs)+'</td>'+'<td><span class="'+getTagClass(type)+'">'+type+'</span></td>'+'</tr>';}
+  function utcToLocalTimeStr(utcStr,tzOff){if(!utcStr)return '—';var d=new Date(utcStr.replace(' ','T').replace(/Z?$/,'Z'));var local=new Date(d.getTime()+tzOff*3600000);var h=local.getUTCHours(),min=local.getUTCMinutes();var ampm=h>=12?'PM':'AM';h=h%12||12;return h+(min>0?':'+String(min).padStart(2,'0'):'')+' '+ampm;}
+  function getLocalDateStr(nowUtc,tzOff,daysAhead){var localMs=nowUtc.getTime()+tzOff*3600000;var localDate=new Date(localMs);var y=localDate.getUTCFullYear();var mo=localDate.getUTCMonth();var d=localDate.getUTCDate()+(daysAhead||0);var result=new Date(Date.UTC(y,mo,d));return result.toISOString().slice(0,10);}
+  function distanceMiles(lat1,lon1,lat2,lon2){var R=3958.8;var dLat=(lat2-lat1)*Math.PI/180;var dLon=(lon2-lon1)*Math.PI/180;var a=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)*Math.sin(dLon/2);return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));}
+  function pad(s,n){return String(s).padEnd(n);}
 
   function processForecasts(rows,station,targetDateStr,nowUtc,wuHigh,wuLow,isTomorrow,currentTemp,currentLow,currentHigh,accuracyData){
     var tzOff=TZ_OFFSETS[station]||-5;
@@ -352,98 +301,56 @@
     rows.forEach(function(row){
       var vt=new Date(row.valid_time.replace(' ','T').replace(/Z?$/,'Z'));
       var vtLocal=new Date(vt.getTime()+tzOff*3600000);
-      if(vtLocal.toISOString().slice(0,10)!==targetDateStr) return;
+      if(vtLocal.toISOString().slice(0,10)!==targetDateStr)return;
       var model=row.model;
-      if(!modelMap[model]) modelMap[model]={model:model,runTime:row.run_time,rows:[]};
+      if(!modelMap[model])modelMap[model]={model:model,runTime:row.run_time,rows:[]};
       if(row.run_time>modelMap[model].runTime){modelMap[model].runTime=row.run_time;modelMap[model].rows=[];}
-      if(row.run_time===modelMap[model].runTime) modelMap[model].rows.push(row);
+      if(row.run_time===modelMap[model].runTime)modelMap[model].rows.push(row);
     });
-
     var results=[];
     Object.values(modelMap).forEach(function(m){
       var maxTemp=null,maxTime=null,maxPacing=null;
       m.rows.forEach(function(row){
         var tf=row.temperature_f;
-        if(tf==null) return;
+        if(tf==null)return;
         if(maxTemp===null||tf>maxTemp){maxTemp=tf;maxTime=row.valid_time;}
-        if(isTomorrow){
-          if(maxPacing===null||tf>maxPacing) maxPacing=tf;
-        }
+        if(isTomorrow){if(maxPacing===null||tf>maxPacing)maxPacing=tf;}
       });
-      // Model Now: linearly interpolate between the surrounding valid_time steps
       if(!isTomorrow){
-        var beforeRow=null, afterRow=null;
-        var beforeDiff=Infinity, afterDiff=Infinity;
+        var beforeRow=null,afterRow=null,beforeDiff=Infinity,afterDiff=Infinity;
         m.rows.forEach(function(row){
-          if(row.temperature_f==null) return;
+          if(row.temperature_f==null)return;
           var vt=new Date(row.valid_time.replace(' ','T').replace(/Z?$/,'Z'));
-          var diff=nowUtc.getTime()-vt.getTime(); // positive=past, negative=future
-          if(diff>=0 && diff<beforeDiff){beforeDiff=diff;beforeRow=row;}
-          if(diff<0 && Math.abs(diff)<afterDiff){afterDiff=Math.abs(diff);afterRow=row;}
+          var diff=nowUtc.getTime()-vt.getTime();
+          if(diff>=0&&diff<beforeDiff){beforeDiff=diff;beforeRow=row;}
+          if(diff<0&&Math.abs(diff)<afterDiff){afterDiff=Math.abs(diff);afterRow=row;}
         });
-        if(beforeRow && afterRow){
-          // Interpolate: weight by how close now is to each step
+        if(beforeRow&&afterRow){
           var t0=new Date(beforeRow.valid_time.replace(' ','T').replace(/Z?$/,'Z')).getTime();
           var t1=new Date(afterRow.valid_time.replace(' ','T').replace(/Z?$/,'Z')).getTime();
-          var tNow=nowUtc.getTime();
-          var frac=(tNow-t0)/(t1-t0); // 0=at before step, 1=at after step
-          var interp=parseFloat(beforeRow.temperature_f)+(parseFloat(afterRow.temperature_f)-parseFloat(beforeRow.temperature_f))*frac;
-          maxPacing=Math.round(interp*10)/10;
-        } else if(beforeRow){
-          maxPacing=Math.round(parseFloat(beforeRow.temperature_f)*10)/10;
-        } else if(afterRow){
-          maxPacing=Math.round(parseFloat(afterRow.temperature_f)*10)/10;
-        }
+          var frac=(nowUtc.getTime()-t0)/(t1-t0);
+          maxPacing=Math.round((parseFloat(beforeRow.temperature_f)+(parseFloat(afterRow.temperature_f)-parseFloat(beforeRow.temperature_f))*frac)*10)/10;
+        } else if(beforeRow){maxPacing=Math.round(parseFloat(beforeRow.temperature_f)*10)/10;}
+        else if(afterRow){maxPacing=Math.round(parseFloat(afterRow.temperature_f)*10)/10;}
       }
-      if(maxTemp===null) return;
-
+      if(maxTemp===null)return;
       var runHour=m.runTime?new Date(m.runTime.replace(' ','T').replace(/Z?$/,'Z')).getUTCHours()+'Z':'';
       var modelLabel=m.model+(runHour?' ('+runHour+')':'');
       var highTimeLocal=utcToLocalTimeStr(maxTime,tzOff);
-
       var deltaStr='—',deltaClass='';
       if(maxPacing!==null&&currentTemp!==null){
-        // Pace = Current observed - Model Now (how much hotter/cooler reality is vs model)
-        // Positive = reality running HOT vs model (red)
-        // Negative = reality running COOL vs model (blue)
-        var cLow  = (currentLow!=null)  ? currentLow  : currentTemp;
-        var cHigh = (currentHigh!=null) ? currentHigh : currentTemp;
-        var dLow  = Math.round((cLow  - maxPacing)*10)/10; // current low  - model
-        var dHigh = Math.round((cHigh - maxPacing)*10)/10; // current high - model
-        var sign = function(n){ return n>=0?'+':''; };
-        if(cLow===cHigh){
-          deltaStr = sign(dLow)+dLow;
-        } else {
-          deltaStr = sign(dLow)+dLow+' to '+sign(dHigh)+dHigh;
-        }
-        // Red = positive (reality hotter than model), Blue = negative (reality cooler than model)
-        deltaClass = dHigh<0 ? 'pace-pos' : dLow>0 ? 'pace-neg' : 'pace-zero';
+        var cLow=(currentLow!=null)?currentLow:currentTemp;
+        var cHigh=(currentHigh!=null)?currentHigh:currentTemp;
+        var dLow=Math.round((cLow-maxPacing)*10)/10;
+        var dHigh=Math.round((cHigh-maxPacing)*10)/10;
+        var sign=function(n){return n>=0?'+':'';};
+        deltaStr=cLow===cHigh?sign(dLow)+dLow:sign(dLow)+dLow+' to '+sign(dHigh)+dHigh;
+        deltaClass=dHigh<0?'pace-pos':dLow>0?'pace-neg':'pace-zero';
       }
-
-      // Match accuracy by base model name (strip run hour)
-      var baseModel=m.model;
-      var acc=accuracyData&&accuracyData[baseModel]?accuracyData[baseModel]:null;
-      results.push({
-        model:modelLabel,
-        forecastHigh:Math.round(maxTemp*10)/10,
-        highTimeLocal:highTimeLocal,
-        pacingHigh:maxPacing!==null?Math.round(maxPacing*10)/10:null,
-        actualTemp:(currentLow!=null&&currentHigh!=null)
-          ? (currentLow===currentHigh ? currentLow+'°F' : currentLow+'–'+currentHigh+'°F')
-          : (currentTemp!=null?currentTemp+'°F':'—'),
-        delta:deltaStr,
-        deltaClass:deltaClass,
-        rank:acc?acc.rank:null,
-        mae:acc?acc.mae:null,
-        bias:acc?acc.bias:null,
-      });
+      var acc=accuracyData&&accuracyData[m.model]?accuracyData[m.model]:null;
+      results.push({model:modelLabel,forecastHigh:Math.round(maxTemp*10)/10,highTimeLocal:highTimeLocal,pacingHigh:maxPacing!==null?Math.round(maxPacing*10)/10:null,actualTemp:(currentLow!=null&&currentHigh!=null)?(currentLow===currentHigh?currentLow+'°F':currentLow+'–'+currentHigh+'°F'):(currentTemp!=null?currentTemp+'°F':'—'),delta:deltaStr,deltaClass:deltaClass,rank:acc?acc.rank:null,mae:acc?acc.mae:null,bias:acc?acc.bias:null});
     });
-
-    results.sort(function(a,b){
-      var ai=MODELS.findIndex(function(m){return a.model.startsWith(m);});
-      var bi=MODELS.findIndex(function(m){return b.model.startsWith(m);});
-      return (ai===-1?999:ai)-(bi===-1?999:bi);
-    });
+    results.sort(function(a,b){var ai=MODELS.findIndex(function(m){return a.model.startsWith(m);});var bi=MODELS.findIndex(function(m){return b.model.startsWith(m);});return (ai===-1?999:ai)-(bi===-1?999:bi);});
     return results;
   }
 
@@ -452,27 +359,19 @@
     var station=document.getElementById('stationSelect').value;
     var btnId=isTomorrow?'fetchTmrwBtn':'fetchTodayBtn';
     var btn=document.getElementById(btnId);
-    btn.disabled=true; btn.classList.add('loading');
+    btn.disabled=true;btn.classList.add('loading');
     btn.querySelector('.btn-text').textContent='Fetching…';
     setStatus('Fetching '+(isTomorrow?"tomorrow's":"today's")+' data for '+station+'…');
-
     var tzOff=TZ_OFFSETS[station]||-5;
     var nowUtc=new Date();
     var targetDateStr=getLocalDateStr(nowUtc,tzOff,isTomorrow?1:0);
-    console.log('fetchDay:', day, station, 'targetDate:', targetDateStr);
-
-    // Full day forecast window (for Fcst High)
     var localMidnight=new Date(targetDateStr+'T00:00:00.000Z');
     var fcstStart=new Date(localMidnight.getTime()-tzOff*3600000);
     var fcstEnd=new Date(fcstStart.getTime()+30*3600000);
     var fcstStartStr=fcstStart.toISOString().slice(0,19)+'Z';
     var fcstEndStr=fcstEnd.toISOString().slice(0,19)+'Z';
-
-
-    // Obs window: last 2 hours (same for both)
     var obsEnd=nowUtc.toISOString().slice(0,19)+'Z';
     var obsStart=new Date(nowUtc.getTime()-2*3600000).toISOString().slice(0,19)+'Z';
-
     try {
       var results=await Promise.allSettled([
         fetch(proxyUrl({endpoint:'observations',station_code:station,start_time:obsStart,end_time:obsEnd})),
@@ -484,199 +383,94 @@
       ]);
       var r1=results[0],r2=results[1],r3=results[2],r4=results[3],r5=results[4],r6=results[5];
 
-      // NWS Forecast Discussion — from api.weather.gov (free, no auth needed)
+      // NWS Discussion
       var nwsDiscussion='';
       var nwsGrid=NWS_GRIDS[station];
       if(nwsGrid){
         try {
-          // Get latest AFD (Area Forecast Discussion) for this office
           var afdUrl='https://api.weather.gov/products/types/AFD/locations/'+nwsGrid.office;
           var nwsResp=await fetch(afdUrl,{headers:{'Accept':'application/json','User-Agent':'wethr-station-snapshot'}});
           if(nwsResp.ok){
             var nwsList=await nwsResp.json();
             var graph=nwsList['@graph']||[];
             if(graph.length>0){
-              // Fetch the most recent AFD product
               var productId=graph[0].id||graph[0]['@id']||'';
               if(productId){
-                var prodUrl='https://api.weather.gov/products/'+productId;
-                var prodResp=await fetch(prodUrl,{headers:{'Accept':'application/json','User-Agent':'wethr-station-snapshot'}});
+                var prodResp=await fetch('https://api.weather.gov/products/'+productId,{headers:{'Accept':'application/json','User-Agent':'wethr-station-snapshot'}});
                 if(prodResp.ok){
                   var prodData=await prodResp.json();
                   var raw=prodData.productText||'';
-                  // Extract SHORT TERM / NEAR TERM / DISCUSSION sections
-                  var sections=[];
-                  // AFD uses && as section separator, .SECTION headers
                   var sections=[];
                   var parts=raw.split('&&');
-                  parts.forEach(function(p){
-                    var trimmed=p.trim();
-                    if(trimmed.match(/^\.(NEAR TERM|SHORT TERM|LONG TERM|DISCUSSION|SYNOPSIS)/i)){
-                      sections.push(trimmed);
-                    }
-                  });
-                  if(sections.length){
-                    nwsDiscussion=sections.slice(0,4).join('\n\n&&\n\n');
-                  } else {
-                    // Fallback: strip header lines, return body text
-                    var bodyLines=raw.split('\n').filter(function(l){
-                      return l.trim().length>0 && !l.match(/^(FXUS|NWS |[A-Z]{4}[0-9]|[0-9]{3,}|AREA FORECAST)/);
-                    });
-                    nwsDiscussion=bodyLines.join('\n').trim().substring(0,3000);
-                  }
+                  parts.forEach(function(p){var trimmed=p.trim();if(trimmed.match(/^\.(NEAR TERM|SHORT TERM|LONG TERM|DISCUSSION|SYNOPSIS)/i))sections.push(trimmed);});
+                  nwsDiscussion=sections.length?sections.slice(0,4).join('\n\n&&\n\n'):(raw.split('\n').filter(function(l){return l.trim().length>0&&!l.match(/^(FXUS|NWS |[A-Z]{4}[0-9]|[0-9]{3,}|AREA FORECAST)/);}).join('\n').trim().substring(0,3000));
                 }
               }
             }
           }
-        } catch(e){ console.log('NWS discussion fetch ERROR:',e.message,e.stack); }
-        console.log('NWS discussion final:', nwsDiscussion?'GOT '+nwsDiscussion.length+' chars':'EMPTY');
+        } catch(e){console.log('NWS discussion error:',e.message);}
       }
-
 
       var history=[],latest=null,wu=null,forecastRows=[],units='fahrenheit';
-      if(r1.status==='fulfilled'&&r1.value.ok){
-        var d=await r1.value.json();
-        history=Array.isArray(d)?d:(d.observations||[]);
-        if(history[0]) units=history[0].units||units;
-      }
+      if(r1.status==='fulfilled'&&r1.value.ok){var d=await r1.value.json();history=Array.isArray(d)?d:(d.observations||[]);if(history[0])units=history[0].units||units;}
       if(r2.status==='fulfilled'&&r2.value.ok){latest=await r2.value.json();units=latest.units||units;}
-      if(r3.status==='fulfilled'&&r3.value.ok) wu=await r3.value.json();
-      if(r4.status==='fulfilled'&&r4.value.ok){
-        var fd=await r4.value.json();
-        forecastRows=Array.isArray(fd)?fd:(fd.forecasts||fd.data||[]);
-      }
-      // NWS Forecast Evolution — from dedicated NWS endpoint (r6) or forecastRows fallback
+      if(r3.status==='fulfilled'&&r3.value.ok)wu=await r3.value.json();
+      if(r4.status==='fulfilled'&&r4.value.ok){var fd=await r4.value.json();forecastRows=Array.isArray(fd)?fd:(fd.forecasts||fd.data||[]);}
+
+      // NWS Forecast (r6)
       var nwsEvolution=nwsEvolutionLog[station+'-'+targetDateStr]||[];
-      var nwsFcst=null;
+      var nwsFcst=null,nwsHigh=null,nwsLow=null;
       try {
         if(r6&&r6.status==='fulfilled'&&r6.value.ok){
           nwsFcst=await r6.value.json();
-          // nwsFcst: {high, low, version, hourly_temps[25], forecast_date}
-          // Build synthetic forecast rows for NWS in the model table
-          var tzOff4=TZ_OFFSETS[station]||-5;
+          nwsHigh=nwsFcst.high!=null?nwsFcst.high:null;
+          nwsLow=nwsFcst.low!=null?nwsFcst.low:null;
           var nwsVersion='NWS (V'+nwsFcst.version+')';
+          var tzOff4=TZ_OFFSETS[station]||-5;
           var fcstDateLocal=new Date(targetDateStr+'T00:00:00.000Z');
           if(nwsFcst.hourly_temps){
             nwsFcst.hourly_temps.forEach(function(tf,hr){
-              if(tf==null) return;
+              if(tf==null)return;
               var utcMs=fcstDateLocal.getTime()+(hr-tzOff4)*3600000;
               var vtStr=new Date(utcMs).toISOString().slice(0,19).replace('T',' ');
               forecastRows.push({model:nwsVersion,run_time:nwsFcst.timestamp?nwsFcst.timestamp.replace('T',' ').slice(0,19):'',valid_time:vtStr,temperature_f:tf});
             });
           }
-          // Track NWS evolution
           var evoKey=station+'-'+targetDateStr;
-          if(!nwsEvolutionLog[evoKey]) nwsEvolutionLog[evoKey]=[];
+          if(!nwsEvolutionLog[evoKey])nwsEvolutionLog[evoKey]=[];
           var lastEntry=nwsEvolutionLog[evoKey].slice(-1)[0];
-          var nowStr=new Date().toUTCString().replace(/.*?(\d{2}:\d{2}:\d{2}).*/, '$1')+' UTC'; var newEntry={time:nowStr,high:nwsFcst.high,low:nwsFcst.low!=null?nwsFcst.low:null,version:'V'+nwsFcst.version};
-          if(!lastEntry||lastEntry.high!==nwsFcst.high||lastEntry.low!==nwsFcst.low){
-            nwsEvolutionLog[evoKey].push(newEntry);
-          }
-          console.log('NWS '+nwsVersion+' high:',nwsFcst.high,'low:',nwsFcst.low);
+          var nowStr=new Date().toUTCString().replace(/.*?(\d{2}:\d{2}:\d{2}).*/,'$1')+' UTC';
+          var newEntry={time:nowStr,high:nwsFcst.high,low:nwsFcst.low!=null?nwsFcst.low:null,version:'V'+nwsFcst.version};
+          if(!lastEntry||lastEntry.high!==nwsFcst.high||lastEntry.low!==nwsFcst.low)nwsEvolutionLog[evoKey].push(newEntry);
         }
-      } catch(e){ console.log('r6 NWS parse error:',e.message); }
-      try {
-        // NWS evolution: use nwsHigh as the current NWS forecast
-        var nwsRows=forecastRows.filter(function(r){ return r.model&&r.model.indexOf('NWS')===0; });
-        // Group by run_time to show evolution of the NWS forecast across updates
-        var runMap={};
-        nwsRows.forEach(function(r){
-          var rt=r.run_time||r.issued_time||'';
-          if(!runMap[rt]) runMap[rt]=[];
-          runMap[rt].push(r);
-        });
-        // For each run, find the projected high for the target day
-        var tzOff2=TZ_OFFSETS[station]||-5;
-        Object.keys(runMap).sort().forEach(function(run){
-          var rows=runMap[run];
-          var maxTf=null;
-          rows.forEach(function(r){
-            var vt=new Date((r.valid_time||'').replace(' ','T').replace(/Z?$/,'Z'));
-            var vtLocal=new Date(vt.getTime()+tzOff2*3600000);
-            if(vtLocal.toISOString().slice(0,10)===targetDateStr){
-              var tf=parseFloat(r.temperature_f);
-              if(!isNaN(tf)&&(maxTf===null||tf>maxTf)) maxTf=tf;
-            }
-          });
-          if(maxTf!==null) nwsEvolution.push({run:run,high:Math.round(maxTf*10)/10});
-        });
-        var allModels=[...new Set(forecastRows.map(function(r){return r.model;}))].sort();
-        console.log('All models in forecastRows:', JSON.stringify(allModels));
-        console.log('NWS Evolution:',nwsEvolution.length,'runs from forecastRows, NWS rows:',nwsRows.length);
-      } catch(e){ console.log('NWS evolution error:',e.message); }
-      console.log('NWS evolution final:', nwsEvolution.length,'runs', JSON.stringify(nwsEvolution.slice(0,3)));
-      // variables declared above via individual r1/r2/r3/r4 assignments
+      } catch(e){console.log('r6 NWS error:',e.message);}
+
+      // Accuracy (r5)
       var accuracyData={};
-      if(r5&&r5.status==='fulfilled'&&!r5.value.ok){
-        console.log('Accuracy API unavailable (status '+r5.value.status+') — requires Developer tier');
-      }
       if(r5&&r5.status==='fulfilled'&&r5.value.ok){
-        var ac=await r5.value.json();
-        if(ac.per_model){
-          var ranked=Object.keys(ac.per_model).map(function(m){
-            return {model:m,mae:ac.per_model[m].mae,bias:ac.per_model[m].bias};
-          });
-          ranked.sort(function(a,b){return a.mae-b.mae;});
-          ranked.forEach(function(r,i){
-            accuracyData[r.model]={rank:i+1,mae:r.mae,bias:r.bias};
-          });
-        }
-        console.log('accuracy ranks:', JSON.stringify(accuracyData));
+        try {
+          var ac=await r5.value.json();
+          if(ac.per_model){var ranked=Object.keys(ac.per_model).map(function(m){return {model:m,mae:ac.per_model[m].mae,bias:ac.per_model[m].bias};});ranked.sort(function(a,b){return a.mae-b.mae;});ranked.forEach(function(r,i){accuracyData[r.model]={rank:i+1,mae:r.mae,bias:r.bias};});}
+        } catch(e){}
       }
 
       history.sort(function(a,b){return new Date(b.observation_time)-new Date(a.observation_time);});
-      var obs1=history; // all obs combined, sorted newest first
-      var obs5=[];      // unused — kept for clipboard compat
-
-      // Use nwsFcst for NWS High/Low pacing panel
-      if(nwsFcst){
-        nwsHigh=nwsFcst.high!=null?nwsFcst.high:null;
-        nwsLow=nwsFcst.low!=null?nwsFcst.low:null;
-      }
-
-      // Extract WU high/low — handle all possible field names from API v2
-      var wuHigh=null, wuLow=null;
-      if(wu){
-        wuHigh = wu.wethr_high!=null ? wu.wethr_high
-               : wu.wethr_high_f!=null ? wu.wethr_high_f
-               : wu.highest_probable!=null ? wu.highest_probable
-               : null;
-        wuLow  = wu.wethr_low!=null ? wu.wethr_low
-               : wu.wethr_low_f!=null ? wu.wethr_low_f
-               : wu.lowest_probable!=null ? wu.lowest_probable
-               : null;
-        console.log('WU response:', JSON.stringify(wu));
-        console.log('wuHigh:', wuHigh, 'wuLow:', wuLow);
-      }
-      // Current temp range from most recent history observation
-      var currentTemp=null, currentLow=null, currentHigh=null;
+      var wuHigh=null,wuLow=null;
+      if(wu){wuHigh=wu.wethr_high!=null?wu.wethr_high:null;wuLow=wu.wethr_low!=null?wu.wethr_low:null;}
+      var currentTemp=null,currentLow=null,currentHigh=null;
       if(history.length>0){
         var h0=history[0];
-        // Use lowest_probable/highest_probable for the F range display
-        currentLow  = h0.lowest_probable!=null  ? h0.lowest_probable
-                    : h0.lowest_probable_f!=null ? h0.lowest_probable_f
-                    : null;
-        currentHigh = h0.highest_probable!=null  ? h0.highest_probable
-                    : h0.highest_probable_f!=null ? h0.highest_probable_f
-                    : null;
-        // currentTemp is the midpoint for pace calculation
-        currentTemp = h0.temperature_display!=null ? h0.temperature_display
-                    : h0.temperature_f!=null ? h0.temperature_f
-                    : h0.temperature!=null ? Math.round((h0.temperature*9/5+32)*10)/10
-                    : null;
-        // If we have a range, use low as the base for pace (conservative)
-        if(currentLow!==null) currentTemp=currentLow;
+        currentLow=h0.lowest_probable!=null?h0.lowest_probable:h0.lowest_probable_f!=null?h0.lowest_probable_f:null;
+        currentHigh=h0.highest_probable!=null?h0.highest_probable:h0.highest_probable_f!=null?h0.highest_probable_f:null;
+        currentTemp=h0.temperature_display!=null?h0.temperature_display:h0.temperature_f!=null?h0.temperature_f:h0.temperature!=null?Math.round((h0.temperature*9/5+32)*10)/10:null;
+        if(currentLow!==null)currentTemp=currentLow;
       }
-      console.log('currentTemp:', currentTemp, 'range:', currentLow, '-', currentHigh);
       var modelData=processForecasts(forecastRows,station,targetDateStr,nowUtc,wuHigh,wuLow,isTomorrow,currentTemp,currentLow,currentHigh,accuracyData);
-
-      var store={station,history,latest,wu,units,obs1,obs5,modelData,wuHigh,wuLow,nwsHigh,nwsLow,targetDateStr,isTomorrow,nwsDiscussion,nwsEvolution,at:new Date()};
+      var store={station,history,latest,wu,units,obs1:history,obs5:[],modelData,wuHigh,wuLow,nwsHigh,nwsLow,targetDateStr,isTomorrow,nwsDiscussion,nwsEvolution,at:new Date()};
 
       if(isTomorrow){
         storeTmrw=store;
-        // tomorrow pacing panel removed
         renderModelTable('tbodyModelsTmrw','modelCountTmrw',modelData,true);
-        // obs not shown on tomorrow screen — included in clipboard only
         document.getElementById('tmrwSection').classList.add('visible');
       } else {
         storeToday=store;
@@ -685,247 +479,227 @@
         renderObsTable('tbodyObsToday','countObsToday',history,units);
         document.getElementById('todaySection').classList.add('visible');
       }
-
-      // Auto-copy to clipboard immediately
       try {
-        var clipText = buildClipboard(store);
+        var clipText=buildClipboard(store);
         if(navigator.clipboard&&navigator.clipboard.writeText){
-          navigator.clipboard.writeText(clipText).then(function(){
-            setStatus('✓ '+(isTomorrow?"Tomorrow":"Today")+': '+history.length+' obs, '+modelData.length+' models — copied to clipboard!','success');
-          }).catch(function(){
-            fallbackCopy(clipText);
-            setStatus('✓ '+(isTomorrow?"Tomorrow":"Today")+': '+history.length+' obs, '+modelData.length+' models — copied to clipboard!','success');
-          });
-        } else {
-          fallbackCopy(clipText);
-          setStatus('✓ '+(isTomorrow?"Tomorrow":"Today")+': '+history.length+' obs, '+modelData.length+' models — copied to clipboard!','success');
-        }
-      } catch(e){
-        setStatus('✓ '+(isTomorrow?"Tomorrow":"Today")+': '+history.length+' obs, '+modelData.length+' models for '+station,'success');
-      }
-
+          navigator.clipboard.writeText(clipText).then(function(){setStatus('✓ '+(isTomorrow?"Tomorrow":"Today")+': '+history.length+' obs, '+modelData.length+' models — copied to clipboard!','success');}).catch(function(){fallbackCopy(clipText);setStatus('✓ Done — copied!','success');});
+        } else {fallbackCopy(clipText);setStatus('✓ Done — copied!','success');}
+      } catch(e){setStatus('✓ Done','success');}
     } catch(err){
-      console.error('fetchDay error:', err);
-      setStatus('✗ '+err.message+' (check console for details)','error');
+      console.error('fetchDay error:',err);
+      setStatus('✗ '+err.message,'error');
     }
-
-    btn.disabled=false; btn.classList.remove('loading');
+    btn.disabled=false;btn.classList.remove('loading');
     btn.querySelector('.btn-text').textContent=isTomorrow?'🔭 Tomorrow\'s Data':'📅 Today\'s Data';
   }
 
+  async function fetchAmbient(){
+    var station=document.getElementById('stationSelect').value;
+    var coords=STATION_COORDS[station];
+    if(!coords){setStatus('No coordinates for '+station,'error');return;}
+    var btn=document.getElementById('fetchAmbientBtn');
+    btn.disabled=true;btn.classList.add('loading');
+    btn.querySelector('.btn-text').textContent='Fetching…';
+    setStatus('Fetching nearby stations around '+station+'…');
+    try {
+      var url='https://api.synopticdata.com/v2/stations/nearesttime'
+        +'?token='+MESONET_TOKEN
+        +'&radius='+coords.lat+','+coords.lon+','+MESONET_RADIUS
+        +'&within=60'
+        +'&units=english'
+        +'&vars=air_temp,relative_humidity,wind_speed,wind_direction,elevation'
+        +'&limit=30'
+        +'&output=json';
+      var resp=await fetch(url);
+      if(!resp.ok)throw new Error('Mesonet API error: '+resp.status);
+      var data=await resp.json();
+      var stationList=data.STATION||[];
+      var rows=stationList.map(function(s){
+        var sLat=parseFloat(s.LATITUDE),sLon=parseFloat(s.LONGITUDE);
+        var dist=distanceMiles(coords.lat,coords.lon,sLat,sLon);
+        var obs=s.OBSERVATIONS||{};
+        var tempF=obs.air_temp_value_1?parseFloat(obs.air_temp_value_1.value):null;
+        var rh=obs.relative_humidity_value_1?parseFloat(obs.relative_humidity_value_1.value):null;
+        var wspd=obs.wind_speed_value_1?parseFloat(obs.wind_speed_value_1.value):null;
+        var wdir=obs.wind_direction_value_1?obs.wind_direction_value_1.value:null;
+        var elev=s.ELEVATION?Math.round(parseFloat(s.ELEVATION))+' ft':'—';
+        var updated=obs.air_temp_value_1?obs.air_temp_value_1.date_time:'';
+        if(updated)updated=updated.replace('T',' ').replace(/\.\d+Z$/,' UTC').replace('Z',' UTC').substring(0,23);
+        return {id:s.STID,name:s.NAME,dist:Math.round(dist*10)/10,tempF:tempF,rh:rh,wspd:wspd,wdir:wdir,elev:elev,updated:updated};
+      }).filter(function(r){return r.tempF!==null;});
+      rows.sort(function(a,b){return a.dist-b.dist;});
+      storeAmbient={station:station,rows:rows,at:new Date()};
+      renderAmbient(rows,station);
+      document.getElementById('ambientSection').classList.add('visible');
+      // Auto-copy
+      try {
+        var clipText=buildAmbientClipboard();
+        if(navigator.clipboard&&navigator.clipboard.writeText){
+          navigator.clipboard.writeText(clipText).then(function(){setStatus('✓ '+rows.length+' nearby stations — copied to clipboard!','success');}).catch(function(){fallbackCopy(clipText);setStatus('✓ '+rows.length+' nearby stations loaded','success');});
+        } else {fallbackCopy(clipText);setStatus('✓ '+rows.length+' nearby stations loaded','success');}
+      } catch(e){setStatus('✓ '+rows.length+' nearby stations loaded','success');}
+    } catch(e){
+      console.error('Mesonet error:',e);
+      setStatus('✗ Mesonet error: '+e.message,'error');
+    }
+    btn.disabled=false;btn.classList.remove('loading');
+    btn.querySelector('.btn-text').textContent='📡 Nearby Stations';
+  }
+
+  function renderAmbient(rows,station){
+    document.getElementById('ambientStationLabel').textContent=station;
+    document.getElementById('ambientCount').textContent=rows.length+' stations';
+    document.getElementById('tbodyAmbient').innerHTML=rows.length?rows.map(function(r){
+      var tempStr=r.tempF!=null?Math.round(r.tempF*10)/10+'°F':'—';
+      var rhStr=r.rh!=null?Math.round(r.rh)+'%':'—';
+      var windStr=r.wspd!=null?(r.wdir?r.wdir+' ':'')+Math.round(r.wspd)+' mph':'—';
+      return '<tr>'
+        +'<td style="color:var(--yellow);font-weight:700;font-family:\'JetBrains Mono\',monospace">'+r.id+'</td>'
+        +'<td style="color:var(--muted);font-size:0.72rem">'+r.name+'</td>'
+        +'<td style="color:var(--muted)">'+r.dist+' mi</td>'
+        +'<td style="color:var(--accent2);font-weight:700">'+tempStr+'</td>'
+        +'<td>'+rhStr+'</td>'
+        +'<td>'+windStr+'</td>'
+        +'<td style="color:var(--muted);font-size:0.7rem">'+r.elev+'</td>'
+        +'<td style="color:var(--muted);font-size:0.65rem;font-family:\'JetBrains Mono\',monospace">'+r.updated+'</td>'
+        +'</tr>';
+    }).join(''):'<tr><td colspan="8" style="color:var(--muted);padding:12px 0">No stations found within '+MESONET_RADIUS+' miles</td></tr>';
+  }
+
+  function buildAmbientClipboard(){
+    if(!storeAmbient)return '';
+    var lines=[];
+    lines.push('Here are the closest stations to '+storeAmbient.station+', align the actual temperature in F to the '+storeAmbient.station+' Station data.');
+    lines.push('');
+    lines.push('=== NEARBY AMBIENT STATIONS — '+storeAmbient.station+' ('+MESONET_RADIUS+' mile radius) ===');
+    lines.push('Fetched : '+storeAmbient.at.toUTCString());
+    lines.push('');
+    lines.push(pad('Station',10)+' '+pad('Name',30)+' '+pad('Dist',8)+' '+pad('Temp',8)+' '+pad('RH%',6)+' '+pad('Wind',16)+' '+pad('Elev',8)+' Updated (UTC)');
+    lines.push('-'.repeat(105));
+    storeAmbient.rows.forEach(function(r){
+      var tempStr=r.tempF!=null?Math.round(r.tempF*10)/10+'°F':'—';
+      var rhStr=r.rh!=null?Math.round(r.rh)+'%':'—';
+      var windStr=r.wspd!=null?(r.wdir?r.wdir+' ':'')+Math.round(r.wspd)+' mph':'—';
+      lines.push(pad(r.id,10)+' '+pad(r.name,30)+' '+pad(r.dist+' mi',8)+' '+pad(tempStr,8)+' '+pad(rhStr,6)+' '+pad(windStr,16)+' '+pad(r.elev,8)+' '+r.updated);
+    });
+    lines.push('');
+    lines.push('=== END NEARBY STATIONS ===');
+    return lines.join('\n');
+  }
+
+  function copyAmbient(){
+    var text=buildAmbientClipboard();
+    if(!text)return;
+    function onCopied(){var b=document.getElementById('copyAmbientBtn'),t=document.getElementById('copyAmbientText');b.classList.add('copied');t.textContent='✓ Copied!';setTimeout(function(){b.classList.remove('copied');t.textContent='Copy Nearby Station Data to Clipboard';},2500);}
+    if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(onCopied).catch(function(){fallbackCopy(text);onCopied();});}else{fallbackCopy(text);onCopied();}
+  }
+
   function renderPacing(gridId,latest,wu,units,isTomorrow,nwsHi,nwsLo){
-    var u=units==='fahrenheit'?'deg F':'deg C';
+    var uu=units==='fahrenheit'?'°F':'°C';
     var items;
     if(isTomorrow){
-      items=[
-        {label:'WU Wethr High', value:wu&&wu.wethr_high!=null?wu.wethr_high+(units==='fahrenheit'?'\u00b0F':'\u00b0C'):'N/A'},
-        {label:'WU Wethr Low',  value:wu&&wu.wethr_low!=null?wu.wethr_low+(units==='fahrenheit'?'\u00b0F':'\u00b0C'):'N/A'},
-        {label:'Rel. Humidity', value:latest&&latest.relative_humidity!=null?latest.relative_humidity+'%':'N/A'},
-      ];
+      items=[{label:'WU Wethr High',value:wu&&wu.wethr_high!=null?wu.wethr_high+uu:'N/A'},{label:'WU Wethr Low',value:wu&&wu.wethr_low!=null?wu.wethr_low+uu:'N/A'},{label:'Rel. Humidity',value:latest&&latest.relative_humidity!=null?latest.relative_humidity+'%':'N/A'}];
     } else {
       var cur=latest?(latest.temperature_display!=null?latest.temperature_display:latest.temperature_f):null;
-      var uu=units==='fahrenheit'?'\u00b0F':'\u00b0C';
       items=[
-        {label:'Current Temp',  value:(function(){
-          if(latest&&latest.lowest_probable!=null&&latest.highest_probable!=null){
-            var lo=latest.lowest_probable,hi=latest.highest_probable;
-            return lo===hi?lo+uu:lo+'–'+hi+uu;
-          }
-          return cur!=null?cur+uu:'N/A';
-        })()},
-        {label:'Rel. Humidity', value:latest&&latest.relative_humidity!=null?latest.relative_humidity+'%':'N/A'},
-        {label:'DSM High',      value:latest&&(latest.dsm_high_display!=null||latest.dsm_high_f!=null)?(latest.dsm_high_display!=null?latest.dsm_high_display:latest.dsm_high_f)+uu:'N/A'},
-        {label:'WU Wethr High', value:wu&&wu.wethr_high!=null?wu.wethr_high+uu:'N/A'},
-        {label:'WU Wethr Low',  value:wu&&wu.wethr_low!=null?wu.wethr_low+uu:'N/A'},
+        {label:'Current Temp',value:(function(){if(latest&&latest.lowest_probable!=null&&latest.highest_probable!=null){var lo=latest.lowest_probable,hi=latest.highest_probable;return lo===hi?lo+uu:lo+'–'+hi+uu;}return cur!=null?cur+uu:'N/A';})()},
+        {label:'Rel. Humidity',value:latest&&latest.relative_humidity!=null?latest.relative_humidity+'%':'N/A'},
+        {label:'DSM High',value:latest&&(latest.dsm_high_display!=null||latest.dsm_high_f!=null)?(latest.dsm_high_display!=null?latest.dsm_high_display:latest.dsm_high_f)+uu:'N/A'},
+        {label:'WU Wethr High',value:wu&&wu.wethr_high!=null?wu.wethr_high+uu:'N/A'},
+        {label:'WU Wethr Low',value:wu&&wu.wethr_low!=null?wu.wethr_low+uu:'N/A'},
         {label:'NWS Wethr High',value:nwsHi!=null?nwsHi+uu:'N/A'},
-        {label:'NWS Wethr Low', value:nwsLo!=null?nwsLo+uu:'N/A'},
+        {label:'NWS Wethr Low',value:nwsLo!=null?nwsLo+uu:'N/A'},
         {label:'Last Obs (UTC)',value:latest?formatTime(latest.observation_time):'N/A'},
       ];
     }
-    document.getElementById(gridId).innerHTML=items.map(function(i){
-      return '<div class="pacing-item"><div class="pacing-label">'+i.label+'</div>'
-            +'<div class="pacing-value'+(i.value==='N/A'?' na':'')+'">'+i.value+'</div></div>';
-    }).join('');
+    document.getElementById(gridId).innerHTML=items.map(function(i){return '<div class="pacing-item"><div class="pacing-label">'+i.label+'</div><div class="pacing-value'+(i.value==='N/A'?' na':'')+'">'+i.value+'</div></div>';}).join('');
   }
 
   function renderModelTable(tbodyId,countId,modelData,isTmrw){
     document.getElementById(countId).textContent=modelData.length+' models';
-    if(!modelData.length){
-      var cols=6;
-      document.getElementById(tbodyId).innerHTML='<tr><td colspan="'+cols+'" style="color:var(--muted);padding:12px 0;font-family:\'JetBrains Mono\',monospace;font-size:0.75rem;">No forecast data available</td></tr>';
-      return;
-    }
+    if(!modelData.length){document.getElementById(tbodyId).innerHTML='<tr><td colspan="9" style="color:var(--muted);padding:12px 0;font-family:\'JetBrains Mono\',monospace;font-size:0.75rem;">No forecast data available</td></tr>';return;}
     if(isTmrw){
-      // Tomorrow: Rank / Model / Fcst High / High Time / MAE / Bias only
       document.getElementById(tbodyId).innerHTML=modelData.map(function(m){
-        var rankStr=m.rank!=null?'#'+m.rank:'—';
-        var rankCls=m.rank===1?'style="color:var(--yellow);font-weight:700"':m.rank!=null&&m.rank<=3?'style="color:var(--green)"':'style="color:var(--muted)"';
-        var maeStr=m.mae!=null?m.mae+'°':'—';
-        var biasStr=m.bias!=null?(m.bias>=0?'+':'')+m.bias+'°':'—';
-        var biasCls=m.bias!=null?(m.bias>0?'style="color:var(--accent2)"':m.bias<0?'style="color:var(--accent)"':'style="color:var(--muted)"'):'';
-        return '<tr>'
-          +'<td '+rankCls+'>'+rankStr+'</td>'
-          +'<td class="m-name tmrw">'+m.model+'</td>'
-          +'<td class="m-high">'+(m.forecastHigh!=null?m.forecastHigh+'°F':'—')+'</td>'
-          +'<td class="m-time">'+m.highTimeLocal+'</td>'
-          +'<td style="color:var(--muted)">'+maeStr+'</td>'
-          +'<td '+biasCls+'>'+biasStr+'</td>'
-          +'</tr>';
+        var rankStr=m.rank!=null?'#'+m.rank:'—';var rankCls=m.rank===1?'style="color:var(--yellow);font-weight:700"':m.rank!=null&&m.rank<=3?'style="color:var(--green)"':'style="color:var(--muted)"';
+        var maeStr=m.mae!=null?m.mae+'°':'—';var biasStr=m.bias!=null?(m.bias>=0?'+':'')+m.bias+'°':'—';var biasCls=m.bias!=null?(m.bias>0?'style="color:var(--accent2)"':m.bias<0?'style="color:var(--accent)"':'style="color:var(--muted)"'):'';
+        return '<tr><td '+rankCls+'>'+rankStr+'</td><td class="m-name tmrw">'+m.model+'</td><td class="m-high">'+(m.forecastHigh!=null?m.forecastHigh+'°F':'—')+'</td><td class="m-time">'+m.highTimeLocal+'</td><td style="color:var(--muted)">'+maeStr+'</td><td '+biasCls+'>'+biasStr+'</td></tr>';
       }).join('');
     } else {
       document.getElementById(tbodyId).innerHTML=modelData.map(function(m){
-        var rankStr=m.rank!=null?'#'+m.rank:'—';
-        var rankCls=m.rank===1?'style="color:var(--yellow);font-weight:700"':m.rank!=null&&m.rank<=3?'style="color:var(--green)"':'style="color:var(--muted)"';
-        var maeStr=m.mae!=null?m.mae+'°':'—';
-        var biasStr=m.bias!=null?(m.bias>=0?'+':'')+m.bias+'°':'—';
-        var biasCls=m.bias!=null?(m.bias>0?'style="color:var(--accent2)"':m.bias<0?'style="color:var(--accent)"':'style="color:var(--muted)"'):'';
-        return '<tr>'
-          +'<td '+rankCls+'>'+rankStr+'</td>'
-          +'<td class="m-name'+(isTmrw?' tmrw':'')+'">'+m.model+'</td>'
-          +'<td class="m-high">'+(m.forecastHigh!=null?m.forecastHigh+'°F':'—')+'</td>'
-          +'<td class="m-time">'+m.highTimeLocal+'</td>'
-          +'<td style="color:var(--text)">'+(m.pacingHigh!=null?m.pacingHigh+'°F':'—')+'</td>'
-          +'<td style="color:var(--green)">'+m.actualTemp+'</td>'
-          +'<td class="'+m.deltaClass+'">'+m.delta+'</td>'
-          +'<td style="color:var(--muted)">'+maeStr+'</td>'
-          +'<td '+biasCls+'>'+biasStr+'</td>'
-          +'</tr>';
+        var rankStr=m.rank!=null?'#'+m.rank:'—';var rankCls=m.rank===1?'style="color:var(--yellow);font-weight:700"':m.rank!=null&&m.rank<=3?'style="color:var(--green)"':'style="color:var(--muted)"';
+        var maeStr=m.mae!=null?m.mae+'°':'—';var biasStr=m.bias!=null?(m.bias>=0?'+':'')+m.bias+'°':'—';var biasCls=m.bias!=null?(m.bias>0?'style="color:var(--accent2)"':m.bias<0?'style="color:var(--accent)"':'style="color:var(--muted)"'):'';
+        return '<tr><td '+rankCls+'>'+rankStr+'</td><td class="m-name">'+m.model+'</td><td class="m-high">'+(m.forecastHigh!=null?m.forecastHigh+'°F':'—')+'</td><td class="m-time">'+m.highTimeLocal+'</td><td style="color:var(--text)">'+(m.pacingHigh!=null?m.pacingHigh+'°F':'—')+'</td><td style="color:var(--green)">'+m.actualTemp+'</td><td class="'+m.deltaClass+'">'+m.delta+'</td><td style="color:var(--muted)">'+maeStr+'</td><td '+biasCls+'>'+biasStr+'</td></tr>';
       }).join('');
     }
   }
 
   function renderObsTable(tbodyId,countId,obs,units){
     document.getElementById(countId).textContent=obs.length+' records';
-    document.getElementById(tbodyId).innerHTML=obs.length
-      ?obs.map(function(o){return buildObsRow(o,units);}).join('')
-      :'<tr><td colspan="6" style="color:var(--muted);padding:12px 0;font-family:\'JetBrains Mono\',monospace;font-size:0.75rem;">No observations in this window</td></tr>';
+    document.getElementById(tbodyId).innerHTML=obs.length?obs.map(function(o){return buildObsRow(o,units);}).join(''):'<tr><td colspan="7" style="color:var(--muted);padding:12px 0;font-family:\'JetBrains Mono\',monospace;font-size:0.75rem;">No observations in this window</td></tr>';
   }
-
-  function pad(s,n){return String(s).padEnd(n);}
 
   function buildClipboard(store){
     var lines=[];
     var u=store.units==='fahrenheit'?'°F':'°C';
-
-    function modelSection(label, data){
+    function modelSection(label,data){
       lines.push('--- '+label+' ('+data.length+' models) ---');
       lines.push(pad('Rank',5)+' '+pad('Model',22)+' '+pad('Fcst High',10)+' '+pad('High Time',12)+' '+pad('Model Now',10)+' '+pad('Current',10)+' '+pad('Pace',14)+' '+pad('7d MAE',8)+' Bias');
-      lines.push('-'.repeat(85));
-      data.forEach(function(m){
-        lines.push(pad(m.rank!=null?'#'+m.rank:'—',5)+' '+pad(m.model,22)+' '+pad(m.forecastHigh!=null?m.forecastHigh+'°F':'—',10)+' '+pad(m.highTimeLocal,12)+' '+pad(m.pacingHigh!=null?m.pacingHigh+'°F':'—',10)+' '+pad(m.actualTemp||'—',10)+' '+pad(m.delta,14)+' '+pad(m.mae!=null?m.mae+'°':'—',8)+' '+(m.bias!=null?(m.bias>=0?'+':'')+m.bias+'°':'—'));
-      });
+      lines.push('-'.repeat(100));
+      data.forEach(function(m){lines.push(pad(m.rank!=null?'#'+m.rank:'—',5)+' '+pad(m.model,22)+' '+pad(m.forecastHigh!=null?m.forecastHigh+'°F':'—',10)+' '+pad(m.highTimeLocal,12)+' '+pad(m.pacingHigh!=null?m.pacingHigh+'°F':'—',10)+' '+pad(m.actualTemp||'—',10)+' '+pad(m.delta,14)+' '+pad(m.mae!=null?m.mae+'°':'—',8)+' '+(m.bias!=null?(m.bias>=0?'+':'')+m.bias+'°':'—'));});
       lines.push('');
     }
-
-    function obsSection(label, history, units){
+    function obsSection(label,history,units){
       lines.push('--- '+label+' ('+history.length+' records) ---');
       lines.push(pad('Time (UTC)',22)+' '+pad('Temp',8)+' '+pad('Dew Pt',8)+' '+pad('RH%',5)+' '+pad('Wind',18)+' '+pad('Sky',12)+' Type');
       lines.push('-'.repeat(90));
-      history.forEach(function(o){
-        var t=o.product||guessType(o);
-        lines.push(pad(formatTime(o.observation_time),22)+' '+pad(formatTemp(o,units),8)+' '+pad(formatDew(o,units),8)+' '+pad(o.relative_humidity!=null?o.relative_humidity+'%':'—',5)+' '+pad(formatWind(o),18)+' '+pad(formatSky(o),12)+' '+(o.product||guessType(o)));
-      });
+      history.forEach(function(o){lines.push(pad(formatTime(o.observation_time),22)+' '+pad(formatTemp(o,units),8)+' '+pad(formatDew(o,units),8)+' '+pad(o.relative_humidity!=null?o.relative_humidity+'%':'—',5)+' '+pad(formatWind(o),18)+' '+pad(formatSky(o),12)+' '+(o.product||guessType(o)));});
       lines.push('');
     }
-
     if(!store.isTomorrow){
-      // ── TODAY ──────────────────────────────────────────────────────
       lines.push("Here is the "+store.station+" Tape from today, stay in forensic meteorologist mode and run the ongoing prompt in this thread to pin point the exact high temp for today at "+store.station+".");
-      lines.push('');
-      lines.push('Station : '+store.station+'   Fetched : '+store.at.toUTCString());
-      lines.push('');
-
-      // Current conditions
+      lines.push('');lines.push('Station : '+store.station+'   Fetched : '+store.at.toUTCString());lines.push('');
       lines.push('--- CURRENT CONDITIONS & PACING ---');
-      if(store.latest){
-        var cur=store.latest.temperature_display!=null?store.latest.temperature_display:store.latest.temperature_f;
-        lines.push('Current Temperature : '+(cur!=null?cur+u:'N/A'));
-        lines.push('Relative Humidity   : '+(store.latest.relative_humidity!=null?store.latest.relative_humidity+'%':'N/A'));
-        var dsmH=store.latest.dsm_high_display!=null?store.latest.dsm_high_display:store.latest.dsm_high_f;
-        if(dsmH!=null) lines.push('DSM High            : '+dsmH+u);
-        lines.push('Last Obs Time (UTC) : '+(store.latest.observation_time||'N/A'));
-      }
-      if(store.wu){
-        lines.push('WU Wethr High : '+store.wu.wethr_high+u+'  @ '+(store.wu.time_of_high_utc||'N/A'));
-        lines.push('WU Wethr Low  : '+store.wu.wethr_low+u+'  @ '+(store.wu.time_of_low_utc||'N/A'));
-      }
-    if(store.nwsHigh!=null) lines.push('NWS Wethr High : '+store.nwsHigh+u);
-    if(store.nwsLow!=null)  lines.push('NWS Wethr Low  : '+store.nwsLow+u);
+      if(store.latest){var cur=store.latest.temperature_display!=null?store.latest.temperature_display:store.latest.temperature_f;lines.push('Current Temperature : '+(cur!=null?cur+u:'N/A'));lines.push('Relative Humidity   : '+(store.latest.relative_humidity!=null?store.latest.relative_humidity+'%':'N/A'));var dsmH=store.latest.dsm_high_display!=null?store.latest.dsm_high_display:store.latest.dsm_high_f;if(dsmH!=null)lines.push('DSM High            : '+dsmH+u);lines.push('Last Obs Time (UTC) : '+(store.latest.observation_time||'N/A'));}
+      if(store.wu){lines.push('WU Wethr High : '+store.wu.wethr_high+u+'  @ '+(store.wu.time_of_high_utc||'N/A'));lines.push('WU Wethr Low  : '+store.wu.wethr_low+u+'  @ '+(store.wu.time_of_low_utc||'N/A'));}
+      if(store.nwsHigh!=null)lines.push('NWS Wethr High : '+store.nwsHigh+u);
+      if(store.nwsLow!=null)lines.push('NWS Wethr Low  : '+store.nwsLow+u);
       lines.push('');
-
-      // Today model pacing
-      modelSection('TODAY MODEL FORECAST PACING', store.modelData);
-
-      // Obs last 2hrs
-      obsSection('ALL OBSERVATIONS — LAST 2 HRS (5min / Hourly)', store.history, store.units);
-
+      modelSection('TODAY MODEL FORECAST PACING',store.modelData);
+      obsSection('ALL OBSERVATIONS — LAST 2 HRS (5min / Hourly)',store.history,store.units);
     } else {
-      // ── TOMORROW ───────────────────────────────────────────────────
       lines.push("Tomorrow's projection data, pacing from today. calibrate model integrity, stay in forensic meteorologist mode and run the ongoing prompt in this thread to pin point the exact high temp for tomorrow at "+store.station);
-      lines.push('');
-      lines.push('Station : '+store.station+'   Fetched : '+store.at.toUTCString());
-      lines.push('');
-
-      // Obs last 2hrs FIRST
-      obsSection('ALL OBSERVATIONS — LAST 2 HRS (5min / Hourly)', store.history, store.units);
-
-      // Today model pacing (if available)
-      if(storeToday && storeToday.modelData && storeToday.modelData.length){
-        modelSection('TODAY MODEL FORECAST PACING', storeToday.modelData);
-      }
-
-      // Tomorrow model pacing
-      modelSection('TOMORROW MODEL FORECAST PACING', store.modelData);
+      lines.push('');lines.push('Station : '+store.station+'   Fetched : '+store.at.toUTCString());lines.push('');
+      obsSection('ALL OBSERVATIONS — LAST 2 HRS (5min / Hourly)',store.history,store.units);
+      if(storeToday&&storeToday.modelData&&storeToday.modelData.length)modelSection('TODAY MODEL FORECAST PACING',storeToday.modelData);
+      modelSection('TOMORROW MODEL FORECAST PACING',store.modelData);
     }
-
-    console.log('clipboard NWS disc:', store.nwsDiscussion?store.nwsDiscussion.length:'MISSING', 'evo:', store.nwsEvolution?store.nwsEvolution.length:'MISSING');
-    // NWS Forecast Evolution
     if(store.nwsEvolution&&store.nwsEvolution.length){
       lines.push('--- NWS FORECAST EVOLUTION ('+store.nwsEvolution.length+' snapshots this session) ---');
       lines.push(pad('Fetched At',14)+' '+pad('Ver',6)+' '+pad('NWS High',10)+' NWS Low');
-      lines.push('-'.repeat(40));
-      store.nwsEvolution.forEach(function(e){
-        lines.push(pad(e.time||'?',14)+' '+pad(e.version||'',6)+' '+pad(e.high!=null?e.high+'°F':'—',10)+' '+(e.low!=null?e.low+'°F':'—'));
-      });
+      lines.push('-'.repeat(45));
+      store.nwsEvolution.forEach(function(e){lines.push(pad(e.time||'?',14)+' '+pad(e.version||'',6)+' '+pad(e.high!=null?e.high+'°F':'—',10)+' '+(e.low!=null?e.low+'°F':'—'));});
       lines.push('');
     }
-
-    // NWS Forecast Discussion
-    if(store.nwsDiscussion){
-      lines.push('--- NWS FORECAST DISCUSSION ---');
-      lines.push(store.nwsDiscussion);
-      lines.push('');
-    }
+    if(store.nwsDiscussion){lines.push('--- NWS FORECAST DISCUSSION ---');lines.push(store.nwsDiscussion);lines.push('');}
     lines.push('=== END OF SNAPSHOT ===');
     return lines.join('\n');
   }
 
   function copyToClipboard(day){
-    var isTomorrow=day==='tomorrow';
-    var store=isTomorrow?storeTmrw:storeToday;
-    if(!store) return;
+    var store=day==='tomorrow'?storeTmrw:storeToday;
+    if(!store)return;
     var text=buildClipboard(store);
-    var btnId=isTomorrow?'copyTmrwBtn':'copyTodayBtn';
-    var txtId=isTomorrow?'copyTmrwText':'copyTodayText';
-    var origLabel=isTomorrow?"📋 Re-copy to Clipboard":"📋 Re-copy to Clipboard";
-
-    function onCopied(){
-      var b=document.getElementById(btnId),t=document.getElementById(txtId);
-      b.classList.add('copied'); t.textContent='✓ Copied to Clipboard!';
-      setTimeout(function(){b.classList.remove('copied');t.textContent=origLabel;},2500);
-    }
-    if(navigator.clipboard&&navigator.clipboard.writeText){
-      navigator.clipboard.writeText(text).then(onCopied).catch(function(){fallbackCopy(text);onCopied();});
-    } else {fallbackCopy(text);onCopied();}
+    var btnId=day==='tomorrow'?'copyTmrwBtn':'copyTodayBtn';
+    var txtId=day==='tomorrow'?'copyTmrwText':'copyTodayText';
+    function onCopied(){var b=document.getElementById(btnId),t=document.getElementById(txtId);b.classList.add('copied');t.textContent='✓ Copied!';setTimeout(function(){b.classList.remove('copied');t.textContent='📋 Re-copy to Clipboard';},2500);}
+    if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(onCopied).catch(function(){fallbackCopy(text);onCopied();});}else{fallbackCopy(text);onCopied();}
   }
 
-  function fallbackCopy(text){
-    var ta=document.createElement('textarea');ta.value=text;ta.style.position='fixed';ta.style.opacity='0';
-    document.body.appendChild(ta);ta.focus();ta.select();document.execCommand('copy');document.body.removeChild(ta);
-  }
+  function fallbackCopy(text){var ta=document.createElement('textarea');ta.value=text;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.focus();ta.select();document.execCommand('copy');document.body.removeChild(ta);}
 </script>
 </body>
 </html>
+
 
 
 
