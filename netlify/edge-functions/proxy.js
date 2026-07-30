@@ -9,6 +9,19 @@ export default async (request, context) => {
   const endpoint = params.get('endpoint') || 'observations';
   params.delete('endpoint');
 
+  let upstreamUrl;
+
+  if (endpoint === 'mesonet') {
+    // Mesonet API — token already in params passed from client
+    upstreamUrl = 'https://api.synopticdata.com/v2/stations/nearesttime?' + params.toString();
+    const resp = await fetch(upstreamUrl, { headers: { 'Accept': 'application/json' } });
+    const data = await resp.text();
+    return new Response(data, {
+      status: resp.status,
+      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+    });
+  }
+
   const upstreamPath = endpoint === 'forecasts'
     ? 'https://wethr.net/api/v2/forecasts.php'
     : endpoint === 'accuracy'
@@ -30,10 +43,7 @@ export default async (request, context) => {
 
   return new Response(data, {
     status: response.status,
-    headers: {
-      'Content-Type': 'application/json',
-      'Access-Control-Allow-Origin': '*',
-    },
+    headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
   });
 };
 
