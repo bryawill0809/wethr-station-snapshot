@@ -502,15 +502,18 @@
     btn.querySelector('.btn-text').textContent='Fetching…';
     setStatus('Fetching nearby stations around '+station+'…');
     try {
-      var url='https://api.synopticdata.com/v2/stations/nearesttime'
-        +'?token='+MESONET_TOKEN
-        +'&radius='+coords.lat+','+coords.lon+','+MESONET_RADIUS
-        +'&within=60'
-        +'&units=english'
-        +'&vars=air_temp,relative_humidity,wind_speed,wind_direction,elevation'
-        +'&limit=30'
-        +'&output=json';
-      var resp=await fetch(url);
+      // Route through proxy to avoid CORS — Mesonet token stays in URL params (not a secret)
+      var mesoParams=new URLSearchParams({
+        endpoint:'mesonet',
+        token:MESONET_TOKEN,
+        radius:coords.lat+','+coords.lon+','+MESONET_RADIUS,
+        within:'60',
+        units:'english',
+        vars:'air_temp,relative_humidity,wind_speed,wind_direction,elevation',
+        limit:'30',
+        output:'json'
+      });
+      var resp=await fetch(PROXY+'?'+mesoParams.toString());
       if(!resp.ok)throw new Error('Mesonet API error: '+resp.status);
       var data=await resp.json();
       var stationList=data.STATION||[];
@@ -699,6 +702,7 @@
 </script>
 </body>
 </html>
+
 
 
 
