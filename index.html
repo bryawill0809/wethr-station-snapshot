@@ -514,7 +514,13 @@
         output:'json'
       });
       var resp=await fetch(PROXY+'?'+mesoParams.toString());
-      if(!resp.ok)throw new Error('Mesonet API error: '+resp.status);
+      if(!resp.ok){var errText=await resp.text();console.log('Mesonet error '+resp.status+':',errText.substring(0,300));throw new Error('Mesonet API error: '+resp.status);}
+      var rawJson=await resp.json();
+      console.log('Mesonet response keys:', JSON.stringify(Object.keys(rawJson)));
+      console.log('Mesonet SUMMARY:', JSON.stringify(rawJson.SUMMARY));
+      console.log('Mesonet station count:', rawJson.STATION?rawJson.STATION.length:0);
+      if(rawJson.STATION&&rawJson.STATION[0]) console.log('Sample station:', JSON.stringify(rawJson.STATION[0]).substring(0,500));
+      var data=rawJson;
       var data=await resp.json();
       var stationList=data.STATION||[];
       var rows=stationList.map(function(s){
@@ -702,6 +708,7 @@
 </script>
 </body>
 </html>
+
 
 
 
