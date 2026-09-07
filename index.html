@@ -267,7 +267,7 @@
       <div class="card-body no-max">
         <table class="model-table">
           <thead><tr>
-            <th>Target Time</th><th>Current Temp</th><th>HRRR Proj</th><th>Change</th><th>Direction</th>
+            <th>Target Time</th><th>Current Temp</th><th>HRRR Proj</th><th>Pace</th><th>Direction</th>
           </tr></thead>
           <tbody id="tbodyHrrr45"></tbody>
         </table>
@@ -599,15 +599,18 @@
       var actualVtLocal=utcToLocalTimeStr(bestRow.valid_time,tzOff);
       var currentStr=currentLow!=null&&currentHigh!=null?(currentLow===currentHigh?currentLow+'°F':currentLow+'–'+currentHigh+'°F'):(currentTemp!=null?currentTemp+'°F':'—');
 
-      var change=null,changeStr='—',changeCls='';
+      var change=null,changeStr='—',changeCls='',direction='—';
       if(currentTemp!==null){
-        var cBase=currentLow!==null?currentLow:currentTemp;
-        change=Math.round((projTemp-cBase)*10)/10;
-        var sign=change>=0?'+':'';
-        changeStr=sign+change+'°F';
-        changeCls=change>0?'pace-neg':change<0?'pace-pos':'pace-zero';
+        var cLow=currentLow!==null?currentLow:currentTemp;
+        var cHigh=currentHigh!==null?currentHigh:currentTemp;
+        var dLow=Math.round((projTemp-cHigh)*10)/10;
+        var dHigh=Math.round((projTemp-cLow)*10)/10;
+        var sign=function(n){return n>=0?'+':'';};
+        changeStr=cLow===cHigh?sign(dLow)+dLow:sign(dLow)+dLow+' to '+sign(dHigh)+dHigh;
+        changeCls=dHigh<0?'pace-pos':dLow>0?'pace-neg':'pace-zero';
+        change=dLow; // for direction
+        direction=dLow>0.5?'▲ Warming':dHigh<-0.5?'▼ Cooling':'→ Steady';
       }
-      var direction=change===null?'—':change>0.5?'▲ Warming':change<-0.5?'▼ Cooling':'→ Steady';
 
       storeHrrr45={station,projTemp,runHour,actualVtLocal,targetLocalStr,currentTemp,currentLow,currentHigh,currentStr,change,changeStr,changeCls,direction,at:new Date()};
 
@@ -653,7 +656,7 @@
     lines.push('Target Time  : '+s.actualVtLocal);
     lines.push('Current Temp : '+s.currentStr);
     lines.push('HRRR Proj    : '+s.projTemp+'°F');
-    lines.push('Change       : '+s.changeStr);
+    lines.push('Pace         : '+s.changeStr);
     lines.push('Direction    : '+s.direction);
     lines.push('');
     lines.push('=== END HRRR :45 PROJECTION ===');
@@ -947,6 +950,7 @@
 </script>
 </body>
 </html>
+
 
 
 
