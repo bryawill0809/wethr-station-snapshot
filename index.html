@@ -35,13 +35,19 @@
   .field select option { background: var(--surface); color: var(--text); }
   .select-wrapper { position: relative; }
   .select-wrapper::after { content: '▾'; position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: var(--accent); pointer-events: none; font-size: 0.9rem; }
-  .btn-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-top: 20px; }
+  .btn-row { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px; margin-top: 20px; }
   .fetch-btn { width: 100%; padding: 14px 24px; background: transparent; border: 1px solid var(--accent); border-radius: 8px; color: var(--accent); font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
   .fetch-btn:hover { background: rgba(0,212,255,0.08); box-shadow: 0 0 20px rgba(0,212,255,0.15); }
   .fetch-btn:disabled { opacity: 0.4; cursor: not-allowed; }
   .fetch-btn.tmrw { border-color: var(--purple); color: var(--purple); }
   .fetch-btn.tmrw:hover { background: rgba(167,139,250,0.08); box-shadow: 0 0 20px rgba(167,139,250,0.15); }
   .fetch-btn.ambient { border-color: var(--yellow); color: var(--yellow); }
+  .fetch-btn.hrrr { border-color: var(--accent2); color: var(--accent2); }
+  .fetch-btn.hrrr:hover { background: rgba(255,107,53,0.08); box-shadow: 0 0 20px rgba(255,107,53,0.15); }
+  .fetch-btn.hrrr .spinner { border-color: rgba(255,107,53,0.3); border-top-color: var(--accent2); }
+  .copy-btn.hrrr-copy { background: rgba(255,107,53,0.05); border-color: var(--accent2); color: var(--accent2); }
+  .copy-btn.hrrr-copy:hover { background: rgba(255,107,53,0.12); box-shadow: 0 0 24px rgba(255,107,53,0.15); }
+  .copy-btn.hrrr-copy.copied { background: rgba(255,107,53,0.15); }
   .fetch-btn.ambient:hover { background: rgba(255,209,102,0.08); box-shadow: 0 0 20px rgba(255,209,102,0.15); }
   .fetch-btn .spinner { width: 13px; height: 13px; border: 2px solid rgba(0,212,255,0.3); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; display: none; }
   .fetch-btn.tmrw .spinner { border-color: rgba(167,139,250,0.3); border-top-color: var(--purple); }
@@ -154,8 +160,11 @@
       <button class="fetch-btn tmrw" id="fetchTmrwBtn" onclick="fetchDay('tomorrow')">
         <div class="spinner"></div><span class="btn-text">🔭 Tomorrow's Data</span>
       </button>
-      <button class="fetch-btn ambient" id="fetchAmbientBtn" onclick="fetchAmbient()">
-        <div class="spinner"></div><span class="btn-text">📡 Nearby Stations</span>
+      <button class="fetch-btn ambient" id="fetchNextHourBtn" onclick="fetchNextHour()">
+        <div class="spinner"></div><span class="btn-text">⏱ Next Hour</span>
+      </button>
+      <button class="fetch-btn hrrr" id="fetchHrrrBtn" onclick="fetchHrrr45()">
+        <div class="spinner"></div><span class="btn-text">🌩 HRRR :45</span>
       </button>
     </div>
   </div>
@@ -219,39 +228,62 @@
     </div>
   </div>
 
-  <!-- NEARBY STATIONS SECTION -->
-  <div class="day-section" id="ambientSection">
-    <div class="day-label ambient-label">📡 Nearby Stations</div>
+  <!-- NEXT HOUR PROJECTION SECTION -->
+  <div class="day-section" id="nextHourSection">
+    <div class="day-label ambient-label">⏱ Next Hour Projection</div>
     <div class="data-card">
       <div class="card-header">
         <div class="card-title ambient-title">
-          🌡 Closest Stations to <span id="ambientStationLabel">—</span>
-          <span class="record-count ambient" id="ambientCount">—</span>
+          🌡 Model Projected Temp at <span id="nextHourLabel">—</span> — <span id="nextHourStation">—</span>
+          <span class="record-count ambient" id="nextHourCount">—</span>
         </div>
       </div>
       <div class="card-body no-max">
-        <table class="obs-table">
+        <table class="model-table">
           <thead><tr>
-            <th>Station ID</th><th>Name</th><th>Distance</th><th>Temp</th><th>RH%</th><th>Wind</th><th>Elev</th><th>Updated (UTC)</th>
+            <th>Model</th><th>Now (Current)</th><th>Next Hour Proj</th><th>Change</th><th>Direction</th>
           </tr></thead>
-          <tbody id="tbodyAmbient"></tbody>
+          <tbody id="tbodyNextHour"></tbody>
         </table>
       </div>
     </div>
     <div class="copy-section">
-      <button class="copy-btn ambient-copy" id="copyAmbientBtn" onclick="copyAmbient()">
-        <span>📋</span><span id="copyAmbientText">Copy Nearby Station Data to Clipboard</span>
+      <button class="copy-btn ambient-copy" id="copyNextHourBtn" onclick="copyNextHour()">
+        <span>📋</span><span id="copyNextHourText">Copy Next Hour Projection to Clipboard</span>
       </button>
     </div>
   </div>
 
+  <!-- HRRR :45 SECTION -->
+  <div class="day-section" id="hrrrSection">
+    <div class="day-label" style="color:var(--accent2)">🌩 HRRR :45 Projection</div>
+    <div class="data-card">
+      <div class="card-header">
+        <div class="card-title" style="color:var(--accent2)">
+          HRRR Projected Temp at <span id="hrrr45Label">—</span> — <span id="hrrr45Station">—</span>
+          <span class="record-count" style="background:rgba(255,107,53,0.1);border-color:rgba(255,107,53,0.2);color:var(--accent2)" id="hrrr45Run">—</span>
+        </div>
+      </div>
+      <div class="card-body no-max">
+        <table class="model-table">
+          <thead><tr>
+            <th>Target Time</th><th>Current Temp</th><th>HRRR Proj</th><th>Change</th><th>Direction</th>
+          </tr></thead>
+          <tbody id="tbodyHrrr45"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="copy-section">
+      <button class="copy-btn hrrr-copy" id="copyHrrr45Btn" onclick="copyHrrr45()">
+        <span>📋</span><span id="copyHrrr45Text">Copy HRRR :45 Projection to Clipboard</span>
+      </button>
+    </div>
+  </div>
 </div>
 <script>
   var storeToday=null, storeTmrw=null, storeAmbient=null;
   var nwsEvolutionLog={};
   var PROXY='/api/proxy';
-  var MESONET_TOKEN='8d9ebca5c94e4116966c96c1ebfc50fb';
-  var MESONET_RADIUS=25;
   var MODELS=['GFS','HRRR','NAM','NBM','GEFS','ECMWF-IFS','ICON','GEM-GDPS','JMA','UKMO','ARPEGE','RAP','GFS-MOS','NBS-MOS','NAM-MOS','LAV-MOS','GEM-HRDPS','NAM4KM'];
   var NWS_GRIDS={
     'KLAX':{office:'LOX'},'KATL':{office:'FFC'},'KAUS':{office:'EWX'},'KBOS':{office:'BOX'},
@@ -260,19 +292,6 @@
     'KMIA':{office:'MFL'},'KMSP':{office:'MPX'},'KOKC':{office:'OUN'},'KPHL':{office:'PHI'},
     'KPHX':{office:'PSR'},'KSAT':{office:'EWX'},'KSFO':{office:'MTR'},'KSEA':{office:'SEW'},
     'KLGA':{office:'OKX'},
-  };
-  var STATION_COORDS={
-    'KLAX':{lat:33.9425,lon:-118.4081},'KATL':{lat:33.6407,lon:-84.4277},
-    'KAUS':{lat:30.1945,lon:-97.6699},'KBOS':{lat:42.3656,lon:-71.0096},
-    'KCLT':{lat:35.214,lon:-80.9431},'KMDW':{lat:41.7868,lon:-87.7522},
-    'KDFW':{lat:32.8998,lon:-97.0403},'KDCA':{lat:38.8521,lon:-77.0377},
-    'KDTW':{lat:42.2124,lon:-83.3534},'KHOU':{lat:29.6454,lon:-95.2789},
-    'KJAX':{lat:30.4941,lon:-81.6879},'KLAS':{lat:36.084,lon:-115.1537},
-    'KMIA':{lat:25.7959,lon:-80.287},'KMSP':{lat:44.882,lon:-93.2218},
-    'KOKC':{lat:35.3931,lon:-97.6007},'KPHL':{lat:39.8719,lon:-75.2411},
-    'KPHX':{lat:33.4373,lon:-112.0078},'KSAT':{lat:29.5337,lon:-98.4698},
-    'KSFO':{lat:37.6213,lon:-122.379},'KSEA':{lat:47.4502,lon:-122.3088},
-    'KLGA':{lat:40.7773,lon:-73.8726},
   };
   var TZ_OFFSETS={
     'KLAX':-8,'KSFO':-8,'KSEA':-8,'KLAS':-8,'KPHX':-7,
@@ -493,115 +512,335 @@
     btn.querySelector('.btn-text').textContent=isTomorrow?'🔭 Tomorrow\'s Data':'📅 Today\'s Data';
   }
 
-  async function fetchAmbient(){
+  var storeHrrr45 = null;
+
+  async function fetchHrrr45(){
     var station=document.getElementById('stationSelect').value;
-    var coords=STATION_COORDS[station];
-    if(!coords){setStatus('No coordinates for '+station,'error');return;}
-    var btn=document.getElementById('fetchAmbientBtn');
-    btn.disabled=true;btn.classList.add('loading');
+    var btn=document.getElementById('fetchHrrrBtn');
+    btn.disabled=true; btn.classList.add('loading');
     btn.querySelector('.btn-text').textContent='Fetching…';
-    setStatus('Fetching nearby stations around '+station+'…');
-    try {
-      // Route through proxy to avoid CORS — Mesonet token stays in URL params (not a secret)
-      var mesoParams=new URLSearchParams({
-        endpoint:'mesonet',
-        token:MESONET_TOKEN,
-        radius:coords.lat+','+coords.lon+','+MESONET_RADIUS,
-        within:'60',
-        units:'english',
-        vars:'air_temp,relative_humidity,wind_speed,wind_direction',
-        limit:'30',
-        output:'json'
-      });
-      var resp=await fetch(PROXY+'?'+mesoParams.toString());
-      var rawJson=await resp.json();
-      if(!resp.ok||rawJson.SUMMARY&&rawJson.SUMMARY.RESPONSE_CODE!==1){
-        console.log('Mesonet error:', JSON.stringify(rawJson.SUMMARY||rawJson).substring(0,300));
-        throw new Error('Mesonet API error: '+(rawJson.SUMMARY?rawJson.SUMMARY.RESPONSE_MESSAGE:resp.status));
-      }
-      console.log('Mesonet SUMMARY:', JSON.stringify(rawJson.SUMMARY));
-      console.log('Mesonet stations:', rawJson.STATION?rawJson.STATION.length:0);
-      if(rawJson.STATION&&rawJson.STATION[0]) console.log('Sample:', JSON.stringify(rawJson.STATION[0]).substring(0,400));
-      var stationList=rawJson.STATION||[];
-      var rows=stationList.map(function(s){
-        var sLat=parseFloat(s.LATITUDE),sLon=parseFloat(s.LONGITUDE);
-        var dist=distanceMiles(coords.lat,coords.lon,sLat,sLon);
-        var obs=s.OBSERVATIONS||{};
-        var tempF=obs.air_temp_value_1?parseFloat(obs.air_temp_value_1.value):null;
-        var rh=obs.relative_humidity_value_1?parseFloat(obs.relative_humidity_value_1.value):null;
-        var wspd=obs.wind_speed_value_1?parseFloat(obs.wind_speed_value_1.value):null;
-        var wdir=obs.wind_direction_value_1?obs.wind_direction_value_1.value:null;
-        var elev=s.ELEVATION?Math.round(parseFloat(s.ELEVATION))+' ft':'—';
-        var updated=obs.air_temp_value_1?obs.air_temp_value_1.date_time:'';
-        if(updated)updated=updated.replace('T',' ').replace(/\.\d+Z$/,' UTC').replace('Z',' UTC').substring(0,23);
-        return {id:s.STID,name:s.NAME,dist:Math.round(dist*10)/10,tempF:tempF,rh:rh,wspd:wspd,wdir:wdir,elev:elev,updated:updated};
-      }).filter(function(r){return r.tempF!==null;});
-      rows.sort(function(a,b){return a.dist-b.dist;});
-      storeAmbient={station:station,rows:rows,at:new Date()};
-      renderAmbient(rows,station);
-      document.getElementById('ambientSection').classList.add('visible');
-      // Auto-copy
-      try {
-        var clipText=buildAmbientClipboard();
-        if(navigator.clipboard&&navigator.clipboard.writeText){
-          navigator.clipboard.writeText(clipText).then(function(){setStatus('✓ '+rows.length+' nearby stations — copied to clipboard!','success');}).catch(function(){fallbackCopy(clipText);setStatus('✓ '+rows.length+' nearby stations loaded','success');});
-        } else {fallbackCopy(clipText);setStatus('✓ '+rows.length+' nearby stations loaded','success');}
-      } catch(e){setStatus('✓ '+rows.length+' nearby stations loaded','success');}
-    } catch(e){
-      console.error('Mesonet error:',e);
-      setStatus('✗ Mesonet error: '+e.message,'error');
+    setStatus('Fetching HRRR :45 projection for '+station+'…');
+
+    var tzOff=TZ_OFFSETS[station]||-5;
+    var nowUtc=new Date();
+    var targetDateStr=getLocalDateStr(nowUtc,tzOff,0);
+
+    // Target: next :45 marker from now
+    // e.g. if now is 4:10pm local, target is 4:45pm local
+    // if now is 4:50pm local, target is 5:45pm local
+    var nowLocal=new Date(nowUtc.getTime()+tzOff*3600000);
+    var localMins=nowLocal.getUTCMinutes();
+    var targetLocal=new Date(nowLocal.getTime());
+    if(localMins<45){
+      // Same hour :45
+      targetLocal.setUTCMinutes(45,0,0);
+    } else {
+      // Next hour :45
+      targetLocal.setUTCHours(targetLocal.getUTCHours()+1);
+      targetLocal.setUTCMinutes(45,0,0);
     }
-    btn.disabled=false;btn.classList.remove('loading');
-    btn.querySelector('.btn-text').textContent='📡 Nearby Stations';
-  }
+    // Convert back to UTC
+    var targetUtc=new Date(targetLocal.getTime()-tzOff*3600000);
+    var targetLocalStr=utcToLocalTimeStr(targetUtc.toISOString().replace('Z',''),tzOff)+' ('+String(targetLocal.getUTCHours()).padStart(2,'0')+':45 local)';
 
-  function renderAmbient(rows,station){
-    document.getElementById('ambientStationLabel').textContent=station;
-    document.getElementById('ambientCount').textContent=rows.length+' stations';
-    document.getElementById('tbodyAmbient').innerHTML=rows.length?rows.map(function(r){
-      var tempStr=r.tempF!=null?Math.round(r.tempF*10)/10+'°F':'—';
-      var rhStr=r.rh!=null?Math.round(r.rh)+'%':'—';
-      var windStr=r.wspd!=null?(r.wdir?r.wdir+' ':'')+Math.round(r.wspd)+' mph':'—';
-      return '<tr>'
-        +'<td style="color:var(--yellow);font-weight:700;font-family:\'JetBrains Mono\',monospace">'+r.id+'</td>'
-        +'<td style="color:var(--muted);font-size:0.72rem">'+r.name+'</td>'
-        +'<td style="color:var(--muted)">'+r.dist+' mi</td>'
-        +'<td style="color:var(--accent2);font-weight:700">'+tempStr+'</td>'
-        +'<td>'+rhStr+'</td>'
-        +'<td>'+windStr+'</td>'
-        +'<td style="color:var(--muted);font-size:0.7rem">'+r.elev+'</td>'
-        +'<td style="color:var(--muted);font-size:0.65rem;font-family:\'JetBrains Mono\',monospace">'+r.updated+'</td>'
+    // Fetch window around the target :45
+    var fcstStart=new Date(targetUtc.getTime()-30*60000).toISOString().slice(0,19)+'Z';
+    var fcstEnd=new Date(targetUtc.getTime()+30*60000).toISOString().slice(0,19)+'Z';
+
+    try {
+      var results=await Promise.allSettled([
+        fetch(proxyUrl({endpoint:'observations',station_code:station,start_time:new Date(nowUtc.getTime()-30*60000).toISOString().slice(0,19)+'Z',end_time:nowUtc.toISOString().slice(0,19)+'Z'})),
+        fetch(proxyUrl({endpoint:'forecasts',location_name:station,start_valid_time:fcstStart,end_valid_time:fcstEnd})),
+      ]);
+      var r1=results[0],r2=results[1];
+
+      // Get current temp from latest obs
+      var currentTemp=null,currentLow=null,currentHigh=null;
+      if(r1.status==='fulfilled'&&r1.value.ok){
+        var obsD=await r1.value.json();
+        var obsArr=Array.isArray(obsD)?obsD:(obsD.observations||[]);
+        if(obsArr.length>0){
+          obsArr.sort(function(a,b){return new Date(b.observation_time)-new Date(a.observation_time);});
+          var h0=obsArr[0];
+          currentLow=h0.lowest_probable!=null?h0.lowest_probable:h0.lowest_probable_f!=null?h0.lowest_probable_f:null;
+          currentHigh=h0.highest_probable!=null?h0.highest_probable:h0.highest_probable_f!=null?h0.highest_probable_f:null;
+          currentTemp=h0.temperature_display!=null?h0.temperature_display:h0.temperature_f!=null?h0.temperature_f:null;
+          if(currentLow!==null) currentTemp=currentLow;
+        }
+      }
+
+      // Get HRRR rows for the target window
+      var forecastRows=[];
+      if(r2.status==='fulfilled'&&r2.value.ok){
+        var fd=await r2.value.json();
+        forecastRows=Array.isArray(fd)?fd:(fd.forecasts||fd.data||[]);
+      }
+
+      // Filter to HRRR only, find latest run, find :45 step closest to target
+      var hrrrRows=forecastRows.filter(function(r){return r.model==='HRRR';});
+      if(!hrrrRows.length) throw new Error('No HRRR data in this time window — try again when HRRR has updated');
+
+      // Get latest run
+      var latestRun=hrrrRows.reduce(function(max,r){return (r.run_time||'')>(max||'')?r.run_time:max;},null);
+      var latestRows=hrrrRows.filter(function(r){return r.run_time===latestRun;});
+
+      // Find the row closest to our target :45 UTC time
+      var bestRow=null, bestDiff=Infinity;
+      latestRows.forEach(function(row){
+        var vt=new Date(row.valid_time.replace(' ','T').replace(/Z?$/,'Z'));
+        var diff=Math.abs(vt.getTime()-targetUtc.getTime());
+        if(diff<bestDiff){bestDiff=diff;bestRow=row;}
+      });
+
+      if(!bestRow||bestRow.temperature_f==null) throw new Error('No HRRR :45 step found — model may not have this time step yet');
+
+      var projTemp=Math.round(parseFloat(bestRow.temperature_f)*10)/10;
+      var runHour=latestRun?new Date(latestRun.replace(' ','T').replace(/Z?$/,'Z')).getUTCHours()+'Z':'';
+      var actualVtLocal=utcToLocalTimeStr(bestRow.valid_time,tzOff);
+      var currentStr=currentLow!=null&&currentHigh!=null?(currentLow===currentHigh?currentLow+'°F':currentLow+'–'+currentHigh+'°F'):(currentTemp!=null?currentTemp+'°F':'—');
+
+      var change=null,changeStr='—',changeCls='';
+      if(currentTemp!==null){
+        var cBase=currentLow!==null?currentLow:currentTemp;
+        change=Math.round((projTemp-cBase)*10)/10;
+        var sign=change>=0?'+':'';
+        changeStr=sign+change+'°F';
+        changeCls=change>0?'pace-neg':change<0?'pace-pos':'pace-zero';
+      }
+      var direction=change===null?'—':change>0.5?'▲ Warming':change<-0.5?'▼ Cooling':'→ Steady';
+
+      storeHrrr45={station,projTemp,runHour,actualVtLocal,targetLocalStr,currentTemp,currentLow,currentHigh,currentStr,change,changeStr,changeCls,direction,at:new Date()};
+
+      // Render
+      document.getElementById('hrrr45Label').textContent=actualVtLocal;
+      document.getElementById('hrrr45Station').textContent=station;
+      document.getElementById('hrrr45Run').textContent='HRRR run: '+runHour;
+      document.getElementById('tbodyHrrr45').innerHTML='<tr>'
+        +'<td style="color:var(--muted)">'+actualVtLocal+'</td>'
+        +'<td style="color:var(--green)">'+currentStr+'</td>'
+        +'<td style="color:var(--accent2);font-weight:700">'+projTemp+'°F</td>'
+        +'<td class="'+changeCls+'" style="font-weight:700">'+changeStr+'</td>'
+        +'<td style="color:var(--muted)">'+direction+'</td>'
         +'</tr>';
-    }).join(''):'<tr><td colspan="8" style="color:var(--muted);padding:12px 0">No stations found within '+MESONET_RADIUS+' miles</td></tr>';
+
+      document.getElementById('hrrrSection').classList.add('visible');
+
+      // Auto-copy
+      var clipText=buildHrrr45Clipboard();
+      try {
+        if(navigator.clipboard&&navigator.clipboard.writeText){
+          navigator.clipboard.writeText(clipText).then(function(){setStatus('✓ HRRR :45 at '+actualVtLocal+' — proj: '+projTemp+'°F — copied!','success');}).catch(function(){fallbackCopy(clipText);setStatus('✓ Done','success');});
+        } else {fallbackCopy(clipText);setStatus('✓ Done','success');}
+      } catch(e){setStatus('✓ Done','success');}
+
+    } catch(err){
+      console.error('fetchHrrr45 error:',err);
+      setStatus('✗ '+err.message,'error');
+    }
+    btn.disabled=false; btn.classList.remove('loading');
+    btn.querySelector('.btn-text').textContent='🌩 HRRR :45';
   }
 
-  function buildAmbientClipboard(){
-    if(!storeAmbient)return '';
+  function buildHrrr45Clipboard(){
+    if(!storeHrrr45)return '';
+    var s=storeHrrr45;
     var lines=[];
-    lines.push('Here are the closest stations to '+storeAmbient.station+', align the actual temperature in F to the '+storeAmbient.station+' Station data.');
+    lines.push('HRRR :45 projection for '+s.station+'. Calibrate pacing against the '+s.actualVtLocal+' HRRR step.');
     lines.push('');
-    lines.push('=== NEARBY AMBIENT STATIONS — '+storeAmbient.station+' ('+MESONET_RADIUS+' mile radius) ===');
-    lines.push('Fetched : '+storeAmbient.at.toUTCString());
+    lines.push('=== HRRR :45 PROJECTION — '+s.station+' ===');
+    lines.push('Fetched      : '+s.at.toUTCString());
+    lines.push('HRRR Run     : '+s.runHour);
+    lines.push('Target Time  : '+s.actualVtLocal);
+    lines.push('Current Temp : '+s.currentStr);
+    lines.push('HRRR Proj    : '+s.projTemp+'°F');
+    lines.push('Change       : '+s.changeStr);
+    lines.push('Direction    : '+s.direction);
     lines.push('');
-    lines.push(pad('Station',10)+' '+pad('Name',30)+' '+pad('Dist',8)+' '+pad('Temp',8)+' '+pad('RH%',6)+' '+pad('Wind',16)+' '+pad('Elev',8)+' Updated (UTC)');
-    lines.push('-'.repeat(105));
-    storeAmbient.rows.forEach(function(r){
-      var tempStr=r.tempF!=null?Math.round(r.tempF*10)/10+'°F':'—';
-      var rhStr=r.rh!=null?Math.round(r.rh)+'%':'—';
-      var windStr=r.wspd!=null?(r.wdir?r.wdir+' ':'')+Math.round(r.wspd)+' mph':'—';
-      lines.push(pad(r.id,10)+' '+pad(r.name,30)+' '+pad(r.dist+' mi',8)+' '+pad(tempStr,8)+' '+pad(rhStr,6)+' '+pad(windStr,16)+' '+pad(r.elev,8)+' '+r.updated);
-    });
-    lines.push('');
-    lines.push('=== END NEARBY STATIONS ===');
+    lines.push('=== END HRRR :45 PROJECTION ===');
     return lines.join('\n');
   }
 
-  function copyAmbient(){
-    var text=buildAmbientClipboard();
+  function copyHrrr45(){
+    var text=buildHrrr45Clipboard();
     if(!text)return;
-    function onCopied(){var b=document.getElementById('copyAmbientBtn'),t=document.getElementById('copyAmbientText');b.classList.add('copied');t.textContent='✓ Copied!';setTimeout(function(){b.classList.remove('copied');t.textContent='Copy Nearby Station Data to Clipboard';},2500);}
+    function onCopied(){var b=document.getElementById('copyHrrr45Btn'),t=document.getElementById('copyHrrr45Text');b.classList.add('copied');t.textContent='✓ Copied!';setTimeout(function(){b.classList.remove('copied');t.textContent='Copy HRRR :45 Projection to Clipboard';},2500);}
     if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(onCopied).catch(function(){fallbackCopy(text);onCopied();});}else{fallbackCopy(text);onCopied();}
   }
+
+
+  var storeNextHour = null;
+
+  async function fetchNextHour(){
+    var station=document.getElementById('stationSelect').value;
+    var btn=document.getElementById('fetchNextHourBtn');
+    btn.disabled=true; btn.classList.add('loading');
+    btn.querySelector('.btn-text').textContent='Fetching…';
+    setStatus('Fetching next hour projections for '+station+'…');
+
+    var tzOff=TZ_OFFSETS[station]||-5;
+    var nowUtc=new Date();
+    var targetDateStr=getLocalDateStr(nowUtc,tzOff,0);
+
+    // Fetch window: now to +2 hours to capture the next hour step for all models
+    var fcstStart=nowUtc.toISOString().slice(0,19)+'Z';
+    var fcstEnd=new Date(nowUtc.getTime()+2*3600000).toISOString().slice(0,19)+'Z';
+    // Also fetch NWS for next hour
+    var nwsDate=targetDateStr;
+
+    try {
+      var results=await Promise.allSettled([
+        fetch(proxyUrl({endpoint:'observations',station_code:station,mode:'latest'})),
+        fetch(proxyUrl({endpoint:'observations',station_code:station,start_time:new Date(nowUtc.getTime()-30*60000).toISOString().slice(0,19)+'Z',end_time:fcstStart})),
+        fetch(proxyUrl({endpoint:'forecasts',location_name:station,start_valid_time:fcstStart,end_valid_time:fcstEnd})),
+        fetch(proxyUrl({endpoint:'nws',station_code:station,date:nwsDate})),
+      ]);
+      var r1=results[0],r2=results[1],r3=results[2],r4=results[3];
+
+      var latest=null, currentTemp=null, currentLow=null, currentHigh=null;
+      var forecastRows=[], units='fahrenheit';
+
+      if(r1.status==='fulfilled'&&r1.value.ok){ latest=await r1.value.json(); units=latest.units||units; }
+      if(r2.status==='fulfilled'&&r2.value.ok){
+        var obsD=await r2.value.json();
+        var obsArr=Array.isArray(obsD)?obsD:(obsD.observations||[]);
+        if(obsArr.length>0){
+          obsArr.sort(function(a,b){return new Date(b.observation_time)-new Date(a.observation_time);});
+          var h0=obsArr[0];
+          currentLow=h0.lowest_probable!=null?h0.lowest_probable:h0.lowest_probable_f!=null?h0.lowest_probable_f:null;
+          currentHigh=h0.highest_probable!=null?h0.highest_probable:h0.highest_probable_f!=null?h0.highest_probable_f:null;
+          currentTemp=h0.temperature_display!=null?h0.temperature_display:h0.temperature_f!=null?h0.temperature_f:null;
+          if(currentLow!==null) currentTemp=currentLow;
+        }
+      }
+      if(r3.status==='fulfilled'&&r3.value.ok){
+        var fd=await r3.value.json();
+        forecastRows=Array.isArray(fd)?fd:(fd.forecasts||fd.data||[]);
+      }
+      // Add NWS hourly temps
+      if(r4.status==='fulfilled'&&r4.value.ok){
+        try {
+          var nwsFcst=await r4.value.json();
+          if(nwsFcst.hourly_temps){
+            var tzOff4=TZ_OFFSETS[station]||-5;
+            var fcstDateLocal=new Date(targetDateStr+'T00:00:00.000Z');
+            nwsFcst.hourly_temps.forEach(function(tf,hr){
+              if(tf==null)return;
+              var utcMs=fcstDateLocal.getTime()+(hr-tzOff4)*3600000;
+              var vtStr=new Date(utcMs).toISOString().slice(0,19).replace('T',' ');
+              forecastRows.push({model:'NWS (V'+nwsFcst.version+')',run_time:nwsFcst.timestamp?nwsFcst.timestamp.replace('T',' ').slice(0,19):'',valid_time:vtStr,temperature_f:tf});
+            });
+          }
+        } catch(e){}
+      }
+
+      // Find next whole hour in UTC
+      var nextHourUtc=new Date(nowUtc);
+      nextHourUtc.setUTCMinutes(0,0,0);
+      nextHourUtc.setUTCHours(nextHourUtc.getUTCHours()+1);
+      var nextHourLocal=utcToLocalTimeStr(nextHourUtc.toISOString().replace('Z',''), tzOff);
+
+      // For each model (latest run), find the temp at the next hour
+      var modelMap={};
+      forecastRows.forEach(function(row){
+        var model=row.model;
+        if(!modelMap[model])modelMap[model]={model:model,runTime:row.run_time||'',rows:[]};
+        if((row.run_time||'')>(modelMap[model].runTime)){modelMap[model].runTime=row.run_time||'';modelMap[model].rows=[];}
+        if((row.run_time||'')===modelMap[model].runTime)modelMap[model].rows.push(row);
+      });
+
+      var nextHourRows=[];
+      Object.values(modelMap).forEach(function(m){
+        // Find the row closest to next hour UTC
+        var bestRow=null, bestDiff=Infinity;
+        m.rows.forEach(function(row){
+          var vt=new Date(row.valid_time.replace(' ','T').replace(/Z?$/,'Z'));
+          var diff=Math.abs(vt.getTime()-nextHourUtc.getTime());
+          if(diff<bestDiff){bestDiff=diff;bestRow=row;}
+        });
+        if(!bestRow||bestRow.temperature_f==null)return;
+        var projTemp=Math.round(parseFloat(bestRow.temperature_f)*10)/10;
+        var runHour=m.runTime?new Date(m.runTime.replace(' ','T').replace(/Z?$/,'Z')).getUTCHours()+'Z':'';
+        var modelLabel=m.model.indexOf('(')<0?(m.model+(runHour?' ('+runHour+')':'')):m.model;
+        var change=null, changeStr='—', changeCls='';
+        if(currentTemp!==null){
+          var cBase=currentLow!==null?currentLow:currentTemp;
+          change=Math.round((projTemp-cBase)*10)/10;
+          var sign=change>=0?'+':'';
+          changeStr=sign+change+'°F';
+          changeCls=change>0?'pace-neg':change<0?'pace-pos':'pace-zero';
+        }
+        var direction=change===null?'—':change>1?'▲ Warming':change<-1?'▼ Cooling':'→ Steady';
+        nextHourRows.push({model:modelLabel,currentStr:currentLow!=null&&currentHigh!=null?(currentLow===currentHigh?currentLow+'°F':currentLow+'–'+currentHigh+'°F'):(currentTemp!=null?currentTemp+'°F':'—'),projTemp:projTemp,change:change,changeStr:changeStr,changeCls:changeCls,direction:direction});
+      });
+
+      // Sort by MODELS order
+      nextHourRows.sort(function(a,b){
+        var ai=MODELS.findIndex(function(m){return a.model.startsWith(m);});
+        var bi=MODELS.findIndex(function(m){return b.model.startsWith(m);});
+        return (ai===-1?999:ai)-(bi===-1?999:bi);
+      });
+
+      var currentStr=currentLow!=null&&currentHigh!=null?(currentLow===currentHigh?currentLow+'°F':currentLow+'–'+currentHigh+'°F'):(currentTemp!=null?currentTemp+'°F':'—');
+      storeNextHour={station,nextHourRows,nextHourLocal,currentTemp,currentLow,currentHigh,currentStr,units,at:new Date()};
+
+      // Render
+      document.getElementById('nextHourLabel').textContent=nextHourLocal;
+      document.getElementById('nextHourStation').textContent=station;
+      document.getElementById('nextHourCount').textContent=nextHourRows.length+' models';
+      document.getElementById('tbodyNextHour').innerHTML=nextHourRows.length?nextHourRows.map(function(r){
+        return '<tr>'
+          +'<td class="m-name">'+r.model+'</td>'
+          +'<td style="color:var(--green)">'+r.currentStr+'</td>'
+          +'<td style="color:var(--accent2);font-weight:700">'+r.projTemp+'°F</td>'
+          +'<td class="'+r.changeCls+'" style="font-weight:700">'+r.changeStr+'</td>'
+          +'<td style="color:var(--muted);font-size:0.8rem">'+r.direction+'</td>'
+          +'</tr>';
+      }).join(''):'<tr><td colspan="5" style="color:var(--muted);padding:12px 0">No forecast data available</td></tr>';
+
+      document.getElementById('nextHourSection').classList.add('visible');
+
+      // Auto-copy
+      var clipText=buildNextHourClipboard();
+      try {
+        if(navigator.clipboard&&navigator.clipboard.writeText){
+          navigator.clipboard.writeText(clipText).then(function(){setStatus('✓ Next hour projections for '+station+' at '+nextHourLocal+' — copied to clipboard!','success');}).catch(function(){fallbackCopy(clipText);setStatus('✓ Done','success');});
+        } else {fallbackCopy(clipText);setStatus('✓ Done','success');}
+      } catch(e){setStatus('✓ Done','success');}
+
+    } catch(err){
+      console.error('fetchNextHour error:',err);
+      setStatus('✗ '+err.message,'error');
+    }
+    btn.disabled=false; btn.classList.remove('loading');
+    btn.querySelector('.btn-text').textContent='⏱ Next Hour';
+  }
+
+  function buildNextHourClipboard(){
+    if(!storeNextHour)return '';
+    var lines=[];
+    lines.push('Here is the '+storeNextHour.station+' next hour model projection. Calibrate expected temperature at '+storeNextHour.nextHourLocal+' against current pacing.');
+    lines.push('');
+    lines.push('=== NEXT HOUR PROJECTIONS — '+storeNextHour.station+' — Target: '+storeNextHour.nextHourLocal+' ===');
+    lines.push('Fetched : '+storeNextHour.at.toUTCString());
+    lines.push('Current Temp: '+storeNextHour.currentStr);
+    lines.push('');
+    lines.push(pad('Model',24)+' '+pad('Current',10)+' '+pad('Next Hour',10)+' '+pad('Change',8)+' Direction');
+    lines.push('-'.repeat(70));
+    storeNextHour.nextHourRows.forEach(function(r){
+      lines.push(pad(r.model,24)+' '+pad(r.currentStr,10)+' '+pad(r.projTemp+'°F',10)+' '+pad(r.changeStr,8)+' '+r.direction);
+    });
+    lines.push('');
+    lines.push('=== END NEXT HOUR PROJECTION ===');
+    return lines.join('\n');
+  }
+
+  function copyNextHour(){
+    var text=buildNextHourClipboard();
+    if(!text)return;
+    function onCopied(){var b=document.getElementById('copyNextHourBtn'),t=document.getElementById('copyNextHourText');b.classList.add('copied');t.textContent='✓ Copied!';setTimeout(function(){b.classList.remove('copied');t.textContent='Copy Next Hour Projection to Clipboard';},2500);}
+    if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(onCopied).catch(function(){fallbackCopy(text);onCopied();});}else{fallbackCopy(text);onCopied();}
+  }
+
 
   function renderPacing(gridId,latest,wu,units,isTomorrow,nwsHi,nwsLo){
     var uu=units==='fahrenheit'?'°F':'°C';
@@ -708,6 +947,7 @@
 </script>
 </body>
 </html>
+
 
 
 
