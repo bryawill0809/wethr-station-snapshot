@@ -739,17 +739,26 @@
       setStatus('No Kalshi hourly market available for '+station,'error');
       return;
     }
-    // Try each slug until one works
+    // Try each slug in order, log every attempt
     var citySlug=null;
     for(var si=0;si<citySlugs.length;si++){
-      var tryUrl=PROXY+'?'+new URLSearchParams({endpoint:'kalshi',city:citySlugs[si],detailed:'false',last_sec:'60'}).toString();
+      var triedSlug=citySlugs[si];
+      var tryUrl=PROXY+'?'+new URLSearchParams({endpoint:'kalshi',city:triedSlug,detailed:'false',last_sec:'60'}).toString();
       try {
         var tryResp=await fetch(tryUrl);
-        if(tryResp.ok){var tryData=await tryResp.json();if(tryData.timeseries&&tryData.timeseries.length>0){citySlug=citySlugs[si];break;}}
-      } catch(e){}
+        var tryText=await tryResp.text();
+        console.log('Kalshi slug "'+triedSlug+'" status:',tryResp.status,'body:',tryText.substring(0,200));
+        if(tryResp.ok){
+          try {
+            var tryData=JSON.parse(tryText);
+            if(tryData.timeseries&&tryData.timeseries.length>0){citySlug=triedSlug;break;}
+            else {console.log('slug "'+triedSlug+'" ok but empty timeseries, keys:',Object.keys(tryData));}
+          } catch(e){console.log('slug "'+triedSlug+'" parse error:',e.message);}
+        }
+      } catch(e){console.log('slug "'+triedSlug+'" fetch error:',e.message);}
     }
     if(!citySlug){
-      setStatus('No live Kalshi index found for '+station+' — market may not be active yet','error');
+      setStatus('No live Kalshi index found for '+station+' — check console for details','error');
       btn.disabled=false;btn.classList.remove('loading');btn.querySelector('.btn-text').textContent='📈 Kalshi Hourly';
       return;
     }
