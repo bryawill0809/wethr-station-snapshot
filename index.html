@@ -321,25 +321,26 @@
   var storeToday=null, storeTmrw=null, storeAmbient=null;
   var nwsEvolutionLog={};
   var PROXY='/api/proxy';
-  // Kalshi hourly market city slugs — only stations with confirmed hourly markets
+  // Kalshi city slugs — multiple possible slugs per station to try in order
+  // The API launched with miami first; other cities are rolling out
   var KALSHI_CITIES = {
-    'KLAX':'los-angeles',
-    'KATL':'atlanta',
-    'KAUS':'austin',
-    'KBOS':'boston',
-    'KCLT':'charlotte',
-    'KMDW':'chicago',
-    'KDFW':'dallas',
-    'KDCA':'washington-dc',
-    'KHOU':'houston',
-    'KJAX':'jacksonville',
-    'KLAS':'las-vegas',
-    'KMIA':'miami',
-    'KPHL':'philadelphia',
-    'KPHX':'phoenix',
-    'KSFO':'san-francisco',
-    'KSEA':'seattle',
-    'KLGA':'new-york-city',
+    'KLAX':['los-angeles','la','losangeles'],
+    'KATL':['atlanta'],
+    'KAUS':['austin'],
+    'KBOS':['boston'],
+    'KCLT':['charlotte'],
+    'KMDW':['chicago'],
+    'KDFW':['dallas'],
+    'KDCA':['washington-dc','dc','washington'],
+    'KHOU':['houston'],
+    'KJAX':['jacksonville'],
+    'KLAS':['las-vegas','lasvegas'],
+    'KMIA':['miami'],
+    'KPHL':['philadelphia','philly'],
+    'KPHX':['phoenix'],
+    'KSFO':['san-francisco','sf','sanfrancisco'],
+    'KSEA':['seattle'],
+    'KLGA':['new-york-city','nyc','new-york'],
   };
 
   var MODELS=['GFS','HRRR','NAM','NBM','GEFS','ECMWF-IFS','ICON','GEM-GDPS','JMA','UKMO','ARPEGE','RAP','GFS-MOS','NBS-MOS','NAM-MOS','LAV-MOS','GEM-HRDPS','NAM4KM'];
@@ -733,11 +734,26 @@
 
   async function fetchKalshi(){
     var station=document.getElementById('stationSelect').value;
-    var citySlug=KALSHI_CITIES[station];
-    if(!citySlug){
+    var citySlugs=KALSHI_CITIES[station];
+    if(!citySlugs){
       setStatus('No Kalshi hourly market available for '+station,'error');
       return;
     }
+    // Try each slug until one works
+    var citySlug=null;
+    for(var si=0;si<citySlugs.length;si++){
+      var tryUrl=PROXY+'?'+new URLSearchParams({endpoint:'kalshi',city:citySlugs[si],detailed:'false',last_sec:'60'}).toString();
+      try {
+        var tryResp=await fetch(tryUrl);
+        if(tryResp.ok){var tryData=await tryResp.json();if(tryData.timeseries&&tryData.timeseries.length>0){citySlug=citySlugs[si];break;}}
+      } catch(e){}
+    }
+    if(!citySlug){
+      setStatus('No live Kalshi index found for '+station+' — market may not be active yet','error');
+      btn.disabled=false;btn.classList.remove('loading');btn.querySelector('.btn-text').textContent='📈 Kalshi Hourly';
+      return;
+    }
+    console.log('Kalshi slug found:',citySlug,'for',station);
     var btn=document.getElementById('fetchKalshiBtn');
     btn.disabled=true; btn.classList.add('loading');
     btn.querySelector('.btn-text').textContent='Fetching…';
@@ -1142,6 +1158,7 @@
 </script>
 </body>
 </html>
+
 
 
 
