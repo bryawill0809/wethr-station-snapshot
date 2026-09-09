@@ -321,26 +321,24 @@
   var storeToday=null, storeTmrw=null, storeAmbient=null;
   var nwsEvolutionLog={};
   var PROXY='/api/proxy';
-  // Kalshi city slugs — multiple possible slugs per station to try in order
-  // The API launched with miami first; other cities are rolling out
+  // Kalshi city slugs — confirmed from API error response
   var KALSHI_CITIES = {
-    'KLAX':['los-angeles','la','losangeles'],
-    'KATL':['atlanta'],
-    'KAUS':['austin'],
-    'KBOS':['boston'],
-    'KCLT':['charlotte'],
-    'KMDW':['chicago'],
-    'KDFW':['dallas'],
-    'KDCA':['washington-dc','dc','washington'],
-    'KHOU':['houston'],
-    'KJAX':['jacksonville'],
-    'KLAS':['las-vegas','lasvegas'],
     'KMIA':['miami'],
-    'KPHL':['philadelphia','philly'],
-    'KPHX':['phoenix'],
-    'KSFO':['san-francisco','sf','sanfrancisco'],
-    'KSEA':['seattle'],
-    'KLGA':['new-york-city','nyc','new-york'],
+    'KDFW':['dfw'],
+    'KHOU':['houston'],
+    'KPHL':['phl-delaware-valley'],
+    'KSEA':['puget-sound'],
+    'KSFO':['sf-bay'],
+    'KBOS':['greater-boston'],
+    'KDTW':['southeast-michigan'],
+    'KMDW':['chicago','chicago-metro'],
+    'KLAX':['los-angeles-metro','la-metro'],
+    'KLGA':['new-york','nyc-metro'],
+    'KATL':['atlanta','atlanta-metro'],
+    'KAUS':['austin','austin-metro'],
+    'KDCA':['dc-metro','washington-dc-metro'],
+    'KLAS':['las-vegas','las-vegas-metro'],
+    'KPHX':['phoenix','phoenix-metro'],
   };
 
   var MODELS=['GFS','HRRR','NAM','NBM','GEFS','ECMWF-IFS','ICON','GEM-GDPS','JMA','UKMO','ARPEGE','RAP','GFS-MOS','NBS-MOS','NAM-MOS','LAV-MOS','GEM-HRDPS','NAM4KM'];
@@ -751,15 +749,16 @@
         if(tryResp.ok){
           try {
             var tryData=JSON.parse(tryText);
-            if(tryData.timeseries&&tryData.timeseries.length>0){citySlug=triedSlug;break;}
-            else {console.log('slug "'+triedSlug+'" ok but empty timeseries, keys:',Object.keys(tryData));}
+            // Accept even empty timeseries — market exists, just may be outside hours
+            if(tryData.city){citySlug=triedSlug;break;}
+            else {console.log('slug "'+triedSlug+'" ok but no city field, keys:',Object.keys(tryData));}
           } catch(e){console.log('slug "'+triedSlug+'" parse error:',e.message);}
         }
       } catch(e){console.log('slug "'+triedSlug+'" fetch error:',e.message);}
     }
     if(!citySlug){
       setStatus('No live Kalshi index found for '+station+' — check console for details','error');
-      btn.disabled=false;btn.classList.remove('loading');btn.querySelector('.btn-text').textContent='📈 Kalshi Hourly';
+        btn.disabled=false;btn.classList.remove('loading');btn.querySelector('.btn-text').textContent='📈 Kalshi Hourly';
       return;
     }
     console.log('Kalshi slug found:',citySlug,'for',station);
@@ -778,7 +777,17 @@
       var data=await resp.json();
 
       var timeseries=data.timeseries||[];
-      if(!timeseries.length) throw new Error('No data returned for '+citySlug);
+      if(!timeseries.length){
+        // Market exists but no data — outside trading hours or pre-market
+        setStatus('Kalshi '+citySlug+' market found but no data yet — may be outside trading hours','success');
+        document.getElementById('kalshiCityLabel').textContent=citySlug+' / '+station;
+        document.getElementById('kalshiStatus').textContent='no data';
+        document.getElementById('kalshiPacingGrid').innerHTML='<div class="pacing-item"><div class="pacing-label">Status</div><div style="color:var(--muted);font-family:monospace">Outside trading hours or pre-market</div></div>';
+        document.getElementById('tbodyKalshi').innerHTML='<tr><td colspan="4" style="color:var(--muted);padding:12px 0">No data available — Kalshi hourly markets run during daytime hours</td></tr>';
+        document.getElementById('kalshiSection').classList.add('visible');
+        btn.disabled=false;btn.classList.remove('loading');btn.querySelector('.btn-text').textContent='📈 Kalshi Hourly';
+        return;
+      }
 
       // Most recent finalized (normal/degraded) point = live index value
       var finalized=timeseries.filter(function(p){return p.status==='normal'||p.status==='degraded';});
