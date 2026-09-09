@@ -35,7 +35,7 @@
   .field select option { background: var(--surface); color: var(--text); }
   .select-wrapper { position: relative; }
   .select-wrapper::after { content: '▾'; position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: var(--accent); pointer-events: none; font-size: 0.9rem; }
-  .btn-row { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px; margin-top: 20px; }
+  .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
   .fetch-btn { width: 100%; padding: 14px 24px; background: transparent; border: 1px solid var(--accent); border-radius: 8px; color: var(--accent); font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
   .fetch-btn:hover { background: rgba(0,212,255,0.08); box-shadow: 0 0 20px rgba(0,212,255,0.15); }
   .fetch-btn:disabled { opacity: 0.4; cursor: not-allowed; }
@@ -43,6 +43,12 @@
   .fetch-btn.tmrw:hover { background: rgba(167,139,250,0.08); box-shadow: 0 0 20px rgba(167,139,250,0.15); }
   .fetch-btn.ambient { border-color: var(--yellow); color: var(--yellow); }
   .fetch-btn.hrrr { border-color: var(--accent2); color: var(--accent2); }
+  .fetch-btn.kalshi { border-color: #ff3b6b; color: #ff3b6b; }
+  .fetch-btn.kalshi:hover { background: rgba(255,59,107,0.08); box-shadow: 0 0 20px rgba(255,59,107,0.15); }
+  .fetch-btn.kalshi .spinner { border-color: rgba(255,59,107,0.3); border-top-color: #ff3b6b; }
+  .copy-btn.kalshi-copy { background: rgba(255,59,107,0.05); border-color: #ff3b6b; color: #ff3b6b; }
+  .copy-btn.kalshi-copy:hover { background: rgba(255,59,107,0.12); }
+  .copy-btn.kalshi-copy.copied { background: rgba(255,59,107,0.15); }
   .fetch-btn.hrrr:hover { background: rgba(255,107,53,0.08); box-shadow: 0 0 20px rgba(255,107,53,0.15); }
   .fetch-btn.hrrr .spinner { border-color: rgba(255,107,53,0.3); border-top-color: var(--accent2); }
   .copy-btn.hrrr-copy { background: rgba(255,107,53,0.05); border-color: var(--accent2); color: var(--accent2); }
@@ -166,6 +172,9 @@
       <button class="fetch-btn hrrr" id="fetchHrrrBtn" onclick="fetchHrrr45()">
         <div class="spinner"></div><span class="btn-text">🌩 HRRR :45</span>
       </button>
+      <button class="fetch-btn kalshi" id="fetchKalshiBtn" onclick="fetchKalshi()">
+        <div class="spinner"></div><span class="btn-text">📈 Kalshi Hourly</span>
+      </button>
     </div>
   </div>
 
@@ -241,7 +250,7 @@
       <div class="card-body no-max">
         <table class="model-table">
           <thead><tr>
-            <th>Model</th><th>Now (Current)</th><th>Next Hour Proj</th><th>Change</th><th>Direction</th>
+            <th>Model</th><th>Now (Current)</th><th>Next Hour Proj</th><th>Pace</th><th>Direction</th>
           </tr></thead>
           <tbody id="tbodyNextHour"></tbody>
         </table>
@@ -280,10 +289,59 @@
     </div>
   </div>
 </div>
+  <!-- KALSHI HOURLY SECTION -->
+  <div class="day-section" id="kalshiSection">
+    <div class="day-label" style="color:#ff3b6b">📈 Kalshi Hourly Market</div>
+    <div class="data-card">
+      <div class="card-header">
+        <div class="card-title" style="color:#ff3b6b">
+          Live Index — <span id="kalshiCityLabel">—</span>
+          <span class="record-count" style="background:rgba(255,59,107,0.1);border-color:rgba(255,59,107,0.2);color:#ff3b6b" id="kalshiStatus">—</span>
+        </div>
+      </div>
+      <div class="card-body no-max">
+        <!-- Current index value -->
+        <div class="pacing-grid" id="kalshiPacingGrid" style="margin-bottom:16px"></div>
+        <!-- Timeseries table -->
+        <table class="obs-table" id="kalshiTable">
+          <thead><tr>
+            <th>Time (Local)</th><th>Kalshi Index</th><th>Status</th><th>Stations</th>
+          </tr></thead>
+          <tbody id="tbodyKalshi"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="copy-section">
+      <button class="copy-btn kalshi-copy" id="copyKalshiBtn" onclick="copyKalshi()">
+        <span>📋</span><span id="copyKalshiText">Copy Kalshi Hourly Data to Clipboard</span>
+      </button>
+    </div>
+  </div>
 <script>
   var storeToday=null, storeTmrw=null, storeAmbient=null;
   var nwsEvolutionLog={};
   var PROXY='/api/proxy';
+  // Kalshi hourly market city slugs — only stations with confirmed hourly markets
+  var KALSHI_CITIES = {
+    'KLAX':'los-angeles',
+    'KATL':'atlanta',
+    'KAUS':'austin',
+    'KBOS':'boston',
+    'KCLT':'charlotte',
+    'KMDW':'chicago',
+    'KDFW':'dallas',
+    'KDCA':'washington-dc',
+    'KHOU':'houston',
+    'KJAX':'jacksonville',
+    'KLAS':'las-vegas',
+    'KMIA':'miami',
+    'KPHL':'philadelphia',
+    'KPHX':'phoenix',
+    'KSFO':'san-francisco',
+    'KSEA':'seattle',
+    'KLGA':'new-york-city',
+  };
+
   var MODELS=['GFS','HRRR','NAM','NBM','GEFS','ECMWF-IFS','ICON','GEM-GDPS','JMA','UKMO','ARPEGE','RAP','GFS-MOS','NBS-MOS','NAM-MOS','LAV-MOS','GEM-HRDPS','NAM4KM'];
   var NWS_GRIDS={
     'KLAX':{office:'LOX'},'KATL':{office:'FFC'},'KAUS':{office:'EWX'},'KBOS':{office:'BOX'},
@@ -671,6 +729,137 @@
   }
 
 
+  var storeKalshi = null;
+
+  async function fetchKalshi(){
+    var station=document.getElementById('stationSelect').value;
+    var citySlug=KALSHI_CITIES[station];
+    if(!citySlug){
+      setStatus('No Kalshi hourly market available for '+station,'error');
+      return;
+    }
+    var btn=document.getElementById('fetchKalshiBtn');
+    btn.disabled=true; btn.classList.add('loading');
+    btn.querySelector('.btn-text').textContent='Fetching…';
+    setStatus('Fetching Kalshi hourly index for '+citySlug+'…');
+
+    var tzOff=TZ_OFFSETS[station]||-5;
+
+    try {
+      // Pull last 50 minutes of data (3000 seconds) with station detail
+      var url='https://external-api.kalshi.com/trade-api/v2/live_data/weather/'+citySlug+'?detailed=true&last_sec=3000';
+      var resp=await fetch(url);
+      if(!resp.ok) throw new Error('Kalshi API error: '+resp.status);
+      var data=await resp.json();
+
+      var timeseries=data.timeseries||[];
+      if(!timeseries.length) throw new Error('No data returned for '+citySlug);
+
+      // Most recent finalized (normal/degraded) point = live index value
+      var finalized=timeseries.filter(function(p){return p.status==='normal'||p.status==='degraded';});
+      var latest=finalized.length?finalized[finalized.length-1]:null;
+
+      // Station names from latest point
+      var stationIds=latest&&latest.stations?latest.stations.map(function(s){return s.station_id;}).join(', '):'—';
+
+      // Render pacing grid
+      var currentWethrLow=storeToday&&storeToday.currentLow!=null?storeToday.currentLow:null;
+      var currentWethrHigh=storeToday&&storeToday.currentHigh!=null?storeToday.currentHigh:null;
+      var liveV=latest?latest.v:null;
+      var pacingStr='—';
+      var pacingCls='';
+      if(liveV!=null&&currentWethrLow!=null&&currentWethrHigh!=null){
+        var dLow=Math.round((liveV-currentWethrHigh)*10)/10;
+        var dHigh=Math.round((liveV-currentWethrLow)*10)/10;
+        var sign=function(n){return n>=0?'+':'';};
+        pacingStr=dLow===dHigh?sign(dLow)+dLow:sign(dLow)+dLow+' to '+sign(dHigh)+dHigh;
+        pacingCls=dHigh<0?'var(--accent)':dLow>0?'var(--danger)':'var(--yellow)';
+      }
+
+      var gridItems=[
+        {label:'Kalshi Live Index',value:liveV!=null?liveV+'°F':'—',color:'#ff3b6b'},
+        {label:'Status',value:latest?latest.status:'—',color:'var(--muted)'},
+        {label:'Contributors',value:latest&&latest.contributors!=null?latest.contributors+' stations':'—',color:'var(--muted)'},
+        {label:'vs WU Range',value:currentWethrLow!=null?currentWethrLow+'–'+currentWethrHigh+'°F':'—',color:'var(--green)'},
+        {label:'Pace vs WU',value:pacingStr,color:pacingCls||'var(--text)'},
+        {label:'Indexing',value:stationIds,color:'var(--muted)'},
+      ];
+      document.getElementById('kalshiPacingGrid').innerHTML=gridItems.map(function(i){
+        return '<div class="pacing-item"><div class="pacing-label">'+i.label+'</div>'
+          +'<div style="font-family:monospace;font-size:0.95rem;font-weight:700;color:'+i.color+'">'+i.value+'</div></div>';
+      }).join('');
+
+      // Build timeseries table — newest first, only finalized points
+      var tableRows=finalized.slice().reverse().slice(0,30); // last 30 finalized mins
+      document.getElementById('tbodyKalshi').innerHTML=tableRows.map(function(p){
+        var localTime=utcToLocalTimeStr(new Date(p.t).toISOString().replace('Z',''),tzOff);
+        var stns=p.stations?p.stations.map(function(s){
+          return '<span style="color:'+(s.code==='ok'?'var(--green)':'var(--muted)')+'">'+s.station_id.replace('1M','')+': '+(s.temp_f!=null?s.temp_f+'°':'—')+'</span>';
+        }).join(' '):'—';
+        return '<tr>'
+          +'<td style="color:var(--muted)">'+localTime+'</td>'
+          +'<td style="color:#ff3b6b;font-weight:700">'+(p.v!=null?p.v+'°F':'—')+'</td>'
+          +'<td style="color:var(--muted);font-size:0.7rem">'+p.status+'</td>'
+          +'<td style="font-size:0.65rem">'+stns+'</td>'
+          +'</tr>';
+      }).join('');
+
+      document.getElementById('kalshiCityLabel').textContent=citySlug+' / '+station;
+      document.getElementById('kalshiStatus').textContent=(liveV!=null?liveV+'°F':'')+' live';
+      document.getElementById('kalshiSection').classList.add('visible');
+
+      storeKalshi={station,citySlug,liveV,timeseries:finalized,stationIds,currentWethrLow,currentWethrHigh,pacingStr,tzOff,at:new Date()};
+
+      // Auto-copy
+      var clipText=buildKalshiClipboard();
+      try {
+        if(navigator.clipboard&&navigator.clipboard.writeText){
+          navigator.clipboard.writeText(clipText).then(function(){
+            setStatus('✓ Kalshi '+citySlug+' live index: '+liveV+'°F — copied!','success');
+          }).catch(function(){fallbackCopy(clipText);setStatus('✓ Done','success');});
+        } else {fallbackCopy(clipText);setStatus('✓ Done','success');}
+      } catch(e){setStatus('✓ Done','success');}
+
+    } catch(err){
+      console.error('Kalshi fetch error:',err);
+      setStatus('✗ '+err.message,'error');
+    }
+    btn.disabled=false; btn.classList.remove('loading');
+    btn.querySelector('.btn-text').textContent='📈 Kalshi Hourly';
+  }
+
+  function buildKalshiClipboard(){
+    if(!storeKalshi)return '';
+    var s=storeKalshi;
+    var lines=[];
+    lines.push('Kalshi hourly market live index for '+s.station+' ('+s.citySlug+'). Align the Kalshi composite temp against current METAR pacing.');
+    lines.push('');
+    lines.push('=== KALSHI HOURLY INDEX — '+s.citySlug.toUpperCase()+' / '+s.station+' ===');
+    lines.push('Fetched        : '+s.at.toUTCString());
+    lines.push('Live Index     : '+(s.liveV!=null?s.liveV+'°F':'N/A'));
+    lines.push('WU Range       : '+(s.currentWethrLow!=null?s.currentWethrLow+'–'+s.currentWethrHigh+'°F':'N/A'));
+    lines.push('Pace vs WU     : '+s.pacingStr);
+    lines.push('Indexing Stns  : '+s.stationIds);
+    lines.push('');
+    lines.push(pad('Time (Local)',14)+' '+pad('Index',8)+' Status');
+    lines.push('-'.repeat(38));
+    s.timeseries.slice().reverse().slice(0,30).forEach(function(p){
+      var localTime=utcToLocalTimeStr(new Date(p.t).toISOString().replace('Z',''),s.tzOff);
+      lines.push(pad(localTime,14)+' '+pad(p.v!=null?p.v+'°F':'—',8)+' '+p.status);
+    });
+    lines.push('');
+    lines.push('=== END KALSHI INDEX ===');
+    return lines.join('\n');
+  }
+
+  function copyKalshi(){
+    var text=buildKalshiClipboard();
+    if(!text)return;
+    function onCopied(){var b=document.getElementById('copyKalshiBtn'),t=document.getElementById('copyKalshiText');b.classList.add('copied');t.textContent='✓ Copied!';setTimeout(function(){b.classList.remove('copied');t.textContent='Copy Kalshi Hourly Data to Clipboard';},2500);}
+    if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(onCopied).catch(function(){fallbackCopy(text);onCopied();});}else{fallbackCopy(text);onCopied();}
+  }
+
+
   var storeNextHour = null;
 
   async function fetchNextHour(){
@@ -764,15 +953,18 @@
         var projTemp=Math.round(parseFloat(bestRow.temperature_f)*10)/10;
         var runHour=m.runTime?new Date(m.runTime.replace(' ','T').replace(/Z?$/,'Z')).getUTCHours()+'Z':'';
         var modelLabel=m.model.indexOf('(')<0?(m.model+(runHour?' ('+runHour+')':'')):m.model;
-        var change=null, changeStr='—', changeCls='';
+        var change=null, changeStr='—', changeCls='', direction='—';
         if(currentTemp!==null){
-          var cBase=currentLow!==null?currentLow:currentTemp;
-          change=Math.round((projTemp-cBase)*10)/10;
-          var sign=change>=0?'+':'';
-          changeStr=sign+change+'°F';
-          changeCls=change>0?'pace-neg':change<0?'pace-pos':'pace-zero';
+          var cLow2=currentLow!==null?currentLow:currentTemp;
+          var cHigh2=currentHigh!==null?currentHigh:currentTemp;
+          var dLow2=Math.round((projTemp-cHigh2)*10)/10;
+          var dHigh2=Math.round((projTemp-cLow2)*10)/10;
+          var sign2=function(n){return n>=0?'+':'';};
+          changeStr=cLow2===cHigh2?sign2(dLow2)+dLow2:sign2(dLow2)+dLow2+' to '+sign2(dHigh2)+dHigh2;
+          changeCls=dHigh2<0?'pace-pos':dLow2>0?'pace-neg':'pace-zero';
+          change=dLow2;
+          direction=dLow2>0.5?'▲ Warming':dHigh2<-0.5?'▼ Cooling':'→ Steady';
         }
-        var direction=change===null?'—':change>1?'▲ Warming':change<-1?'▼ Cooling':'→ Steady';
         nextHourRows.push({model:modelLabel,currentStr:currentLow!=null&&currentHigh!=null?(currentLow===currentHigh?currentLow+'°F':currentLow+'–'+currentHigh+'°F'):(currentTemp!=null?currentTemp+'°F':'—'),projTemp:projTemp,change:change,changeStr:changeStr,changeCls:changeCls,direction:direction});
       });
 
