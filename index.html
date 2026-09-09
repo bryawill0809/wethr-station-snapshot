@@ -791,7 +791,91 @@
       return;
     }
 
+
+    // Full fetch with detailed station data
+    try {
+      var url=PROXY+'?'+new URLSearchParams({endpoint:'kalshi',city:citySlug,detailed:'true',last_sec:'3000'}).toString();
+      var resp=await fetch(url);
+      if(!resp.ok) throw new Error('Kalshi API error: '+resp.status);
+      var data=await resp.json();
+      var timeseries=data.timeseries||[];
+
+      if(!timeseries.length){
+        setStatus('Kalshi '+citySlug+' market found but no data — outside trading hours','success');
+        document.getElementById('kalshiCityLabel').textContent=market.city+' / '+station;
+        document.getElementById('kalshiStatus').textContent='no data';
+        document.getElementById('kalshiPacingGrid').innerHTML='<div class="pacing-item"><div class="pacing-label">Status</div><div style="color:var(--muted);font-family:monospace">Outside trading hours</div></div>';
+        document.getElementById('tbodyKalshi').innerHTML='<tr><td colspan="4" style="color:var(--muted);padding:12px 0">No data — Kalshi hourly markets run during daytime hours</td></tr>';
+        document.getElementById('kalshiSection').classList.add('visible');
+        if(activeBtn)activeBtn.disabled=false;
+        return;
+      }
+
+      var finalized=timeseries.filter(function(p){return p.status==='normal'||p.status==='degraded';});
+      var latest=finalized.length?finalized[finalized.length-1]:null;
+      var stationIds=latest&&latest.stations?latest.stations.map(function(s){return s.station_id;}).join(', '):'—';
+      var liveV=latest?latest.v:null;
+
+      // Pace vs WU range from today's store
+      var currentWethrLow=storeToday&&storeToday.currentLow!=null?storeToday.currentLow:null;
+      var currentWethrHigh=storeToday&&storeToday.currentHigh!=null?storeToday.currentHigh:null;
+      var pacingStr='—', pacingColor='var(--text)';
+      if(liveV!=null&&currentWethrLow!=null&&currentWethrHigh!=null){
+        var dLow=Math.round((liveV-currentWethrHigh)*10)/10;
+        var dHigh=Math.round((liveV-currentWethrLow)*10)/10;
+        var sign=function(n){return n>=0?'+':'';};
+        pacingStr=dLow===dHigh?sign(dLow)+dLow:sign(dLow)+dLow+' to '+sign(dHigh)+dHigh;
+        pacingColor=dHigh<0?'var(--accent)':dLow>0?'var(--danger)':'var(--yellow)';
+      }
+
+      var gridItems=[
+        {label:'Kalshi Live Index',value:liveV!=null?liveV+'°F':'—',color:'#ff3b6b'},
+        {label:'Status',value:latest?latest.status:'—',color:'var(--muted)'},
+        {label:'Contributors',value:latest&&latest.contributors!=null?latest.contributors+' stns':'—',color:'var(--muted)'},
+        {label:'vs WU Range',value:currentWethrLow!=null?currentWethrLow+'–'+currentWethrHigh+'°F':'fetch Today first',color:'var(--green)'},
+        {label:'Pace vs WU',value:pacingStr,color:pacingColor},
+        {label:'Indexing',value:stationIds,color:'var(--muted)'},
+      ];
+      document.getElementById('kalshiPacingGrid').innerHTML=gridItems.map(function(i){
+        return '<div class="pacing-item"><div class="pacing-label">'+i.label+'</div>'
+          +'<div style="font-family:monospace;font-size:0.95rem;font-weight:700;color:'+i.color+'">'+i.value+'</div></div>';
+      }).join('');
+
+      var tableRows=finalized.slice().reverse().slice(0,30);
+      document.getElementById('tbodyKalshi').innerHTML=tableRows.map(function(p){
+        var localTime=utcToLocalTimeStr(new Date(p.t).toISOString().replace('Z',''),tzOff);
+        var stns=p.stations?p.stations.map(function(s){
+          return '<span style="color:'+(s.code==='ok'?'var(--green)':'var(--muted)')+'">'+s.station_id.replace('1M','')+':'+(s.temp_f!=null?s.temp_f:'—')+'°</span>';
+        }).join(' '):'—';
+        return '<tr>'
+          +'<td style="color:var(--muted)">'+localTime+'</td>'
+          +'<td style="color:#ff3b6b;font-weight:700">'+(p.v!=null?p.v+'°F':'—')+'</td>'
+          +'<td style="color:var(--muted);font-size:0.7rem">'+p.status+'</td>'
+          +'<td style="font-size:0.65rem">'+stns+'</td>'
+          +'</tr>';
+      }).join('');
+
+      document.getElementById('kalshiCityLabel').textContent=market.city+' / '+station;
+      document.getElementById('kalshiStatus').textContent=(liveV!=null?liveV+'°F':'')+' live';
+      document.getElementById('kalshiSection').classList.add('visible');
+
+      storeKalshi={station:station,citySlug:citySlug,liveV:liveV,timeseries:finalized,stationIds:stationIds,currentWethrLow:currentWethrLow,currentWethrHigh:currentWethrHigh,pacingStr:pacingStr,tzOff:tzOff,at:new Date()};
+
+      // Auto-copy
+      var clipText=buildKalshiClipboard();
+      if(navigator.clipboard&&navigator.clipboard.writeText){
+        navigator.clipboard.writeText(clipText).then(function(){
+          setStatus('✓ Kalshi '+market.city+' live index: '+liveV+'°F — copied!','success');
+        }).catch(function(){fallbackCopy(clipText);setStatus('✓ Done','success');});
+      } else {fallbackCopy(clipText);setStatus('✓ Done','success');}
+
+    } catch(err){
+      console.error('Kalshi fetch error:',err);
+      setStatus('✗ Kalshi error: '+err.message,'error');
+    }
+    if(activeBtn)activeBtn.disabled=false;
   }
+
 
   function buildKalshiClipboard(){
     if(!storeKalshi)return '';
