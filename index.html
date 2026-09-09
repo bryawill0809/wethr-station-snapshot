@@ -44,6 +44,14 @@
   .fetch-btn.ambient { border-color: var(--yellow); color: var(--yellow); }
   .fetch-btn.hrrr { border-color: var(--accent2); color: var(--accent2); }
   .fetch-btn.kalshi { border-color: #ff3b6b; color: #ff3b6b; }
+  .kalshi-markets-panel { margin-bottom: 24px; }
+  .kalshi-btn-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
+  .kalshi-city-btn { background: transparent; border: 1px solid #ff3b6b; border-radius: 8px; color: #ff3b6b; font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; padding: 10px 12px; transition: all 0.2s; text-align: left; line-height: 1.4; }
+  .kalshi-city-btn:hover { background: rgba(255,59,107,0.08); box-shadow: 0 0 16px rgba(255,59,107,0.2); }
+  .kalshi-city-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .kalshi-city-btn.active { background: rgba(255,59,107,0.12); border-width: 2px; }
+  .kalshi-city-btn .btn-station { font-size: 0.85rem; display: block; }
+  .kalshi-city-btn .btn-city { color: rgba(255,59,107,0.6); font-size: 0.62rem; display: block; margin-top: 2px; }
   .fetch-btn.kalshi:hover { background: rgba(255,59,107,0.08); box-shadow: 0 0 20px rgba(255,59,107,0.15); }
   .fetch-btn.kalshi .spinner { border-color: rgba(255,59,107,0.3); border-top-color: #ff3b6b; }
   .copy-btn.kalshi-copy { background: rgba(255,59,107,0.05); border-color: #ff3b6b; color: #ff3b6b; }
@@ -172,9 +180,7 @@
       <button class="fetch-btn hrrr" id="fetchHrrrBtn" onclick="fetchHrrr45()">
         <div class="spinner"></div><span class="btn-text">🌩 HRRR :45</span>
       </button>
-      <button class="fetch-btn kalshi" id="fetchKalshiBtn" onclick="fetchKalshi()">
-        <div class="spinner"></div><span class="btn-text">📈 Kalshi Hourly</span>
-      </button>
+
     </div>
   </div>
 
@@ -289,21 +295,25 @@
     </div>
   </div>
 </div>
-  <!-- KALSHI HOURLY SECTION -->
+  <!-- KALSHI HOURLY MARKETS SECTION -->
+  <div class="kalshi-markets-panel" id="kalshiPanel" style="display:none">
+    <div class="day-label" style="color:#ff3b6b;border-bottom:1px solid var(--border);padding-bottom:10px;margin-bottom:16px">📈 Kalshi Hourly Markets</div>
+    <div class="kalshi-btn-grid" id="kalshiBtnGrid"></div>
+  </div>
+
+  <!-- KALSHI RESULT SECTION -->
   <div class="day-section" id="kalshiSection">
-    <div class="day-label" style="color:#ff3b6b">📈 Kalshi Hourly Market</div>
+    <div class="day-label" style="color:#ff3b6b">📈 Kalshi — <span id="kalshiCityLabel">—</span></div>
     <div class="data-card">
       <div class="card-header">
         <div class="card-title" style="color:#ff3b6b">
-          Live Index — <span id="kalshiCityLabel">—</span>
+          Live Index
           <span class="record-count" style="background:rgba(255,59,107,0.1);border-color:rgba(255,59,107,0.2);color:#ff3b6b" id="kalshiStatus">—</span>
         </div>
       </div>
       <div class="card-body no-max">
-        <!-- Current index value -->
         <div class="pacing-grid" id="kalshiPacingGrid" style="margin-bottom:16px"></div>
-        <!-- Timeseries table -->
-        <table class="obs-table" id="kalshiTable">
+        <table class="obs-table">
           <thead><tr>
             <th>Time (Local)</th><th>Kalshi Index</th><th>Status</th><th>Stations</th>
           </tr></thead>
@@ -321,25 +331,24 @@
   var storeToday=null, storeTmrw=null, storeAmbient=null;
   var nwsEvolutionLog={};
   var PROXY='/api/proxy';
-  // Kalshi city slugs — confirmed from API error response
-  var KALSHI_CITIES = {
-    'KMIA':['miami'],
-    'KDFW':['dfw'],
-    'KHOU':['houston'],
-    'KPHL':['phl-delaware-valley'],
-    'KSEA':['puget-sound'],
-    'KSFO':['sf-bay'],
-    'KBOS':['greater-boston'],
-    'KDTW':['southeast-michigan'],
-    'KMDW':['chicago','chicago-metro'],
-    'KLAX':['los-angeles-metro','la-metro'],
-    'KLGA':['new-york','nyc-metro'],
-    'KATL':['atlanta','atlanta-metro'],
-    'KAUS':['austin','austin-metro'],
-    'KDCA':['dc-metro','washington-dc-metro'],
-    'KLAS':['las-vegas','las-vegas-metro'],
-    'KPHX':['phoenix','phoenix-metro'],
-  };
+  var KALSHI_MARKETS = [
+    {station:'KLAX',city:'Los Angeles',slugs:['los-angeles-metro','la-metro','los-angeles','la']},
+    {station:'KMIA',city:'Miami',slugs:['miami']},
+    {station:'KDFW',city:'Dallas',slugs:['dfw']},
+    {station:'KHOU',city:'Houston',slugs:['houston']},
+    {station:'KPHL',city:'Philadelphia',slugs:['phl-delaware-valley']},
+    {station:'KSEA',city:'Seattle',slugs:['puget-sound']},
+    {station:'KSFO',city:'San Francisco',slugs:['sf-bay']},
+    {station:'KBOS',city:'Boston',slugs:['greater-boston']},
+    {station:'KDTW',city:'Detroit',slugs:['southeast-michigan']},
+    {station:'KLGA',city:'New York',slugs:['nyc-metro','new-york','nyc']},
+    {station:'KATL',city:'Atlanta',slugs:['atlanta','atlanta-metro']},
+    {station:'KMDW',city:'Chicago',slugs:['chicago','chicago-metro']},
+    {station:'KAUS',city:'Austin',slugs:['austin','austin-metro']},
+    {station:'KDCA',city:'Washington DC',slugs:['dc-metro','washington-dc-metro']},
+    {station:'KLAS',city:'Las Vegas',slugs:['las-vegas','las-vegas-metro']},
+    {station:'KPHX',city:'Phoenix',slugs:['phoenix','phoenix-metro']},
+  ];
 
   var MODELS=['GFS','HRRR','NAM','NBM','GEFS','ECMWF-IFS','ICON','GEM-GDPS','JMA','UKMO','ARPEGE','RAP','GFS-MOS','NBS-MOS','NAM-MOS','LAV-MOS','GEM-HRDPS','NAM4KM'];
   var NWS_GRIDS={
@@ -730,14 +739,37 @@
 
   var storeKalshi = null;
 
-  async function fetchKalshi(){
-    var station=document.getElementById('stationSelect').value;
-    var citySlugs=KALSHI_CITIES[station];
-    if(!citySlugs){
-      setStatus('No Kalshi hourly market available for '+station,'error');
-      return;
-    }
-    // Try each slug in order, log every attempt
+  // Build the Kalshi market button grid on page load
+  function initKalshiGrid(){
+    var grid=document.getElementById('kalshiBtnGrid');
+    if(!grid)return;
+    grid.innerHTML='';
+    KALSHI_MARKETS.forEach(function(m){
+      var b=document.createElement('button');
+      b.className='kalshi-city-btn'; b.id='kbtn-'+m.station;
+      b.innerHTML='<span class="btn-station">'+m.station+'</span><span class="btn-city">'+m.city+'</span>';
+      (function(stn){b.addEventListener('click',function(){fetchKalshi(stn);});})(m.station);
+      grid.appendChild(b);
+    });
+    document.getElementById('kalshiPanel').style.display='block';
+  }
+
+  async function fetchKalshi(station){
+    var market=KALSHI_MARKETS.find(function(m){return m.station===station;});
+    if(!market){setStatus('Unknown Kalshi market: '+station,'error');return;}
+    var citySlugs=market.slugs;
+    var tzOff=TZ_OFFSETS[station]||-5;
+
+    // Mark active button
+    KALSHI_MARKETS.forEach(function(m){
+      var b=document.getElementById('kbtn-'+m.station);
+      if(b) b.classList.remove('active');
+    });
+    var activeBtn=document.getElementById('kbtn-'+station);
+    if(activeBtn){activeBtn.disabled=true;activeBtn.classList.add('active');}
+    setStatus('Fetching Kalshi hourly index for '+market.city+'…');
+
+    // Try each slug
     var citySlug=null;
     for(var si=0;si<citySlugs.length;si++){
       var triedSlug=citySlugs[si];
@@ -745,121 +777,20 @@
       try {
         var tryResp=await fetch(tryUrl);
         var tryText=await tryResp.text();
-        console.log('Kalshi slug "'+triedSlug+'" status:',tryResp.status,'body:',tryText.substring(0,200));
         if(tryResp.ok){
           try {
             var tryData=JSON.parse(tryText);
-            // Accept even empty timeseries — market exists, just may be outside hours
             if(tryData.city){citySlug=triedSlug;break;}
-            else {console.log('slug "'+triedSlug+'" ok but no city field, keys:',Object.keys(tryData));}
-          } catch(e){console.log('slug "'+triedSlug+'" parse error:',e.message);}
+          } catch(e){}
         }
-      } catch(e){console.log('slug "'+triedSlug+'" fetch error:',e.message);}
+      } catch(e){}
     }
     if(!citySlug){
-      setStatus('No live Kalshi index found for '+station+' — check console for details','error');
-        btn.disabled=false;btn.classList.remove('loading');btn.querySelector('.btn-text').textContent='📈 Kalshi Hourly';
+      setStatus('No Kalshi index found for '+market.city+' — market may not be live yet','error');
+      if(activeBtn)activeBtn.disabled=false;
       return;
     }
-    console.log('Kalshi slug found:',citySlug,'for',station);
-    var btn=document.getElementById('fetchKalshiBtn');
-    btn.disabled=true; btn.classList.add('loading');
-    btn.querySelector('.btn-text').textContent='Fetching…';
-    setStatus('Fetching Kalshi hourly index for '+citySlug+'…');
 
-    var tzOff=TZ_OFFSETS[station]||-5;
-
-    try {
-      // Pull last 50 minutes of data (3000 seconds) with station detail
-      var url=PROXY+'?'+new URLSearchParams({endpoint:'kalshi',city:citySlug,detailed:'true',last_sec:'3000'}).toString();
-      var resp=await fetch(url);
-      if(!resp.ok) throw new Error('Kalshi API error: '+resp.status);
-      var data=await resp.json();
-
-      var timeseries=data.timeseries||[];
-      if(!timeseries.length){
-        // Market exists but no data — outside trading hours or pre-market
-        setStatus('Kalshi '+citySlug+' market found but no data yet — may be outside trading hours','success');
-        document.getElementById('kalshiCityLabel').textContent=citySlug+' / '+station;
-        document.getElementById('kalshiStatus').textContent='no data';
-        document.getElementById('kalshiPacingGrid').innerHTML='<div class="pacing-item"><div class="pacing-label">Status</div><div style="color:var(--muted);font-family:monospace">Outside trading hours or pre-market</div></div>';
-        document.getElementById('tbodyKalshi').innerHTML='<tr><td colspan="4" style="color:var(--muted);padding:12px 0">No data available — Kalshi hourly markets run during daytime hours</td></tr>';
-        document.getElementById('kalshiSection').classList.add('visible');
-        btn.disabled=false;btn.classList.remove('loading');btn.querySelector('.btn-text').textContent='📈 Kalshi Hourly';
-        return;
-      }
-
-      // Most recent finalized (normal/degraded) point = live index value
-      var finalized=timeseries.filter(function(p){return p.status==='normal'||p.status==='degraded';});
-      var latest=finalized.length?finalized[finalized.length-1]:null;
-
-      // Station names from latest point
-      var stationIds=latest&&latest.stations?latest.stations.map(function(s){return s.station_id;}).join(', '):'—';
-
-      // Render pacing grid
-      var currentWethrLow=storeToday&&storeToday.currentLow!=null?storeToday.currentLow:null;
-      var currentWethrHigh=storeToday&&storeToday.currentHigh!=null?storeToday.currentHigh:null;
-      var liveV=latest?latest.v:null;
-      var pacingStr='—';
-      var pacingCls='';
-      if(liveV!=null&&currentWethrLow!=null&&currentWethrHigh!=null){
-        var dLow=Math.round((liveV-currentWethrHigh)*10)/10;
-        var dHigh=Math.round((liveV-currentWethrLow)*10)/10;
-        var sign=function(n){return n>=0?'+':'';};
-        pacingStr=dLow===dHigh?sign(dLow)+dLow:sign(dLow)+dLow+' to '+sign(dHigh)+dHigh;
-        pacingCls=dHigh<0?'var(--accent)':dLow>0?'var(--danger)':'var(--yellow)';
-      }
-
-      var gridItems=[
-        {label:'Kalshi Live Index',value:liveV!=null?liveV+'°F':'—',color:'#ff3b6b'},
-        {label:'Status',value:latest?latest.status:'—',color:'var(--muted)'},
-        {label:'Contributors',value:latest&&latest.contributors!=null?latest.contributors+' stations':'—',color:'var(--muted)'},
-        {label:'vs WU Range',value:currentWethrLow!=null?currentWethrLow+'–'+currentWethrHigh+'°F':'—',color:'var(--green)'},
-        {label:'Pace vs WU',value:pacingStr,color:pacingCls||'var(--text)'},
-        {label:'Indexing',value:stationIds,color:'var(--muted)'},
-      ];
-      document.getElementById('kalshiPacingGrid').innerHTML=gridItems.map(function(i){
-        return '<div class="pacing-item"><div class="pacing-label">'+i.label+'</div>'
-          +'<div style="font-family:monospace;font-size:0.95rem;font-weight:700;color:'+i.color+'">'+i.value+'</div></div>';
-      }).join('');
-
-      // Build timeseries table — newest first, only finalized points
-      var tableRows=finalized.slice().reverse().slice(0,30); // last 30 finalized mins
-      document.getElementById('tbodyKalshi').innerHTML=tableRows.map(function(p){
-        var localTime=utcToLocalTimeStr(new Date(p.t).toISOString().replace('Z',''),tzOff);
-        var stns=p.stations?p.stations.map(function(s){
-          return '<span style="color:'+(s.code==='ok'?'var(--green)':'var(--muted)')+'">'+s.station_id.replace('1M','')+': '+(s.temp_f!=null?s.temp_f+'°':'—')+'</span>';
-        }).join(' '):'—';
-        return '<tr>'
-          +'<td style="color:var(--muted)">'+localTime+'</td>'
-          +'<td style="color:#ff3b6b;font-weight:700">'+(p.v!=null?p.v+'°F':'—')+'</td>'
-          +'<td style="color:var(--muted);font-size:0.7rem">'+p.status+'</td>'
-          +'<td style="font-size:0.65rem">'+stns+'</td>'
-          +'</tr>';
-      }).join('');
-
-      document.getElementById('kalshiCityLabel').textContent=citySlug+' / '+station;
-      document.getElementById('kalshiStatus').textContent=(liveV!=null?liveV+'°F':'')+' live';
-      document.getElementById('kalshiSection').classList.add('visible');
-
-      storeKalshi={station,citySlug,liveV,timeseries:finalized,stationIds,currentWethrLow,currentWethrHigh,pacingStr,tzOff,at:new Date()};
-
-      // Auto-copy
-      var clipText=buildKalshiClipboard();
-      try {
-        if(navigator.clipboard&&navigator.clipboard.writeText){
-          navigator.clipboard.writeText(clipText).then(function(){
-            setStatus('✓ Kalshi '+citySlug+' live index: '+liveV+'°F — copied!','success');
-          }).catch(function(){fallbackCopy(clipText);setStatus('✓ Done','success');});
-        } else {fallbackCopy(clipText);setStatus('✓ Done','success');}
-      } catch(e){setStatus('✓ Done','success');}
-
-    } catch(err){
-      console.error('Kalshi fetch error:',err);
-      setStatus('✗ '+err.message,'error');
-    }
-    btn.disabled=false; btn.classList.remove('loading');
-    btn.querySelector('.btn-text').textContent='📈 Kalshi Hourly';
   }
 
   function buildKalshiClipboard(){
@@ -1172,10 +1103,16 @@
     if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(onCopied).catch(function(){fallbackCopy(text);onCopied();});}else{fallbackCopy(text);onCopied();}
   }
 
+  // Initialize Kalshi market buttons on load
+  document.addEventListener('DOMContentLoaded',function(){initKalshiGrid();});
+  // Fallback if DOMContentLoaded already fired
+  if(document.readyState!=='loading') initKalshiGrid();
+
   function fallbackCopy(text){var ta=document.createElement('textarea');ta.value=text;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.focus();ta.select();document.execCommand('copy');document.body.removeChild(ta);}
 </script>
 </body>
 </html>
+
 
 
 
