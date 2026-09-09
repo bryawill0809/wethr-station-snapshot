@@ -747,7 +747,7 @@
 
     try {
       // Pull last 50 minutes of data (3000 seconds) with station detail
-      var url='https://external-api.kalshi.com/trade-api/v2/live_data/weather/'+citySlug+'?detailed=true&last_sec=3000';
+      var url=PROXY+'?'+new URLSearchParams({endpoint:'kalshi',city:citySlug,detailed:'true',last_sec:'3000'}).toString();
       var resp=await fetch(url);
       if(!resp.ok) throw new Error('Kalshi API error: '+resp.status);
       var data=await resp.json();
