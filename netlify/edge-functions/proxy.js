@@ -22,6 +22,23 @@ export default async (request, context) => {
     });
   }
 
+  // Kalshi — no auth needed, just proxy for CORS
+  if (endpoint === 'kalshi') {
+    const city = params.get('city');
+    const lastSec = params.get('last_sec') || '3000';
+    const detailed = params.get('detailed') || 'true';
+    const kalshiUrl = 'https://external-api.kalshi.com/trade-api/v2/live_data/weather/' + city
+      + '?detailed=' + detailed + '&last_sec=' + lastSec;
+    const kalshiResp = await fetch(kalshiUrl, {
+      headers: { 'Accept': 'application/json' }
+    });
+    const kalshiData = await kalshiResp.text();
+    return new Response(kalshiData, {
+      status: kalshiResp.status,
+      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+    });
+  }
+
   const upstreamPath = endpoint === 'forecasts'
     ? 'https://wethr.net/api/v2/forecasts.php'
     : endpoint === 'accuracy'
