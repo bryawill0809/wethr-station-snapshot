@@ -319,6 +319,20 @@
           </tr></thead>
           <tbody id="tbodyKalshi"></tbody>
         </table>
+
+        <!-- Composite HRRR Forecast -->
+        <div id="compositeSection" style="display:none;margin-top:20px;border-top:1px solid var(--border);padding-top:16px">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:0.68rem;letter-spacing:0.15em;text-transform:uppercase;color:#ff3b6b;margin-bottom:12px">
+            🌩 HRRR Composite Forecast — Top of Hour Settlement
+          </div>
+          <div class="pacing-grid" id="compositeGrid" style="margin-bottom:14px"></div>
+          <table class="model-table" id="compositeTable">
+            <thead><tr>
+              <th>Station</th><th>Live °F</th><th>HRRR Now</th><th>HRRR Top-of-Hr</th><th>Trend</th>
+            </tr></thead>
+            <tbody id="tbodyComposite"></tbody>
+          </table>
+        </div>
       </div>
     </div>
     <div class="copy-section">
@@ -861,6 +875,19 @@
 
       storeKalshi={station:station,citySlug:citySlug,liveV:liveV,timeseries:finalized,stationIds:stationIds,currentWethrLow:currentWethrLow,currentWethrHigh:currentWethrHigh,pacingStr:pacingStr,tzOff:tzOff,at:new Date()};
 
+      // ── COMPOSITE HRRR FORECAST ──────────────────────────────────────
+      // Extract unique station IDs from the latest Kalshi timeseries point
+      var blendStations=[];
+      if(latest&&latest.stations){
+        blendStations=latest.stations.map(function(s){
+          // station_id comes as e.g. "KMIA1M" — strip the suffix
+          return s.station_id.replace(/[0-9]M$/,'').replace(/H$/,'');
+        }).filter(function(s,i,arr){return arr.indexOf(s)===i&&s.length>=4;});
+      }
+      if(blendStations.length>0){
+        fetchCompositeHrrr(blendStations,station,tzOff,liveV,finalized);
+      }
+
       // Auto-copy
       var clipText=buildKalshiClipboard();
       if(navigator.clipboard&&navigator.clipboard.writeText){
@@ -874,6 +901,150 @@
       setStatus('✗ Kalshi error: '+err.message,'error');
     }
     if(activeBtn)activeBtn.disabled=false;
+  }
+
+
+  async function fetchCompositeHrrr(blendStations, primaryStation, tzOff, liveV, kalshiTimeseries){
+    document.getElementById('compositeSection').style.display='block';
+    document.getElementById('tbodyComposite').innerHTML='<tr><td colspan="5" style="color:var(--muted);padding:10px 0">Fetching HRRR for '+blendStations.length+' stations…</td></tr>';
+
+    var nowUtc=new Date();
+    // Next top-of-hour UTC
+    var topOfHour=new Date(nowUtc);
+    topOfHour.setUTCMinutes(0,0,0);
+    topOfHour.setUTCHours(topOfHour.getUTCHours()+1);
+
+    // Fetch window: ±90 min around now (covers current and next hour HRRR steps)
+    var fcstStart=new Date(nowUtc.getTime()-30*60000).toISOString().slice(0,19)+'Z';
+    var fcstEnd=new Date(nowUtc.getTime()+90*60000).toISOString().slice(0,19)+'Z';
+
+    // Fetch HRRR for each station in parallel
+    var fetches=blendStations.map(function(stn){
+      return fetch(proxyUrl({endpoint:'forecasts',location_name:stn,start_valid_time:fcstStart,end_valid_time:fcstEnd}))
+        .then(function(r){return r.ok?r.json():null;})
+        .then(function(d){return {stn:stn,rows:d?Array.isArray(d)?d:(d.forecasts||d.data||[]):[]}; })
+        .catch(function(){return {stn:stn,rows:[]};});
+    });
+
+    var results=await Promise.all(fetches);
+
+    // Get Kalshi live readings per station from latest timeseries point
+    var kalshiStnTemps={};
+    if(kalshiTimeseries.length>0){
+      var lastPoint=kalshiTimeseries[kalshiTimeseries.length-1];
+      if(lastPoint.stations){
+        lastPoint.stations.forEach(function(s){
+          var stnId=s.station_id.replace(/[0-9]M$/,'').replace(/H$/,'');
+          kalshiStnTemps[stnId]=s.temp_f;
+        });
+      }
+    }
+
+    // For each station: find HRRR Model Now and Top-of-Hour projection
+    var stationData=[];
+    results.forEach(function(res){
+      // Filter to HRRR only, latest run
+      var hrrrRows=res.rows.filter(function(r){return r.model==='HRRR';});
+      if(!hrrrRows.length){stationData.push({stn:res.stn,liveTemp:kalshiStnTemps[res.stn]||null,hrrrNow:null,hrrrTOH:null});return;}
+
+      var latestRun=hrrrRows.reduce(function(max,r){return (r.run_time||'')>(max||'')?r.run_time:max;},null);
+      var latestRows=hrrrRows.filter(function(r){return r.run_time===latestRun;});
+
+      // Model Now: interpolate between surrounding steps
+      var beforeRow=null,afterRow=null,beforeDiff=Infinity,afterDiff=Infinity;
+      latestRows.forEach(function(row){
+        var vt=new Date(row.valid_time.replace(' ','T').replace(/Z?$/,'Z'));
+        var diff=nowUtc.getTime()-vt.getTime();
+        if(diff>=0&&diff<beforeDiff){beforeDiff=diff;beforeRow=row;}
+        if(diff<0&&Math.abs(diff)<afterDiff){afterDiff=Math.abs(diff);afterRow=row;}
+      });
+      var hrrrNow=null;
+      if(beforeRow&&afterRow){
+        var t0=new Date(beforeRow.valid_time.replace(' ','T').replace(/Z?$/,'Z')).getTime();
+        var t1=new Date(afterRow.valid_time.replace(' ','T').replace(/Z?$/,'Z')).getTime();
+        var frac=(nowUtc.getTime()-t0)/(t1-t0);
+        hrrrNow=Math.round((parseFloat(beforeRow.temperature_f)+(parseFloat(afterRow.temperature_f)-parseFloat(beforeRow.temperature_f))*frac)*10)/10;
+      } else if(beforeRow){hrrrNow=Math.round(parseFloat(beforeRow.temperature_f)*10)/10;}
+
+      // Top-of-Hour: closest step to topOfHour
+      var tohRow=null,tohDiff=Infinity;
+      latestRows.forEach(function(row){
+        var vt=new Date(row.valid_time.replace(' ','T').replace(/Z?$/,'Z'));
+        var diff=Math.abs(vt.getTime()-topOfHour.getTime());
+        if(diff<tohDiff){tohDiff=diff;tohRow=row;}
+      });
+      var hrrrTOH=tohRow?Math.round(parseFloat(tohRow.temperature_f)*10)/10:null;
+
+      stationData.push({
+        stn:res.stn,
+        liveTemp:kalshiStnTemps[res.stn]!=null?Math.round(parseFloat(kalshiStnTemps[res.stn])*100)/100:null,
+        hrrrNow:hrrrNow,
+        hrrrTOH:hrrrTOH,
+        runHour:latestRun?new Date(latestRun.replace(' ','T').replace(/Z?$/,'Z')).getUTCHours()+'Z':'',
+      });
+    });
+
+    // Composite averages (equal weight)
+    var validNow=stationData.filter(function(s){return s.hrrrNow!=null;});
+    var validTOH=stationData.filter(function(s){return s.hrrrTOH!=null;});
+    var compositeNow=validNow.length?Math.round(validNow.reduce(function(s,d){return s+d.hrrrNow;},0)/validNow.length*100)/100:null;
+    var compositeTOH=validTOH.length?Math.round(validTOH.reduce(function(s,d){return s+d.hrrrTOH;},0)/validTOH.length*100)/100:null;
+
+    // Trend: composite TOH minus composite Now
+    var trend=null,trendStr='—',trendColor='var(--muted)';
+    if(compositeNow!=null&&compositeTOH!=null){
+      trend=Math.round((compositeTOH-compositeNow)*100)/100;
+      var sign=trend>=0?'+':'';
+      trendStr=sign+trend+'°F by '+utcToLocalTimeStr(topOfHour.toISOString().replace('Z',''),tzOff);
+      trendColor=trend>0.2?'var(--danger)':trend<-0.2?'var(--accent)':'var(--yellow)';
+    }
+
+    // Pace of composite TOH vs live Kalshi index
+    var paceTOH='—', paceTOHColor='var(--text)';
+    if(liveV!=null&&compositeTOH!=null){
+      var delta=Math.round((compositeTOH-liveV)*100)/100;
+      var sign2=delta>=0?'+':'';
+      paceTOH=sign2+delta+'°F';
+      paceTOHColor=delta>0?'var(--danger)':delta<0?'var(--accent)':'var(--yellow)';
+    }
+
+    // Save for clipboard
+    storeKalshi.compositeNow=compositeNow;
+    storeKalshi.compositeTOH=compositeTOH;
+    storeKalshi.stationData=stationData;
+    storeKalshi.topOfHourLocal=utcToLocalTimeStr(topOfHour.toISOString().replace('Z',''),tzOff);
+    storeKalshi.paceTOH=paceTOH;
+
+    // Render composite summary grid
+    var topHour=utcToLocalTimeStr(topOfHour.toISOString().replace('Z',''),tzOff);
+    document.getElementById('compositeGrid').innerHTML=[
+      {label:'HRRR Composite Now',value:compositeNow!=null?compositeNow+'°F':'—',color:'var(--accent2)'},
+      {label:'HRRR Composite @ '+topHour,value:compositeTOH!=null?compositeTOH+'°F':'—',color:'var(--yellow)'},
+      {label:'Trend to '+topHour,value:trendStr,color:trendColor},
+      {label:'Kalshi Live Index',value:liveV!=null?liveV+'°F':'—',color:'#ff3b6b'},
+      {label:'HRRR vs Kalshi @ '+topHour,value:paceTOH,color:paceTOHColor},
+      {label:'Stations',value:blendStations.length+' in blend',color:'var(--muted)'},
+    ].map(function(i){
+      return '<div class="pacing-item"><div class="pacing-label">'+i.label+'</div>'
+        +'<div style="font-family:monospace;font-size:0.95rem;font-weight:700;color:'+i.color+'">'+i.value+'</div></div>';
+    }).join('');
+
+    // Render per-station table
+    document.getElementById('tbodyComposite').innerHTML=stationData.map(function(s){
+      var liveTStr=s.liveTemp!=null?s.liveTemp+'°F':'—';
+      var nowStr=s.hrrrNow!=null?s.hrrrNow+'°F':'—';
+      var tohStr=s.hrrrTOH!=null?s.hrrrTOH+'°F':'—';
+      var t=s.hrrrNow!=null&&s.hrrrTOH!=null?Math.round((s.hrrrTOH-s.hrrrNow)*100)/100:null;
+      var tStr=t!=null?(t>=0?'+':'')+t+'°F':'—';
+      var tCls=t!=null?(t>0.2?'pace-neg':t<-0.2?'pace-pos':'pace-zero'):'';
+      return '<tr>'
+        +'<td style="color:var(--yellow);font-weight:700;font-family:monospace">'+s.stn+(s.runHour?' <span style="color:var(--muted);font-size:0.65rem">('+s.runHour+')</span>':'')+'</td>'
+        +'<td style="color:#ff3b6b">'+liveTStr+'</td>'
+        +'<td style="color:var(--accent2)">'+nowStr+'</td>'
+        +'<td style="color:var(--yellow);font-weight:700">'+tohStr+'</td>'
+        +'<td class="'+tCls+'">'+tStr+'</td>'
+        +'</tr>';
+    }).join('');
   }
 
 
@@ -896,6 +1067,23 @@
       var localTime=utcToLocalTimeStr(new Date(p.t).toISOString().replace('Z',''),s.tzOff);
       lines.push(pad(localTime,14)+' '+pad(p.v!=null?p.v+'°F':'—',8)+' '+p.status);
     });
+    lines.push('');
+    // Composite HRRR section
+    if(s.compositeTOH!=null){
+      lines.push('');
+      lines.push('--- HRRR COMPOSITE FORECAST --- Target: '+s.topOfHourLocal);
+      lines.push('HRRR Composite Now      : '+(s.compositeNow!=null?s.compositeNow+'°F':'—'));
+      lines.push('HRRR Composite Top-Hr   : '+s.compositeTOH+'°F');
+      lines.push('HRRR vs Kalshi Index    : '+s.paceTOH);
+      if(s.stationData&&s.stationData.length){
+        lines.push('');
+        lines.push(pad('Station',10)+' '+pad('Kalshi Live',12)+' '+pad('HRRR Now',10)+' HRRR @TopHr');
+        lines.push('-'.repeat(50));
+        s.stationData.forEach(function(d){
+          lines.push(pad(d.stn,10)+' '+pad(d.liveTemp!=null?d.liveTemp+'°F':'—',12)+' '+pad(d.hrrrNow!=null?d.hrrrNow+'°F':'—',10)+' '+(d.hrrrTOH!=null?d.hrrrTOH+'°F':'—'));
+        });
+      }
+    }
     lines.push('');
     lines.push('=== END KALSHI INDEX ===');
     return lines.join('\n');
